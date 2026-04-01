@@ -1,0 +1,346 @@
+{
+  "form_id": "openclaw_fmea_draft",
+  "version": "0.1.0",
+  "primary_intent": "new_fmea_draft",
+  "title": "FMEA 共创",
+  "description": "从模块描述、历史问题、BOM 和约束条件生成 Excel 版 FMEA 共创草稿。",
+  "artifact_contract": {
+    "primary_artifact": "excel_workbook",
+    "optional_artifacts": [
+      "markdown_preview",
+      "json_payload",
+      "review_cards_json"
+    ],
+    "excel_workbook_sheets": [
+      "概览",
+      "Scope规划",
+      "per_scope_tables",
+      "确认队列",
+      "Top风险",
+      "建议动作",
+      "来源追踪"
+    ]
+  },
+  "sections": [
+    {
+      "id": "task_basic",
+      "label": "任务基础信息",
+      "description": "定义本次共创任务的基本范围。",
+      "fields": [
+        {
+          "id": "intent",
+          "label": "任务类型",
+          "component": "select",
+          "required": true,
+          "default": "new_fmea_draft",
+          "options": [
+            {
+              "value": "new_fmea_draft",
+              "label": "新建 FMEA 草稿",
+              "description": "从模块描述开始生成首版。"
+            },
+            {
+              "value": "review_existing_fmea",
+              "label": "审查已有 FMEA",
+              "description": "对已有表格做补全和审查。"
+            },
+            {
+              "value": "high_risk_review",
+              "label": "高风险复盘",
+              "description": "聚焦高 RPN 和措施建议。"
+            },
+            {
+              "value": "case_library_extract",
+              "label": "案例沉淀",
+              "description": "把确认过的条目转成案例。"
+            }
+          ]
+        },
+        {
+          "id": "project_name",
+          "label": "项目/产品名称",
+          "component": "text",
+          "required": false,
+          "placeholder": "例如：CAN400 NMR 系统"
+        },
+        {
+          "id": "module_name",
+          "label": "模块/分析对象名称",
+          "component": "text",
+          "required": true,
+          "placeholder": "例如：射频功放"
+        },
+        {
+          "id": "fmea_type",
+          "label": "FMEA 类型",
+          "component": "select",
+          "required": true,
+          "default": "DFMEA",
+          "options": [
+            {
+              "value": "AFMEA",
+              "label": "AFMEA"
+            },
+            {
+              "value": "SFMEA",
+              "label": "SFMEA"
+            },
+            {
+              "value": "DFMEA",
+              "label": "DFMEA"
+            }
+          ]
+        },
+        {
+          "id": "requested_output_name",
+          "label": "输出文件名",
+          "component": "text",
+          "required": false,
+          "placeholder": "默认按 模块名_auto_scope_draft.xlsx 生成"
+        }
+      ]
+    },
+    {
+      "id": "functional_context",
+      "label": "功能与场景",
+      "description": "提供这次共创最核心的上下文。",
+      "fields": [
+        {
+          "id": "function_description",
+          "label": "功能/要求描述",
+          "component": "textarea",
+          "required": true,
+          "min_length": 20,
+          "placeholder": "说明模块要做什么、关键性能要求、不能接受什么失效。"
+        },
+        {
+          "id": "use_scenario",
+          "label": "使用场景/任务场景",
+          "component": "textarea",
+          "required": true,
+          "min_length": 10,
+          "placeholder": "说明运行工况、生命周期阶段、典型任务或使用方式。"
+        },
+        {
+          "id": "customer_impact",
+          "label": "客户或后工序影响",
+          "component": "textarea",
+          "required": false,
+          "placeholder": "说明如果失效，会影响客户、联调、后工序还是安全。"
+        }
+      ]
+    },
+    {
+      "id": "scope_strategy",
+      "label": "Scope 策略",
+      "description": "决定由系统自动拆分 scope，还是由用户显式指定。",
+      "fields": [
+        {
+          "id": "scope_mode",
+          "label": "Scope 方式",
+          "component": "radio",
+          "required": true,
+          "default": "auto",
+          "options": [
+            {
+              "value": "auto",
+              "label": "自动拆分",
+              "description": "根据模块画像和输入文本自动建议子系统。"
+            },
+            {
+              "value": "manual",
+              "label": "手工指定",
+              "description": "由用户直接定义子系统名称和关键词。"
+            }
+          ]
+        },
+        {
+          "id": "scope_notes",
+          "label": "Scope 补充说明",
+          "component": "textarea",
+          "required": false,
+          "placeholder": "补充说明分析边界、责任归属或已知拆分原则。"
+        },
+        {
+          "id": "scopes",
+          "label": "手工 scope 列表",
+          "component": "repeater",
+          "required": false,
+          "visible_when": {
+            "field": "scope_mode",
+            "equals": "manual"
+          },
+          "item_schema": {
+            "fields": [
+              {
+                "id": "name",
+                "label": "scope 名称",
+                "component": "text",
+                "required": true
+              },
+              {
+                "id": "keywords",
+                "label": "scope 关键词",
+                "component": "textarea",
+                "required": true,
+                "placeholder": "用空格、逗号或换行分隔关键词。"
+              },
+              {
+                "id": "notes",
+                "label": "scope 说明",
+                "component": "textarea",
+                "required": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "technical_context",
+      "label": "技术上下文",
+      "description": "补充设计、环境、接口和部件信息。",
+      "fields": [
+        {
+          "id": "environment",
+          "label": "环境与工况",
+          "component": "textarea",
+          "required": false,
+          "placeholder": "温度、压力、振动、EMC、湿度、流体或热工况。"
+        },
+        {
+          "id": "interfaces",
+          "label": "接口信息",
+          "component": "textarea",
+          "required": false,
+          "placeholder": "结构、信号、能量、流体、运动接口。"
+        },
+        {
+          "id": "design_constraints",
+          "label": "设计约束",
+          "component": "textarea",
+          "required": false,
+          "placeholder": "安全、EMC、尺寸、重量、成本、法规、材料、容差等约束。"
+        },
+        {
+          "id": "bom_or_key_parts",
+          "label": "BOM/关键部件",
+          "component": "textarea",
+          "required": false,
+          "placeholder": "输入关键件、材料、连接方式、器件清单。"
+        }
+      ]
+    },
+    {
+      "id": "evidence_inputs",
+      "label": "证据与现状",
+      "description": "帮助检索案例并提升评分依据。",
+      "fields": [
+        {
+          "id": "historical_issues",
+          "label": "历史问题/投诉/维修",
+          "component": "textarea",
+          "required": false
+        },
+        {
+          "id": "current_controls",
+          "label": "当前控制/检测/联锁",
+          "component": "textarea",
+          "required": false
+        },
+        {
+          "id": "attachments_summary",
+          "label": "附件摘要",
+          "component": "textarea",
+          "required": false,
+          "placeholder": "把图纸、规格书、旧 FMEA、测试报告等附件提炼成可直接利用的摘要。"
+        },
+        {
+          "id": "existing_fmea_text",
+          "label": "已有 FMEA 内容",
+          "component": "textarea",
+          "required": false,
+          "visible_when": {
+            "field": "intent",
+            "in": [
+              "review_existing_fmea",
+              "high_risk_review"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "delivery_options",
+      "label": "交付选项",
+      "description": "控制是否同时生成预览和结构化副产物。",
+      "fields": [
+        {
+          "id": "include_markdown_preview",
+          "label": "同时生成 Markdown 预览",
+          "component": "checkbox",
+          "required": false,
+          "default": true
+        },
+        {
+          "id": "include_json_payload",
+          "label": "同时生成 JSON 结构化结果",
+          "component": "checkbox",
+          "required": false,
+          "default": true
+        },
+        {
+          "id": "include_review_cards",
+          "label": "同时生成 Review Cards JSON",
+          "component": "checkbox",
+          "required": false,
+          "default": true,
+          "visible_when": {
+            "field": "include_json_payload",
+            "equals": true
+          }
+        }
+      ]
+    }
+  ],
+  "validation_rules": [
+    {
+      "id": "minimum_context",
+      "severity": "error",
+      "description": "至少需要模块名、FMEA 类型、功能描述、使用场景，以及至少一个扩展上下文字段。 "
+    },
+    {
+      "id": "manual_scope_requires_items",
+      "severity": "error",
+      "description": "当 scope_mode = manual 时，scopes 至少要有一个条目。"
+    },
+    {
+      "id": "manual_scope_keywords_required",
+      "severity": "error",
+      "description": "每个手工 scope 必须同时具备名称和关键词。"
+    }
+  ],
+  "submission_mapping": {
+    "module_name": "--module",
+    "input_body": "--input-file or --input-text",
+    "manual_scope_item": "--scope \"{name}::{keywords}\"",
+    "excel_out": "--excel-out",
+    "markdown_out": "--markdown-out",
+    "json_out": "--json-out"
+  },
+  "input_body_order": [
+    "project_name",
+    "module_name",
+    "function_description",
+    "use_scenario",
+    "environment",
+    "interfaces",
+    "design_constraints",
+    "historical_issues",
+    "current_controls",
+    "bom_or_key_parts",
+    "customer_impact",
+    "attachments_summary",
+    "existing_fmea_text"
+  ]
+}

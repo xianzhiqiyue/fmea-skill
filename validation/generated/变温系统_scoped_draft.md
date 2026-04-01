@@ -1,0 +1,69 @@
+# 变温系统 首版 DFMEA 草稿
+
+- 生成方式: `draft_fmea_from_cases.py`
+- 模块: `变温系统`
+- FMEA 类型: `DFMEA`
+- 输入长度: `1709` 字符
+
+## 输入摘要
+
+> 示例：我们目前正在设计一套压缩机制冷单元，其中有一个气液分离器，一端连接蒸发器，一端连接压缩机。气液分离器的功能是保证从蒸发器出来的冷媒进进入压缩机前是完全气态状态，避免压缩机受到液击。使用铜管焊接的方式与蒸发器和压缩机连接。为了减小热传输损失，将蒸发器置于压缩制冷机末端管道内，蒸发器是一根铜管，铜管外侧有螺旋槽通道，用于空气热交换，铜管内部一端与毛细管相连、是冷媒入口，另一端是冷媒出口，通过焊接连接为通路。单级压缩系统中，压缩机用于输出高温高压冷媒，我们使用的是泰康的CAJZ2432PBR，冷媒是R454C，此制冷机直接用于NMR样品制冷。压缩机制冷单元设计了一个控制板卡，主要功能有以下几点<br>1、通信：和上位机板卡通过422通讯，实现远程控制压缩机制冷单元的功率，以及读取压缩机状态，例如出气口温度，报警信息等。<br>2、压缩机的控制：通过板卡MCU去控制继电器来控制压缩机的启动和区控制冷媒电...
+
+## Scope 规划
+
+| Scope | 检索关键词 |
+| --- | --- |
+| 压缩机制冷子系统 | 压缩机 / 冷媒 / 气液分离器 / 蒸发器 / 高压 / 继电器 / 启动 / 时序 / VX3244 |
+| 液氮蒸发子系统 | 液氮罐 / 排气管组件 / 主体组件 / 波纹管 / 真空 / PTFE / 特氟龙 / 换热盘管 / 加热棒 / PT100 / 航插 / 麦拉膜 / G10 |
+
+## 压缩机制冷子系统
+
+| Analysis object | Function or requirement | Failure mode | Failure effect | S | Cause or mechanism | O | Current controls | D | RPN | Recommended actions | Owner | Target date | Confidence status | Source case |
+| --- | --- | --- | --- | ---: | --- | ---: | --- | ---: | ---: | --- | --- | --- | --- | --- |
+| 控制系统 | 0档停机逻辑 | 液击风险 (Liquid Hammer) | 系统损坏： 0档同时断电，未做“抽空”处理。停机期间冷媒迁移至压缩机，下次启动瞬间打碎阀片。 | 7 | 设计逻辑缺陷：直接切断继电器，未执行 Pump-down 程序。 | 6 | 有气液分离器，无液击风险 | 8 | 336 |  | 李坤 | 2026-02-12 00:00:00 | AI draft from historical DFMEA; O and D still need expert confirmation | CAN400产品DFMEA.xlsx / 变温系统 / row 25 |
+| 压缩机排气管 | 振动控制 (低振动传递) | 振动过大 (气流啸叫) | 客户: NMR谱图出现边带 (Sidebands)，信噪比差 。后工序: 探头与制冷机耦合困难。 | 7 | 1.冷媒流动转弯处引起冲击振动 2.排气管传递压缩机振动。 3. 冷媒两相流脉动 (液击)。 | 6 | 1. 样机测试。 2.压缩机前端增加一个气液分离器 | 7 | 294 | 1. 设计优化: 优化冷媒传输通道的转弯半径 。 2. 流体设计: 优化毛细管长度和管径。 3. 仿真: 进行模态分析，避开压缩机频率。 4.蒸发器到探头接口增加隔振 | 李坤 | 2026-04-30 00:00:00 | AI draft from historical DFMEA; O and D still need expert confirmation | CAN400产品DFMEA.xlsx / 变温系统 / row 6 |
+| 控制系统 | 启动时序 (0档-12档) | 带液启动 (Liquid Floodback) | 系统：逻辑设定“1028阀先开，5S后开压缩机”。停机期间高压侧液体灌入低压侧，压缩机启动瞬间负荷极大，且有液击风险。 | 8 | 1. 启动逻辑顺序不当（先供液后启动）。2. 5S延时导致液体积聚。 | 5 | 有气液分离器，无液击风险 | 7 | 280 |  | 李坤 | 2026-02-12 00:00:00 | AI draft from historical DFMEA; O and D still need expert confirmation | CAN400产品DFMEA.xlsx / 变温系统 / row 26 |
+| 压缩机排气管 | 冷媒传输 (无堵塞) | 冰堵或脏堵 | 客户: 制冷失效，压缩机过热保护 。+1后工序: 抽真空时间极长，无法达到背景真空度。 | 8 | 1. 焊接过程产生的氧化皮落入管内。2. 干燥过滤器选型过小。 3.真空未抽到指定的真空度 4.内部结构件脏污 | 5 | 1. 充氮保护焊。 | 6 | 240 | 1. 设计/工艺: 严格定义充氮保护焊接流程参数 。 2.明确真空度指标要求 3..图纸明确清洁度要求，来料检验时对清洁度进行重点检验，焊接前内部增加清洗焊接 4.对过滤器型号进行优化选型 | 李坤 | 2026-04-30 00:00:00 | AI draft from historical DFMEA; O and D still need expert confirmation | CAN400产品DFMEA.xlsx / 变温系统 / row 5 |
+| 压缩机排气管 | 绝热性能 (防止热漏) | 冷量耗散 / 结露 | 客户: 制冷效率低，探头外部结霜 | 6 | 1. 蒸发器与外部支架之间缺乏有效热断桥。 | 5 | 1. 在蒸发器与外部之间填充保温棉。 2.对蒸发器末端连接结构进行下沉设计，减小接触面积 | 5 | 150 | 1.增加隔热环，材料采用低热导率材料 (如 G10 或 PEEK) 。 2.优化蒸发器尺寸，增加空气气隙，在蒸发器外侧包裹麦拉膜 | 李坤 | 2026-04-30 00:00:00 | AI draft from historical DFMEA; O and D still need expert confirmation | CAN400产品DFMEA.xlsx / 变温系统 / row 7 |
+| 气液分离器 | 气液分离匹配：选型需匹配系统工况 | 分离失效 (液击) | 对客户： 压缩机阀片断裂。 | 8 | 选型失误 | 3 | 1.建立选型规范： 强制要求按“系统最大充注量 x 70%”作为最小容积标准，而非按匹数估算。 | 5 | 120 | 规范冷媒的充注工艺，确保充注量不会导致带液 | 李坤 | 2026-04-30 00:00:00 | AI draft from historical DFMEA; O and D still need expert confirmation | CAN400产品DFMEA.xlsx / 变温系统 / row 8 |
+| 压缩机排气管 | 冷媒传输 (无泄漏) | 泄漏 (焊缝开裂) | 客户: 压缩机不制冷 | 8 | 1. 铜管与毛细管壁厚差异大，焊接熔深难控制。2. 振动导致热影响区疲劳断裂。3. 异种金属焊接缺陷。 | 5 | 1.设计采用插接台阶结构，保证焊接两端的壁厚一致 2.毛细管采用螺旋结构，释放应力 3. 压力测试。 | 3 | 120 | 增加管路的设计应力应变验证测试 | 张衡阳 | 2026-05-30 00:00:00 | AI draft from historical DFMEA; O and D still need expert confirmation | CAN400产品DFMEA.xlsx / 变温系统 / row 4 |
+| 控制系统 | 外气路切换 (VX3244) | 流路堵死 换热器冻结 | 系统：切换瞬间若VX3244卡死或两端截止，外气流中断。压缩机仍全速制冷(-40℃)，导致换热器瞬间结冰堵死甚至冻裂。 | 6 | 1. 气路阀切换存在“死区(Dead zone)”。2. 阀体机械故障。 | 4 | 探测：排气温度异常(过低)。 | 5 | 120 | 1. 增加“防冻结保护”：若检测到外气路流量中断，强制停机。 | 盛飞洋 | 2026-03-30 00:00:00 | AI draft from historical DFMEA; O and D still need expert confirmation | CAN400产品DFMEA.xlsx / 变温系统 / row 27 |
+| 控制系统 | 冷媒阀控制 (10282A6) | 未正常启动或未完全启动 | 压缩机制冷效果达不到预期，影响变温性能 | 6 | 1. 阀体内杂质卡住阀芯。2. 阀芯弹簧疲劳。3继电器损坏 | 5 | 出气口温度监测 | 3 | 90 | 增加出气口温度长期未达到指标后进行报警 | 盛飞洋 | 2026-03-30 00:00:00 | AI draft from historical DFMEA; O and D still need expert confirmation | CAN400产品DFMEA.xlsx / 变温系统 / row 28 |
+| 控制系统 | 继电器输出 (220V) | 触点粘连 (Stuck ON) | 安全：切到0档或报警时，继电器触点熔焊粘连，压缩机无法停机。 | 9 | 1. 感性负载反向电动势拉弧。2. 继电器选型余量不足。 | 7 | 探测：继电器失效，一致处于短路 | 1 | 63 | 额外增加交流接触器 | 盛飞洋 | 2026-03-30 00:00:00 | AI draft from historical DFMEA; O and D still need expert confirmation | CAN400产品DFMEA.xlsx / 变温系统 / row 31 |
+| 控制系统 | 高压保护 (传感器) | 读数卡死 (传感器失效) | 安全：传感器损坏输出固定电压（如2.5V），实际压力已超标。压缩机未停机，导致安全阀起跳或爆炸。 | 10 | 1. 传感器ADC电路受干扰。2. 传感器内部断路短路。 | 1 | 串联机械式高压开关直接切断接触器线圈。 | 1 | 10 |  |  |  | AI draft from historical DFMEA; O and D still need expert confirmation | CAN400产品DFMEA.xlsx / 变温系统 / row 30 |
+| 控制系统 | 板卡供电 (24V) | 电压跌落 (Brownout) | 系统：VX3244和1028同时动作拉低24V电压，导致MCU复位或继电器吸合不紧打火。 | 7 | 1. 电源功率余量不足。2. 线圈浪涌电流叠加。 | 1 | 探测：电压监测。 1. 电源功率按峰值负载1.5倍配置。2. MCU增加“分时启动”逻辑：避免多个大功率继电器在同一毫秒内动作。 | 1 | 7 |  |  |  | AI draft from historical DFMEA; O and D still need expert confirmation | CAN400产品DFMEA.xlsx / 变温系统 / row 32 |
+
+## 液氮蒸发子系统
+
+| Analysis object | Function or requirement | Failure mode | Failure effect | S | Cause or mechanism | O | Current controls | D | RPN | Recommended actions | Owner | Target date | Confidence status | Source case |
+| --- | --- | --- | --- | ---: | --- | ---: | --- | ---: | ---: | --- | --- | --- | --- | --- |
+| 氮气供应系统 | 内部连接-紫铜管与特氟龙件 | 连接处冷缩泄漏 | 后工序：常温检漏通过，但低温测试时内部串气。 | 7 | 特氟龙(PTFE)收缩率远大于铜，低温下配合间隙变大导致密封失效。 | 6 | 接触面锥形设计，冷气无法直接接触特氟龙件 增加O圈密封 | 8 | 336 |  |  |  | AI draft from historical DFMEA; O and D still need expert confirmation | CAN400产品DFMEA.xlsx / 变温系统 / row 39 |
+| 氮气供应系统 | 排气管组件-波纹管 | 波纹管疲劳破裂/穿孔 | 后工序：调试时发现漏气。 | 9 | 1. 波纹管壁厚不均。 | 2 | 1. 内管选用316L材质。 | 3 | 108 | 来料增加氦质谱抽真空漏率检测 | 李坤 | 2026-06-30 00:00:00 | AI draft from historical DFMEA; O and D still need expert confirmation | CAN400产品DFMEA.xlsx / 变温系统 / row 36 |
+|  | 排气管-绝热层 (麦拉膜) | 热短路 (接触外壁) | 后工序：外管结霜。 | 5 | 隔热环(G10)间距过大，麦拉膜松散接触到外管壁。 隔热环移位导致内外壁接触 | 4 | G10隔热环支撑。 | 5 | 100 | 1.优化G10环厚度，防止倾倒 | 李坤 | 2026-04-30 00:00:00 | AI draft from historical DFMEA; O and D still need expert confirmation | CAN400产品DFMEA.xlsx / 变温系统 / row 50 |
+|  | 电气航插 | 密封失效/短路 | 后工序：抽真空失败。 | 7 | 主体真空泄露导致低温传输，航插焊接处有冷凝水 | 3 | 选用气密性航插。 | 2 | 42 | 焊接完之后使用703硅胶进行密封 | 李坤 | 2026-04-30 00:00:00 | AI draft from historical DFMEA; O and D still need expert confirmation | CAN400产品DFMEA.xlsx / 变温系统 / row 48 |
+| 氮气供应系统 | 主体组件-真空腔体 | 真空丧失 (漏气) | 后工序：装配测试时发现外壁结霜/出汗。 | 8 | 1. 焊缝存在微裂纹或气孔。 | 2 | 1. 氦质谱检漏仪检漏。 | 2 | 32 |  |  |  | AI draft from historical DFMEA; O and D still need expert confirmation | CAN400产品DFMEA.xlsx / 变温系统 / row 33 |
+| 氮气供应系统 | 加热棒 | 加热棒干烧/过热 | 客户：加热棒烧断，无法使用蒸发模式；严重时引发火灾或破坏液氮罐内部结构。 | 9 | 液氮耗尽后，传感器未及时反馈或控制系统失灵，加热棒持续工作。 | 1 | 依靠PT100监测液位。 | 2 | 18 |  |  |  | AI draft from historical DFMEA; O and D still need expert confirmation | CAN400产品DFMEA.xlsx / 变温系统 / row 44 |
+|  | 电气航插 | 密封失效/短路 | 客户：真空度丧失，或传感器信号干扰。 |  |  |  |  |  |  |  | 李坤 | 2026-04-30 00:00:00 | AI draft from partial case data; S/O/D incomplete and needs confirmation | CAN400产品DFMEA.xlsx / 变温系统 / row 49 |
+| 氮气供应系统 | 排气管组件-波纹管 | 波纹管疲劳破裂/穿孔 | 客户：低温氮气泄漏到实验室环境（窒息风险），系统彻底失效。 |  | 2. 安装或运输过程中弯折过度。<br>3. 冷热交替导致金属疲劳。 |  |  |  |  |  |  |  | AI draft from partial case data; S/O/D incomplete and needs confirmation | CAN400产品DFMEA.xlsx / 变温系统 / row 37; CAN400产品DFMEA.xlsx / 变温系统 / row 38 |
+| 氮气供应系统 | 主体组件-真空腔体 | 真空丧失 (漏气) | 客户：制冷效率急剧下降，液氮消耗量激增，样品无法降温。 |  | 2. O圈密封处密封面粗糙度不足或O圈低温脆化。 |  | 2. 选用氟橡胶O圈。<br>2. 关键密封位采用双O圈+抽空槽设计。 |  |  |  |  |  | AI draft from partial case data; S/O/D incomplete and needs confirmation | CAN400产品DFMEA.xlsx / 变温系统 / row 34; CAN400产品DFMEA.xlsx / 变温系统 / row 35 |
+
+## Top Risks
+
+| Scope | Analysis object | Failure mode | RPN | Confidence status |
+| --- | --- | --- | ---: | --- |
+| 压缩机制冷子系统 | 控制系统 | 液击风险 (Liquid Hammer) | 336 | AI draft from historical DFMEA; O and D still need expert confirmation |
+| 液氮蒸发子系统 | 氮气供应系统 | 连接处冷缩泄漏 | 336 | AI draft from historical DFMEA; O and D still need expert confirmation |
+| 压缩机制冷子系统 | 压缩机排气管 | 振动过大 (气流啸叫) | 294 | AI draft from historical DFMEA; O and D still need expert confirmation |
+| 压缩机制冷子系统 | 控制系统 | 带液启动 (Liquid Floodback) | 280 | AI draft from historical DFMEA; O and D still need expert confirmation |
+| 压缩机制冷子系统 | 压缩机排气管 | 冰堵或脏堵 | 240 | AI draft from historical DFMEA; O and D still need expert confirmation |
+| 压缩机制冷子系统 | 压缩机排气管 | 冷量耗散 / 结露 | 150 | AI draft from historical DFMEA; O and D still need expert confirmation |
+| 压缩机制冷子系统 | 气液分离器 | 分离失效 (液击) | 120 | AI draft from historical DFMEA; O and D still need expert confirmation |
+| 压缩机制冷子系统 | 压缩机排气管 | 泄漏 (焊缝开裂) | 120 | AI draft from historical DFMEA; O and D still need expert confirmation |
+
+## Rows Needing Confirmation
+
+| Scope | Analysis object | Failure mode | Why |
+| --- | --- | --- | --- |
+| 液氮蒸发子系统 |  | 密封失效/短路 | AI draft from partial case data; S/O/D incomplete and needs confirmation |
+| 液氮蒸发子系统 | 氮气供应系统 | 波纹管疲劳破裂/穿孔 | AI draft from partial case data; S/O/D incomplete and needs confirmation |
+| 液氮蒸发子系统 | 氮气供应系统 | 真空丧失 (漏气) | AI draft from partial case data; S/O/D incomplete and needs confirmation |

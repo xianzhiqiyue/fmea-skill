@@ -1,0 +1,8 @@
+interface:
+  display_name: "OpenClaw FMEA Co-creator"
+  short_description: "共创 AFMEA、SFMEA、DFMEA 的结构化 skill"
+  brand_color: "#0F766E"
+  default_prompt: "Use $openclaw-fmea-cocreator to co-create an Excel-based FMEA draft package from my module description, existing materials, and historical cases, including confirmation items, top risks, suggested actions, and source trace."
+
+policy:
+  allow_implicit_invocation: true

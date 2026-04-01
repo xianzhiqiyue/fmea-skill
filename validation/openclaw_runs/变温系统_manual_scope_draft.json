@@ -1,0 +1,983 @@
+{
+  "module": "变温系统",
+  "fmea_type": "DFMEA",
+  "input_text": "项目/产品名称:\nCAN400 低温平台\n\n模块/分析对象名称:\n变温系统\n\n功能/要求描述:\n变温系统需要支持压缩机制冷与液氮蒸发两类温控路径，在目标温区内提供稳定、可控的低温环境。\n\n使用场景/任务场景:\n系统用于样品低温实验，涉及压缩机运行、冷媒回路、液氮蒸发、换热盘管、加热棒和真空绝热结构。\n\n环境与工况:\n同时存在高低温切换、真空绝热、冷缩、液氮蒸发和电加热工况。\n\n接口信息:\n包含冷媒回路、液氮回路、真空腔、加热控制和温度采集接口。\n\n设计约束:\n需要兼顾制冷效率、启动停机安全、真空可靠性和低温密封可靠性。\n\n历史问题/投诉/维修:\n历史上出现过液击、冰堵、PTFE 冷缩泄漏、盘管冻结和高压保护失效问题。\n\n当前控制/检测/联锁:\n已有压力保护、通讯控制、抽真空流程、检漏和部分低温验证手段。\n\nBOM/关键部件:\n压缩机、气液分离器、冷媒阀、422 通讯板卡、液氮罐、波纹管、PTFE 接头、加热棒、PT100。\n\n客户或后工序影响:\n失效会导致制冷失效、实验中断、返工、设备损坏或液氮消耗异常。\n\n附件摘要:\n已整理项目计划原始长文本、变温系统 DFMEA 样例和质量赋能资料摘要。\n\n手工 scope 定义:\nscope 名称: 压缩机制冷子系统\nscope 关键词: 压缩机 冷媒 气液分离器 蒸发器 毛细管 高压 继电器 启动 时序\nscope 说明: 关注液击、冰堵、通信和压力保护。\n\nscope 名称: 液氮蒸发子系统\nscope 关键词: 液氮罐 真空 波纹管 PTFE 盘管 冰堵 加热棒 PT100 航插\nscope 说明: 关注低温密封、换热盘管、真空绝热与蒸发安全。",
+  "scopes": [
+    {
+      "name": "压缩机制冷子系统",
+      "query_terms": [
+        "压缩机",
+        "冷媒",
+        "气液分离器",
+        "蒸发器",
+        "毛细管",
+        "高压",
+        "继电器",
+        "启动",
+        "时序"
+      ],
+      "extracted_terms": [
+        "变温系统",
+        "气液分离器",
+        "压缩机运行",
+        "换热盘管",
+        "PTFE",
+        "制冷失效",
+        "高压保护",
+        "压缩机",
+        "波纹管",
+        "CAN",
+        "加热棒",
+        "结构",
+        "安全",
+        "液击",
+        "泄漏"
+      ],
+      "auto_suggested": false,
+      "hit_count": 0,
+      "reason": "manual"
+    },
+    {
+      "name": "液氮蒸发子系统",
+      "query_terms": [
+        "液氮罐",
+        "真空",
+        "波纹管",
+        "PTFE",
+        "盘管",
+        "冰堵",
+        "加热棒",
+        "PT100",
+        "航插"
+      ],
+      "extracted_terms": [
+        "变温系统",
+        "气液分离器",
+        "压缩机运行",
+        "换热盘管",
+        "PTFE",
+        "制冷失效",
+        "高压保护",
+        "压缩机",
+        "波纹管",
+        "CAN",
+        "加热棒",
+        "结构",
+        "安全",
+        "液击",
+        "泄漏"
+      ],
+      "auto_suggested": false,
+      "hit_count": 0,
+      "reason": "manual"
+    }
+  ],
+  "rows": [
+    {
+      "scope": "压缩机制冷子系统",
+      "analysis_object": "控制系统",
+      "function": "0档停机逻辑",
+      "failure_mode": "液击风险 (Liquid Hammer)",
+      "effect": "系统损坏： 0档同时断电，未做“抽空”处理。停机期间冷媒迁移至压缩机，下次启动瞬间打碎阀片。",
+      "severity": "7",
+      "cause": "设计逻辑缺陷：直接切断继电器，未执行 Pump-down 程序。",
+      "occurrence": "6",
+      "current_controls": "有气液分离器，无液击风险",
+      "detection": "8",
+      "rpn": "336",
+      "recommended_actions": "",
+      "owner": "李坤",
+      "target_date": "2026-02-12 00:00:00",
+      "confirmation_status": "draft",
+      "rating_basis": "S=7 继承自历史案例的后果强度；O=6、D=8 继承自成品 DFMEA，但仍需结合本企业标尺校准",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 25"
+      ],
+      "max_match_score": 26,
+      "max_scope_hits": 4,
+      "confirmation_reasons": [],
+      "reviewer_focus": "校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "压缩机制冷子系统",
+      "analysis_object": "压缩机排气管",
+      "function": "振动控制 (低振动传递)",
+      "failure_mode": "振动过大 (气流啸叫)",
+      "effect": "客户: NMR谱图出现边带 (Sidebands)，信噪比差 。后工序: 探头与制冷机耦合困难。",
+      "severity": "7",
+      "cause": "1.冷媒流动转弯处引起冲击振动 2.排气管传递压缩机振动。 3. 冷媒两相流脉动 (液击)。",
+      "occurrence": "6",
+      "current_controls": "1. 样机测试。 2.压缩机前端增加一个气液分离器",
+      "detection": "7",
+      "rpn": "294",
+      "recommended_actions": "1. 设计优化: 优化冷媒传输通道的转弯半径 。 2. 流体设计: 优化毛细管长度和管径。 3. 仿真: 进行模态分析，避开压缩机频率。 4.蒸发器到探头接口增加隔振",
+      "owner": "李坤",
+      "target_date": "2026-04-30 00:00:00",
+      "confirmation_status": "draft",
+      "rating_basis": "S=7 继承自历史案例的后果强度；O=6、D=7 继承自成品 DFMEA，但仍需结合本企业标尺校准",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 6"
+      ],
+      "max_match_score": 26,
+      "max_scope_hits": 2,
+      "confirmation_reasons": [],
+      "reviewer_focus": "校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "压缩机制冷子系统",
+      "analysis_object": "控制系统",
+      "function": "启动时序 (0档-12档)",
+      "failure_mode": "带液启动 (Liquid Floodback)",
+      "effect": "系统：逻辑设定“1028阀先开，5S后开压缩机”。停机期间高压侧液体灌入低压侧，压缩机启动瞬间负荷极大，且有液击风险。",
+      "severity": "8",
+      "cause": "1. 启动逻辑顺序不当（先供液后启动）。2. 5S延时导致液体积聚。",
+      "occurrence": "5",
+      "current_controls": "有气液分离器，无液击风险",
+      "detection": "7",
+      "rpn": "280",
+      "recommended_actions": "",
+      "owner": "李坤",
+      "target_date": "2026-02-12 00:00:00",
+      "confirmation_status": "draft",
+      "rating_basis": "S=8 继承自历史案例的后果强度；O=5、D=7 继承自成品 DFMEA，但仍需结合本企业标尺校准",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 26"
+      ],
+      "max_match_score": 26,
+      "max_scope_hits": 4,
+      "confirmation_reasons": [],
+      "reviewer_focus": "校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "压缩机制冷子系统",
+      "analysis_object": "压缩机排气管",
+      "function": "冷媒传输 (无堵塞)",
+      "failure_mode": "冰堵或脏堵",
+      "effect": "客户: 制冷失效，压缩机过热保护 。+1后工序: 抽真空时间极长，无法达到背景真空度。",
+      "severity": "8",
+      "cause": "1. 焊接过程产生的氧化皮落入管内。2. 干燥过滤器选型过小。 3.真空未抽到指定的真空度 4.内部结构件脏污",
+      "occurrence": "5",
+      "current_controls": "1. 充氮保护焊。",
+      "detection": "6",
+      "rpn": "240",
+      "recommended_actions": "1. 设计/工艺: 严格定义充氮保护焊接流程参数 。 2.明确真空度指标要求 3..图纸明确清洁度要求，来料检验时对清洁度进行重点检验，焊接前内部增加清洗焊接 4.对过滤器型号进行优化选型",
+      "owner": "李坤",
+      "target_date": "2026-04-30 00:00:00",
+      "confirmation_status": "needs expert confirmation",
+      "rating_basis": "S=8 继承自历史案例的后果强度；O=5、D=6 继承自成品 DFMEA，但仍需结合本企业标尺校准",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 5"
+      ],
+      "max_match_score": 17,
+      "max_scope_hits": 2,
+      "confirmation_reasons": [
+        "scope 归属存在边界，当前放在本 scope，但也可能属于：液氮蒸发子系统"
+      ],
+      "reviewer_focus": "确认 scope 归属与责任边界；校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": [
+        "液氮蒸发子系统"
+      ]
+    },
+    {
+      "scope": "压缩机制冷子系统",
+      "analysis_object": "压缩机排气管",
+      "function": "绝热性能 (防止热漏)",
+      "failure_mode": "冷量耗散 / 结露",
+      "effect": "客户: 制冷效率低，探头外部结霜",
+      "severity": "6",
+      "cause": "1. 蒸发器与外部支架之间缺乏有效热断桥。",
+      "occurrence": "5",
+      "current_controls": "1. 在蒸发器与外部之间填充保温棉。 2.对蒸发器末端连接结构进行下沉设计，减小接触面积",
+      "detection": "5",
+      "rpn": "150",
+      "recommended_actions": "1.增加隔热环，材料采用低热导率材料 (如 G10 或 PEEK) 。 2.优化蒸发器尺寸，增加空气气隙，在蒸发器外侧包裹麦拉膜",
+      "owner": "李坤",
+      "target_date": "2026-04-30 00:00:00",
+      "confirmation_status": "draft",
+      "rating_basis": "S=6 继承自历史案例的后果强度；O=5、D=5 继承自成品 DFMEA，但仍需结合本企业标尺校准",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 7"
+      ],
+      "max_match_score": 17,
+      "max_scope_hits": 2,
+      "confirmation_reasons": [],
+      "reviewer_focus": "校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "压缩机制冷子系统",
+      "analysis_object": "压缩机排气管",
+      "function": "冷媒传输 (无泄漏)",
+      "failure_mode": "泄漏 (焊缝开裂)",
+      "effect": "客户: 压缩机不制冷",
+      "severity": "8",
+      "cause": "1. 铜管与毛细管壁厚差异大，焊接熔深难控制。2. 振动导致热影响区疲劳断裂。3. 异种金属焊接缺陷。",
+      "occurrence": "5",
+      "current_controls": "1.设计采用插接台阶结构，保证焊接两端的壁厚一致 2.毛细管采用螺旋结构，释放应力 3. 压力测试。",
+      "detection": "3",
+      "rpn": "120",
+      "recommended_actions": "增加管路的设计应力应变验证测试",
+      "owner": "张衡阳",
+      "target_date": "2026-05-30 00:00:00",
+      "confirmation_status": "draft",
+      "rating_basis": "S=8 继承自历史案例的后果强度；O=5、D=3 继承自成品 DFMEA，但仍需结合本企业标尺校准",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 4"
+      ],
+      "max_match_score": 20,
+      "max_scope_hits": 3,
+      "confirmation_reasons": [],
+      "reviewer_focus": "校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "压缩机制冷子系统",
+      "analysis_object": "气液分离器",
+      "function": "气液分离匹配：选型需匹配系统工况",
+      "failure_mode": "分离失效 (液击)",
+      "effect": "对客户： 压缩机阀片断裂。",
+      "severity": "8",
+      "cause": "选型失误",
+      "occurrence": "3",
+      "current_controls": "1.建立选型规范： 强制要求按“系统最大充注量 x 70%”作为最小容积标准，而非按匹数估算。",
+      "detection": "5",
+      "rpn": "120",
+      "recommended_actions": "规范冷媒的充注工艺，确保充注量不会导致带液",
+      "owner": "李坤",
+      "target_date": "2026-04-30 00:00:00",
+      "confirmation_status": "draft",
+      "rating_basis": "S=8 继承自历史案例的后果强度；O=3、D=5 继承自成品 DFMEA，但仍需结合本企业标尺校准",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 8"
+      ],
+      "max_match_score": 20,
+      "max_scope_hits": 2,
+      "confirmation_reasons": [],
+      "reviewer_focus": "校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "压缩机制冷子系统",
+      "analysis_object": "控制系统",
+      "function": "冷媒阀控制 (10282A6)",
+      "failure_mode": "未正常启动或未完全启动",
+      "effect": "压缩机制冷效果达不到预期，影响变温性能",
+      "severity": "6",
+      "cause": "1. 阀体内杂质卡住阀芯。2. 阀芯弹簧疲劳。3继电器损坏",
+      "occurrence": "5",
+      "current_controls": "出气口温度监测",
+      "detection": "3",
+      "rpn": "90",
+      "recommended_actions": "增加出气口温度长期未达到指标后进行报警",
+      "owner": "盛飞洋",
+      "target_date": "2026-03-30 00:00:00",
+      "confirmation_status": "draft",
+      "rating_basis": "S=6 继承自历史案例的后果强度；O=5、D=3 继承自成品 DFMEA，但仍需结合本企业标尺校准",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 28"
+      ],
+      "max_match_score": 23,
+      "max_scope_hits": 4,
+      "confirmation_reasons": [],
+      "reviewer_focus": "校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "压缩机制冷子系统",
+      "analysis_object": "控制系统",
+      "function": "继电器输出 (220V)",
+      "failure_mode": "触点粘连 (Stuck ON)",
+      "effect": "安全：切到0档或报警时，继电器触点熔焊粘连，压缩机无法停机。",
+      "severity": "9",
+      "cause": "1. 感性负载反向电动势拉弧。2. 继电器选型余量不足。",
+      "occurrence": "7",
+      "current_controls": "探测：继电器失效，一致处于短路",
+      "detection": "1",
+      "rpn": "63",
+      "recommended_actions": "额外增加交流接触器",
+      "owner": "盛飞洋",
+      "target_date": "2026-03-30 00:00:00",
+      "confirmation_status": "draft",
+      "rating_basis": "S=9 继承自历史案例的后果强度；O=7、D=1 继承自成品 DFMEA，但仍需结合本企业标尺校准",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 31"
+      ],
+      "max_match_score": 17,
+      "max_scope_hits": 2,
+      "confirmation_reasons": [],
+      "reviewer_focus": "校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "压缩机制冷子系统",
+      "analysis_object": "",
+      "function": "结构强度：耐压与密封。",
+      "failure_mode": "本体泄漏 (供应商焊缝)",
+      "effect": "对客户： 冷媒泄漏。",
+      "severity": "8",
+      "cause": "供应商工艺波动",
+      "occurrence": "1",
+      "current_controls": "1、选用具有UL/CE认证的一线品牌。 2、供应商使用隔断包装，保护铜管接口不被挤压。 3、供应商出厂前100%检漏。",
+      "detection": "2",
+      "rpn": "16",
+      "recommended_actions": "",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "draft",
+      "rating_basis": "S=8 继承自历史案例的后果强度；O=1、D=2 继承自成品 DFMEA，但仍需结合本企业标尺校准",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 11"
+      ],
+      "max_match_score": 14,
+      "max_scope_hits": 1,
+      "confirmation_reasons": [],
+      "reviewer_focus": "校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "压缩机制冷子系统",
+      "analysis_object": "控制系统",
+      "function": "高压保护 (传感器)",
+      "failure_mode": "读数卡死 (传感器失效)",
+      "effect": "安全：传感器损坏输出固定电压（如2.5V），实际压力已超标。压缩机未停机，导致安全阀起跳或爆炸。",
+      "severity": "10",
+      "cause": "1. 传感器ADC电路受干扰。2. 传感器内部断路短路。",
+      "occurrence": "1",
+      "current_controls": "串联机械式高压开关直接切断接触器线圈。",
+      "detection": "1",
+      "rpn": "10",
+      "recommended_actions": "",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "draft",
+      "rating_basis": "S=10 继承自历史案例的后果强度；O=1、D=1 继承自成品 DFMEA，但仍需结合本企业标尺校准",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 30"
+      ],
+      "max_match_score": 17,
+      "max_scope_hits": 2,
+      "confirmation_reasons": [],
+      "reviewer_focus": "校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "压缩机制冷子系统",
+      "analysis_object": "控制系统",
+      "function": "板卡供电 (24V)",
+      "failure_mode": "电压跌落 (Brownout)",
+      "effect": "系统：VX3244和1028同时动作拉低24V电压，导致MCU复位或继电器吸合不紧打火。",
+      "severity": "7",
+      "cause": "1. 电源功率余量不足。2. 线圈浪涌电流叠加。",
+      "occurrence": "1",
+      "current_controls": "探测：电压监测。 1. 电源功率按峰值负载1.5倍配置。2. MCU增加“分时启动”逻辑：避免多个大功率继电器在同一毫秒内动作。",
+      "detection": "1",
+      "rpn": "7",
+      "recommended_actions": "",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "draft",
+      "rating_basis": "S=7 继承自历史案例的后果强度；O=1、D=1 继承自成品 DFMEA，但仍需结合本企业标尺校准",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 32"
+      ],
+      "max_match_score": 17,
+      "max_scope_hits": 1,
+      "confirmation_reasons": [],
+      "reviewer_focus": "校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "液氮蒸发子系统",
+      "analysis_object": "氮气供应系统",
+      "function": "换热盘管 (紫铜)",
+      "failure_mode": "盘管内部冰堵",
+      "effect": "客户：气流受阻，压力升高，无法制冷。",
+      "severity": "7",
+      "cause": "进气口输入的氮气纯度不够，含有水汽，在低温下结冰堵塞管路。",
+      "occurrence": "",
+      "current_controls": "盘管管径设计足够余量，避免过细导致易堵。",
+      "detection": "8",
+      "rpn": "280",
+      "recommended_actions": "自然放置时，输入与输出口增加与空气的隔离装置\n要求输入高纯氮气（说明书）。",
+      "owner": "李坤",
+      "target_date": "2026-04-30 00:00:00",
+      "confirmation_status": "needs expert confirmation",
+      "rating_basis": "S=7 继承自历史案例的后果强度；O/D 未完整继承，需专家补齐评分依据",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 41",
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 42",
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 43"
+      ],
+      "max_match_score": 17,
+      "max_scope_hits": 2,
+      "confirmation_reasons": [
+        "源案例缺少完整评分字段：O"
+      ],
+      "reviewer_focus": "补齐 O/D 与现行检测控制",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "液氮蒸发子系统",
+      "analysis_object": "氮气供应系统",
+      "function": "排气管组件-波纹管",
+      "failure_mode": "波纹管疲劳破裂/穿孔",
+      "effect": "后工序：调试时发现漏气。",
+      "severity": "9",
+      "cause": "1. 波纹管壁厚不均。",
+      "occurrence": "2",
+      "current_controls": "1. 内管选用316L材质。",
+      "detection": "3",
+      "rpn": "108",
+      "recommended_actions": "来料增加氦质谱抽真空漏率检测",
+      "owner": "李坤",
+      "target_date": "2026-06-30 00:00:00",
+      "confirmation_status": "draft",
+      "rating_basis": "S=9 继承自历史案例的后果强度；O=2、D=3 继承自成品 DFMEA，但仍需结合本企业标尺校准",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 36"
+      ],
+      "max_match_score": 17,
+      "max_scope_hits": 1,
+      "confirmation_reasons": [],
+      "reviewer_focus": "校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "液氮蒸发子系统",
+      "analysis_object": "",
+      "function": "电气航插",
+      "failure_mode": "密封失效/短路",
+      "effect": "后工序：抽真空失败。",
+      "severity": "7",
+      "cause": "主体真空泄露导致低温传输，航插焊接处有冷凝水",
+      "occurrence": "3",
+      "current_controls": "选用气密性航插。",
+      "detection": "2",
+      "rpn": "42",
+      "recommended_actions": "焊接完之后使用703硅胶进行密封",
+      "owner": "李坤",
+      "target_date": "2026-04-30 00:00:00",
+      "confirmation_status": "draft",
+      "rating_basis": "S=7 继承自历史案例的后果强度；O=3、D=2 继承自成品 DFMEA，但仍需结合本企业标尺校准",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 48"
+      ],
+      "max_match_score": 17,
+      "max_scope_hits": 2,
+      "confirmation_reasons": [],
+      "reviewer_focus": "校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "液氮蒸发子系统",
+      "analysis_object": "氮气供应系统",
+      "function": "主体组件-真空腔体",
+      "failure_mode": "真空丧失 (漏气)",
+      "effect": "后工序：装配测试时发现外壁结霜/出汗。",
+      "severity": "8",
+      "cause": "1. 焊缝存在微裂纹或气孔。",
+      "occurrence": "2",
+      "current_controls": "1. 氦质谱检漏仪检漏。",
+      "detection": "2",
+      "rpn": "32",
+      "recommended_actions": "",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "draft",
+      "rating_basis": "S=8 继承自历史案例的后果强度；O=2、D=2 继承自成品 DFMEA，但仍需结合本企业标尺校准",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 33"
+      ],
+      "max_match_score": 14,
+      "max_scope_hits": 1,
+      "confirmation_reasons": [],
+      "reviewer_focus": "校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "液氮蒸发子系统",
+      "analysis_object": "氮气供应系统",
+      "function": "加热棒",
+      "failure_mode": "加热棒干烧/过热",
+      "effect": "客户：加热棒烧断，无法使用蒸发模式；严重时引发火灾或破坏液氮罐内部结构。",
+      "severity": "9",
+      "cause": "液氮耗尽后，传感器未及时反馈或控制系统失灵，加热棒持续工作。",
+      "occurrence": "1",
+      "current_controls": "依靠PT100监测液位。",
+      "detection": "2",
+      "rpn": "18",
+      "recommended_actions": "",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "draft",
+      "rating_basis": "S=9 继承自历史案例的后果强度；O=1、D=2 继承自成品 DFMEA，但仍需结合本企业标尺校准",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 44"
+      ],
+      "max_match_score": 20,
+      "max_scope_hits": 2,
+      "confirmation_reasons": [],
+      "reviewer_focus": "校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "液氮蒸发子系统",
+      "analysis_object": "",
+      "function": "电气航插",
+      "failure_mode": "密封失效/短路",
+      "effect": "客户：真空度丧失，或传感器信号干扰。",
+      "severity": "",
+      "cause": "",
+      "occurrence": "",
+      "current_controls": "",
+      "detection": "",
+      "rpn": "",
+      "recommended_actions": "",
+      "owner": "李坤",
+      "target_date": "2026-04-30 00:00:00",
+      "confirmation_status": "needs expert confirmation",
+      "rating_basis": "S 未在源案例中明确给出；O/D 未完整继承，需专家补齐评分依据",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 49"
+      ],
+      "max_match_score": 17,
+      "max_scope_hits": 2,
+      "confirmation_reasons": [
+        "源案例缺少完整评分字段：S/O/D"
+      ],
+      "reviewer_focus": "补齐 O/D 与现行检测控制",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "液氮蒸发子系统",
+      "analysis_object": "氮气供应系统",
+      "function": "主体组件-真空腔体",
+      "failure_mode": "真空丧失 (漏气)",
+      "effect": "客户：制冷效率急剧下降，液氮消耗量激增，样品无法降温。",
+      "severity": "",
+      "cause": "2. O圈密封处密封面粗糙度不足或O圈低温脆化。",
+      "occurrence": "",
+      "current_controls": "2. 选用氟橡胶O圈。\n2. 关键密封位采用双O圈+抽空槽设计。",
+      "detection": "",
+      "rpn": "",
+      "recommended_actions": "",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "needs expert confirmation",
+      "rating_basis": "S 未在源案例中明确给出；O/D 未完整继承，需专家补齐评分依据",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 34",
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 35"
+      ],
+      "max_match_score": 14,
+      "max_scope_hits": 1,
+      "confirmation_reasons": [
+        "源案例缺少完整评分字段：S/O/D"
+      ],
+      "reviewer_focus": "补齐 O/D 与现行检测控制",
+      "boundary_scopes": []
+    }
+  ],
+  "confirmation_queue": [
+    {
+      "scope": "压缩机制冷子系统",
+      "row_key": "压缩机排气管 / 冰堵或脏堵",
+      "why_confirmation_is_needed": "scope 归属存在边界，当前放在本 scope，但也可能属于：液氮蒸发子系统",
+      "suggested_reviewer_focus": "确认 scope 归属与责任边界；校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 5"
+      ]
+    },
+    {
+      "scope": "液氮蒸发子系统",
+      "row_key": "氮气供应系统 / 盘管内部冰堵",
+      "why_confirmation_is_needed": "源案例缺少完整评分字段：O",
+      "suggested_reviewer_focus": "补齐 O/D 与现行检测控制",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 41",
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 42",
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 43"
+      ]
+    },
+    {
+      "scope": "液氮蒸发子系统",
+      "row_key": "电气航插 / 密封失效/短路",
+      "why_confirmation_is_needed": "源案例缺少完整评分字段：S/O/D",
+      "suggested_reviewer_focus": "补齐 O/D 与现行检测控制",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 49"
+      ]
+    },
+    {
+      "scope": "液氮蒸发子系统",
+      "row_key": "氮气供应系统 / 真空丧失 (漏气)",
+      "why_confirmation_is_needed": "源案例缺少完整评分字段：S/O/D",
+      "suggested_reviewer_focus": "补齐 O/D 与现行检测控制",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 34",
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 35"
+      ]
+    }
+  ],
+  "top_risks": [
+    {
+      "scope": "压缩机制冷子系统",
+      "failure_mode": "液击风险 (Liquid Hammer)",
+      "current_rpn": "336",
+      "why_it_matters": "系统损坏： 0档同时断电，未做“抽空”处理。停机期间冷媒迁移至压缩机，下次启动瞬间打碎阀片。",
+      "first_action_candidate": "",
+      "reference_type": "current module"
+    },
+    {
+      "scope": "压缩机制冷子系统",
+      "failure_mode": "振动过大 (气流啸叫)",
+      "current_rpn": "294",
+      "why_it_matters": "客户: NMR谱图出现边带 (Sidebands)，信噪比差 。后工序: 探头与制冷机耦合困难。",
+      "first_action_candidate": "1. 设计优化: 优化冷媒传输通道的转弯半径 。 2. 流体设计: 优化毛细管长度和管径。 3. 仿真: 进行模态分析，避开压缩机频率。 4.蒸发器到探头...",
+      "reference_type": "current module"
+    },
+    {
+      "scope": "压缩机制冷子系统",
+      "failure_mode": "带液启动 (Liquid Floodback)",
+      "current_rpn": "280",
+      "why_it_matters": "系统：逻辑设定“1028阀先开，5S后开压缩机”。停机期间高压侧液体灌入低压侧，压缩机启动瞬间负荷极大，且有液击风险。",
+      "first_action_candidate": "",
+      "reference_type": "current module"
+    },
+    {
+      "scope": "液氮蒸发子系统",
+      "failure_mode": "盘管内部冰堵",
+      "current_rpn": "280",
+      "why_it_matters": "客户：气流受阻，压力升高，无法制冷。",
+      "first_action_candidate": "自然放置时，输入与输出口增加与空气的隔离装置",
+      "reference_type": "current module"
+    },
+    {
+      "scope": "压缩机制冷子系统",
+      "failure_mode": "冰堵或脏堵",
+      "current_rpn": "240",
+      "why_it_matters": "客户: 制冷失效，压缩机过热保护 。+1后工序: 抽真空时间极长，无法达到背景真空度。",
+      "first_action_candidate": "1. 设计/工艺: 严格定义充氮保护焊接流程参数 。 2.明确真空度指标要求 3..图纸明确清洁度要求，来料检验时对清洁度进行重点检验，焊接前内部增加清洗...",
+      "reference_type": "current module"
+    },
+    {
+      "scope": "压缩机制冷子系统",
+      "failure_mode": "冷量耗散 / 结露",
+      "current_rpn": "150",
+      "why_it_matters": "客户: 制冷效率低，探头外部结霜",
+      "first_action_candidate": "1.增加隔热环，材料采用低热导率材料 (如 G10 或 PEEK) 。 2.优化蒸发器尺寸，增加空气气隙，在蒸发器外侧包裹麦拉膜",
+      "reference_type": "current module"
+    },
+    {
+      "scope": "压缩机制冷子系统",
+      "failure_mode": "泄漏 (焊缝开裂)",
+      "current_rpn": "120",
+      "why_it_matters": "客户: 压缩机不制冷",
+      "first_action_candidate": "增加管路的设计应力应变验证测试",
+      "reference_type": "current module"
+    },
+    {
+      "scope": "压缩机制冷子系统",
+      "failure_mode": "分离失效 (液击)",
+      "current_rpn": "120",
+      "why_it_matters": "对客户： 压缩机阀片断裂。",
+      "first_action_candidate": "规范冷媒的充注工艺，确保充注量不会导致带液",
+      "reference_type": "current module"
+    }
+  ],
+  "suggested_actions": [
+    {
+      "scope": "压缩机制冷子系统",
+      "row_key": "压缩机排气管 / 振动过大 (气流啸叫)",
+      "current_rpn": "294",
+      "recommended_action": "1. 设计优化: 优化冷媒传输通道的转弯半径 。 2. 流体设计: 优化毛细管长度和管径。 3. 仿真: 进行模态分析，避开压缩机频率。 4.蒸发器到探头接口增加隔振",
+      "owner": "李坤",
+      "target_date": "2026-04-30 00:00:00",
+      "confirmation_status": "draft",
+      "reference_type": "current module",
+      "source_case": "CAN400产品DFMEA.xlsx / 变温系统 / row 6"
+    },
+    {
+      "scope": "液氮蒸发子系统",
+      "row_key": "氮气供应系统 / 盘管内部冰堵",
+      "current_rpn": "280",
+      "recommended_action": "自然放置时，输入与输出口增加与空气的隔离装置\n要求输入高纯氮气（说明书）。",
+      "owner": "李坤",
+      "target_date": "2026-04-30 00:00:00",
+      "confirmation_status": "needs expert confirmation",
+      "reference_type": "current module",
+      "source_case": "CAN400产品DFMEA.xlsx / 变温系统 / row 41; CAN400产品DFMEA.xlsx / 变温系统 / row 42; CAN400产品DFMEA.xlsx / 变温系统 / row 43"
+    },
+    {
+      "scope": "压缩机制冷子系统",
+      "row_key": "压缩机排气管 / 冰堵或脏堵",
+      "current_rpn": "240",
+      "recommended_action": "1. 设计/工艺: 严格定义充氮保护焊接流程参数 。 2.明确真空度指标要求 3..图纸明确清洁度要求，来料检验时对清洁度进行重点检验，焊接前内部增加清洗焊接 4.对过滤器型号进行优化选型",
+      "owner": "李坤",
+      "target_date": "2026-04-30 00:00:00",
+      "confirmation_status": "needs expert confirmation",
+      "reference_type": "current module",
+      "source_case": "CAN400产品DFMEA.xlsx / 变温系统 / row 5"
+    },
+    {
+      "scope": "压缩机制冷子系统",
+      "row_key": "压缩机排气管 / 冷量耗散 / 结露",
+      "current_rpn": "150",
+      "recommended_action": "1.增加隔热环，材料采用低热导率材料 (如 G10 或 PEEK) 。 2.优化蒸发器尺寸，增加空气气隙，在蒸发器外侧包裹麦拉膜",
+      "owner": "李坤",
+      "target_date": "2026-04-30 00:00:00",
+      "confirmation_status": "draft",
+      "reference_type": "current module",
+      "source_case": "CAN400产品DFMEA.xlsx / 变温系统 / row 7"
+    },
+    {
+      "scope": "压缩机制冷子系统",
+      "row_key": "压缩机排气管 / 泄漏 (焊缝开裂)",
+      "current_rpn": "120",
+      "recommended_action": "增加管路的设计应力应变验证测试",
+      "owner": "张衡阳",
+      "target_date": "2026-05-30 00:00:00",
+      "confirmation_status": "draft",
+      "reference_type": "current module",
+      "source_case": "CAN400产品DFMEA.xlsx / 变温系统 / row 4"
+    },
+    {
+      "scope": "压缩机制冷子系统",
+      "row_key": "气液分离器 / 分离失效 (液击)",
+      "current_rpn": "120",
+      "recommended_action": "规范冷媒的充注工艺，确保充注量不会导致带液",
+      "owner": "李坤",
+      "target_date": "2026-04-30 00:00:00",
+      "confirmation_status": "draft",
+      "reference_type": "current module",
+      "source_case": "CAN400产品DFMEA.xlsx / 变温系统 / row 8"
+    },
+    {
+      "scope": "液氮蒸发子系统",
+      "row_key": "氮气供应系统 / 波纹管疲劳破裂/穿孔",
+      "current_rpn": "108",
+      "recommended_action": "来料增加氦质谱抽真空漏率检测",
+      "owner": "李坤",
+      "target_date": "2026-06-30 00:00:00",
+      "confirmation_status": "draft",
+      "reference_type": "current module",
+      "source_case": "CAN400产品DFMEA.xlsx / 变温系统 / row 36"
+    },
+    {
+      "scope": "压缩机制冷子系统",
+      "row_key": "控制系统 / 未正常启动或未完全启动",
+      "current_rpn": "90",
+      "recommended_action": "增加出气口温度长期未达到指标后进行报警",
+      "owner": "盛飞洋",
+      "target_date": "2026-03-30 00:00:00",
+      "confirmation_status": "draft",
+      "reference_type": "current module",
+      "source_case": "CAN400产品DFMEA.xlsx / 变温系统 / row 28"
+    },
+    {
+      "scope": "压缩机制冷子系统",
+      "row_key": "控制系统 / 触点粘连 (Stuck ON)",
+      "current_rpn": "63",
+      "recommended_action": "额外增加交流接触器",
+      "owner": "盛飞洋",
+      "target_date": "2026-03-30 00:00:00",
+      "confirmation_status": "draft",
+      "reference_type": "current module",
+      "source_case": "CAN400产品DFMEA.xlsx / 变温系统 / row 31"
+    },
+    {
+      "scope": "液氮蒸发子系统",
+      "row_key": "电气航插 / 密封失效/短路",
+      "current_rpn": "42",
+      "recommended_action": "焊接完之后使用703硅胶进行密封",
+      "owner": "李坤",
+      "target_date": "2026-04-30 00:00:00",
+      "confirmation_status": "draft",
+      "reference_type": "current module",
+      "source_case": "CAN400产品DFMEA.xlsx / 变温系统 / row 48"
+    }
+  ],
+  "source_trace": [
+    {
+      "scope": "压缩机制冷子系统",
+      "row_key": "控制系统 / 液击风险 (Liquid Hammer)",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 25"
+      ]
+    },
+    {
+      "scope": "压缩机制冷子系统",
+      "row_key": "压缩机排气管 / 振动过大 (气流啸叫)",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 6"
+      ]
+    },
+    {
+      "scope": "压缩机制冷子系统",
+      "row_key": "控制系统 / 带液启动 (Liquid Floodback)",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 26"
+      ]
+    },
+    {
+      "scope": "压缩机制冷子系统",
+      "row_key": "压缩机排气管 / 冰堵或脏堵",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 5"
+      ]
+    },
+    {
+      "scope": "压缩机制冷子系统",
+      "row_key": "压缩机排气管 / 冷量耗散 / 结露",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 7"
+      ]
+    },
+    {
+      "scope": "压缩机制冷子系统",
+      "row_key": "压缩机排气管 / 泄漏 (焊缝开裂)",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 4"
+      ]
+    },
+    {
+      "scope": "压缩机制冷子系统",
+      "row_key": "气液分离器 / 分离失效 (液击)",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 8"
+      ]
+    },
+    {
+      "scope": "压缩机制冷子系统",
+      "row_key": "控制系统 / 未正常启动或未完全启动",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 28"
+      ]
+    },
+    {
+      "scope": "压缩机制冷子系统",
+      "row_key": "控制系统 / 触点粘连 (Stuck ON)",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 31"
+      ]
+    },
+    {
+      "scope": "压缩机制冷子系统",
+      "row_key": "结构强度：耐压与密封。 / 本体泄漏 (供应商焊缝)",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 11"
+      ]
+    },
+    {
+      "scope": "压缩机制冷子系统",
+      "row_key": "控制系统 / 读数卡死 (传感器失效)",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 30"
+      ]
+    },
+    {
+      "scope": "压缩机制冷子系统",
+      "row_key": "控制系统 / 电压跌落 (Brownout)",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 32"
+      ]
+    },
+    {
+      "scope": "液氮蒸发子系统",
+      "row_key": "氮气供应系统 / 盘管内部冰堵",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 41",
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 42",
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 43"
+      ]
+    },
+    {
+      "scope": "液氮蒸发子系统",
+      "row_key": "氮气供应系统 / 波纹管疲劳破裂/穿孔",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 36"
+      ]
+    },
+    {
+      "scope": "液氮蒸发子系统",
+      "row_key": "电气航插 / 密封失效/短路",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 48"
+      ]
+    },
+    {
+      "scope": "液氮蒸发子系统",
+      "row_key": "氮气供应系统 / 真空丧失 (漏气)",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 33"
+      ]
+    },
+    {
+      "scope": "液氮蒸发子系统",
+      "row_key": "氮气供应系统 / 加热棒干烧/过热",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 44"
+      ]
+    },
+    {
+      "scope": "液氮蒸发子系统",
+      "row_key": "电气航插 / 密封失效/短路",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 49"
+      ]
+    },
+    {
+      "scope": "液氮蒸发子系统",
+      "row_key": "氮气供应系统 / 真空丧失 (漏气)",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 34",
+        "CAN400产品DFMEA.xlsx / 变温系统 / row 35"
+      ]
+    }
+  ]
+}

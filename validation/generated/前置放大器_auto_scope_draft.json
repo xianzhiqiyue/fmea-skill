@@ -1,0 +1,748 @@
+{
+  "module": "前置放大器",
+  "fmea_type": "DFMEA",
+  "input_text": "示例：我们目前正在设计一套用于 NMR 系统的前置放大器模块，它位于探头与后级射频链路之间，需要在发射和接收两种工作状态下完成保护切换、低噪声放大、功率检测和接口控制。该模块既要在大功率发射瞬间保护低噪声器件不被击穿，也要在接收阶段保持较低噪声系数和稳定增益，同时保证控制模式切换和接口信号在复杂电磁环境下仍然可靠。\n\n前置放大器主要包含以下几个方面：\n\n1、T/R 开关与高功率保护链路：在发射状态下需要隔离高功率射频，保护 LNA 和后续敏感器件；在接收状态下需要快速导通，避免影响接收灵敏度。要求切换器件、保护链路和时序控制在高功率脉冲、热冲击和快速切换条件下仍然可靠，不出现热击穿、响应滞后、保护失效或误动作。\n\n2、低噪声放大链路：需要在接收状态下提供稳定增益和较低噪声系数，并在温度变化、屏蔽条件变化和长期运行中保持一致性。要求放大链路不能因为温漂、偏置波动、自激、屏蔽不足或链路不平衡而导致增益波动、噪声恶化或伪影问题。\n\n3、功率检测与联动保护：需要在异常功率出现时快速切断风险链路，并给出可靠告警。要求耦合器、检波器和联动控制具备足够动态范围和响应速度，避免出现漏保护、误保护或解除保护不及时的问题。\n\n4、工作模式逻辑与控制状态机：模块需要在不同模式之间切换，例如保护模式、观察模式或其他接收/发射相关状态。要求控制逻辑在强电磁干扰、CPU异常、异常态分支覆盖不足或时序竞争条件下，仍能保持安全默认态，不出现逻辑死锁、模式切换失败或错误导通。\n\n5、电源与控制接口：模块需要通过多芯接口获得供电并传输控制信号。要求在供电纹波、线束串扰、屏蔽不足和装配波动条件下，接口仍然稳定，不能因为控制信号被干扰而导致 T/R 开关误动作或模式状态异常。\n\n请基于以上描述识别适合的 DFMEA 分析范围，召回相似案例，生成首版 DFMEA 草稿，并明确指出需要人工确认的评分、控制措施和边界项。",
+  "scopes": [
+    {
+      "name": "T/R与保护子系统",
+      "query_terms": [
+        "T/R",
+        "高功率",
+        "保护",
+        "功率检测",
+        "PIN",
+        "限幅",
+        "联动跳闸",
+        "VSWR",
+        "驻波",
+        "复位",
+        "热管理"
+      ],
+      "extracted_terms": [],
+      "auto_suggested": true,
+      "hit_count": 4,
+      "reason": "matched keywords: T/R / 高功率 / 保护 / 功率检测"
+    },
+    {
+      "name": "低噪声放大与接口子系统",
+      "query_terms": [
+        "LNA",
+        "增益",
+        "接口",
+        "振荡",
+        "N-K",
+        "BNC",
+        "回波损耗"
+      ],
+      "extracted_terms": [
+        "LNA"
+      ],
+      "auto_suggested": true,
+      "hit_count": 3,
+      "reason": "matched keywords: LNA / 增益 / 接口"
+    },
+    {
+      "name": "控制逻辑与供电子系统",
+      "query_terms": [
+        "供电",
+        "串扰",
+        "模式切换",
+        "UNWORK",
+        "OBSERVE",
+        "Watchdog",
+        "DB-37"
+      ],
+      "extracted_terms": [],
+      "auto_suggested": true,
+      "hit_count": 3,
+      "reason": "matched keywords: 供电 / 串扰 / 模式切换"
+    }
+  ],
+  "rows": [
+    {
+      "scope": "T/R与保护子系统",
+      "analysis_object": "异常状态保护 (核心逻辑)",
+      "function": "功率/脉宽/驻波超限时，极速切断射频输出，保护功放与探头。",
+      "failure_mode": "保护动作严重滞后（器件已烧毁才触发）",
+      "effect": "客户：由于5s的检测周期远大于100ms的脉宽，反射功率瞬间击穿末级功率管或毁坏探头。",
+      "severity": "10",
+      "cause": "依赖软件轮询进行异常检测，5s的周期对于微秒级的射频脉冲而言太慢。",
+      "occurrence": "6",
+      "current_controls": "软件轮询检测（周期5s）+ 蜂鸣器告警。",
+      "detection": "8",
+      "rpn": "480",
+      "recommended_actions": "引入纯硬件级联锁保护（Hard Interlock）：采用高速比较器直接切断射频输入开关或偏置电压，响应时间控制在微秒（$\\mu$s）级。5s周期仅用于UI刷新和软件复位逻辑。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "needs expert confirmation",
+      "rating_basis": "S=10 继承自历史案例的后果强度；O=6、D=8 继承自成品 DFMEA，但仍需结合本企业标尺校准；本行属于 direct family reference，仅建议作为补缺参考",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 射频功放 / row 2"
+      ],
+      "max_match_score": 23,
+      "max_scope_hits": 2,
+      "confirmation_reasons": [
+        "该行主要来自跨模块家族类比，需要确认是否适用于当前模块责任范围"
+      ],
+      "reviewer_focus": "确认该类比是否适用于当前模块机理、接口和责任范围；校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "T/R与保护子系统",
+      "analysis_object": "VSWR 失配检测",
+      "function": "精确检测正反向功率，反射>50%或驻波>6关断。",
+      "failure_mode": "宽频段内（5-400MHz）反射功率测量严重失准",
+      "effect": "客户：假报警导致实验频频中断（过保护），或驻波已极大但不报警（漏保护）。",
+      "severity": "9",
+      "cause": "宽带定向耦合器的方向性（Directivity）在低频和高频端衰减严重，无法区分正反向。",
+      "occurrence": "5",
+      "current_controls": "驻波比阈值检测。",
+      "detection": "6",
+      "rpn": "270",
+      "recommended_actions": "已采用分段耦合器或在DSP端对不同频点的耦合度进行频率补偿（Look-up Table）；过滤瞬时尖峰防误报。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "needs expert confirmation",
+      "rating_basis": "S=9 继承自历史案例的后果强度；O=5、D=6 继承自成品 DFMEA，但仍需结合本企业标尺校准；本行属于 direct family reference，仅建议作为补缺参考",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 射频功放 / row 5"
+      ],
+      "max_match_score": 23,
+      "max_scope_hits": 3,
+      "confirmation_reasons": [
+        "该行主要来自跨模块家族类比，需要确认是否适用于当前模块责任范围"
+      ],
+      "reviewer_focus": "确认该类比是否适用于当前模块机理、接口和责任范围；校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "T/R与保护子系统",
+      "analysis_object": "热管理系统",
+      "function": "保障长脉宽下的有效散热，>85℃时保护关断。",
+      "failure_mode": "局部热斑失控，温度传感器未及时感知",
+      "effect": "后工序：老化测试报废率高。 客户：夏天环境温度高时频繁过热死机。",
+      "severity": "7",
+      "cause": "传感器贴装位置距离发热核心（功率管法兰）过远；风扇故障。",
+      "occurrence": "4",
+      "current_controls": "整体温度监测。",
+      "detection": "5",
+      "rpn": "140",
+      "recommended_actions": "热敏电阻需贴紧功率管法兰；已增加风扇转速（RPM）实时监测，转速掉线直接预警。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "needs expert confirmation",
+      "rating_basis": "S=7 继承自历史案例的后果强度；O=4、D=5 继承自成品 DFMEA，但仍需结合本企业标尺校准；本行属于 direct family reference，仅建议作为补缺参考",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 射频功放 / row 6"
+      ],
+      "max_match_score": 17,
+      "max_scope_hits": 2,
+      "confirmation_reasons": [
+        "该行主要来自跨模块家族类比，需要确认是否适用于当前模块责任范围"
+      ],
+      "reviewer_focus": "确认该类比是否适用于当前模块机理、接口和责任范围；校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "T/R与保护子系统",
+      "analysis_object": "",
+      "function": "功率超阈值时关闭射频输入并告警。",
+      "failure_mode": "功率检测耦合器失效或响应过慢",
+      "effect": "",
+      "severity": "9",
+      "cause": "耦合路径阻抗失配；检波器动态范围受限。",
+      "occurrence": "3",
+      "current_controls": "耦合功率监测；手动解除告警。",
+      "detection": "5",
+      "rpn": "135",
+      "recommended_actions": "引入硬件联动跳闸：告警信号不经过上位机，直接硬件拉低功率门控。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "draft",
+      "rating_basis": "S=9 继承自历史案例的后果强度；O=3、D=5 继承自成品 DFMEA，但仍需结合本企业标尺校准",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 前置放大器 / row 4"
+      ],
+      "max_match_score": 26,
+      "max_scope_hits": 1,
+      "confirmation_reasons": [],
+      "reviewer_focus": "校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "T/R与保护子系统",
+      "analysis_object": "",
+      "function": "发射时隔离高功率(300W+)，保护LNA；接收时快速导通。",
+      "failure_mode": "PIN二极管热击穿或响应滞后",
+      "effect": "",
+      "severity": "10",
+      "cause": "散热设计不足；RGP信号边沿抖动或时序竞争。",
+      "occurrence": "3",
+      "current_controls": "交叉PIN管短路引导地；限幅电路。 选用更高功率余量的PIN管",
+      "detection": "4",
+      "rpn": "120",
+      "recommended_actions": "",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "draft",
+      "rating_basis": "S=10 继承自历史案例的后果强度；O=3、D=4 继承自成品 DFMEA，但仍需结合本企业标尺校准",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 前置放大器 / row 2"
+      ],
+      "max_match_score": 32,
+      "max_scope_hits": 3,
+      "confirmation_reasons": [],
+      "reviewer_focus": "校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "T/R与保护子系统",
+      "analysis_object": "故障复位逻辑",
+      "function": "保护触发后，待手动复位重新工作。",
+      "failure_mode": "死板的手动复位导致自动化实验完全瘫痪",
+      "effect": "客户：仅因为极其短暂的脉冲毛刺触发了驻波保护，导致长达几天的实验报废。",
+      "severity": "6",
+      "cause": "一刀切的软件锁定逻辑。 功放链路中对输入脉冲进行平稳、去毛刺处理",
+      "occurrence": "6",
+      "current_controls": "手动复位。",
+      "detection": "3",
+      "rpn": "108",
+      "recommended_actions": "引入智能重试机制（Auto-Recovery）：对于轻微且时间极短的故障（如瞬态VSWR尖峰），允许系统在降功率后自动重试3次，失败后再彻底锁死求助人工。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "needs expert confirmation",
+      "rating_basis": "S=6 继承自历史案例的后果强度；O=6、D=3 继承自成品 DFMEA，但仍需结合本企业标尺校准；本行属于 direct family reference，仅建议作为补缺参考",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 射频功放 / row 7"
+      ],
+      "max_match_score": 26,
+      "max_scope_hits": 3,
+      "confirmation_reasons": [
+        "该行主要来自跨模块家族类比，需要确认是否适用于当前模块责任范围"
+      ],
+      "reviewer_focus": "确认该类比是否适用于当前模块机理、接口和责任范围；校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "低噪声放大与接口子系统",
+      "analysis_object": "",
+      "function": "射频信号稳定传输，低插入损耗。",
+      "failure_mode": "接口在大功率下产生电弧或击穿",
+      "effect": "",
+      "severity": "9",
+      "cause": "同轴线缆中心针位移；接头紧固力矩不一。",
+      "occurrence": "4",
+      "current_controls": "手动紧固；柔性电缆连接。",
+      "detection": "6",
+      "rpn": "216",
+      "recommended_actions": "定期对接口进行电磁回波损耗（Return Loss）测试；使用力矩扳手规定装配标准。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "draft",
+      "rating_basis": "S=9 继承自历史案例的后果强度；O=4、D=6 继承自成品 DFMEA，但仍需结合本企业标尺校准",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 前置放大器 / row 5"
+      ],
+      "max_match_score": 26,
+      "max_scope_hits": 1,
+      "confirmation_reasons": [],
+      "reviewer_focus": "校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "低噪声放大与接口子系统",
+      "analysis_object": "双通道射频放大",
+      "function": "在指定频段提供51±1 dB稳定增益，输出140W/300W线性功率。",
+      "failure_mode": "大动态脉冲下增益压缩或相位失真",
+      "effect": "客户：射频脉冲翻转角不准，NMR信号强度异常，甚至无法激发出信号。",
+      "severity": "8",
+      "cause": "大功率输出时晶体管结温急剧上升，导致跨导变化，引发热记忆效应。",
+      "occurrence": "5",
+      "current_controls": "出厂静态标定51dB。",
+      "detection": "5",
+      "rpn": "200",
+      "recommended_actions": "增加包络反馈或动态偏置控制；使用包络跟踪（Envelope Tracking）技术补偿大功率下的增益压缩。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "needs expert confirmation",
+      "rating_basis": "S=8 继承自历史案例的后果强度；O=5、D=5 继承自成品 DFMEA，但仍需结合本企业标尺校准；本行属于 direct family reference，仅建议作为补缺参考",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 射频功放 / row 3"
+      ],
+      "max_match_score": 17,
+      "max_scope_hits": 1,
+      "confirmation_reasons": [
+        "该行主要来自跨模块家族类比，需要确认是否适用于当前模块责任范围"
+      ],
+      "reviewer_focus": "确认该类比是否适用于当前模块机理、接口和责任范围；校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "低噪声放大与接口子系统",
+      "analysis_object": "射频接收路径 (微弱信号放大)",
+      "function": "接收机提供65dB最大增益，0.5dB精确步进。",
+      "failure_mode": "接收链路非线性失真或提前饱和",
+      "effect": "",
+      "severity": "8",
+      "cause": "大信号恢复时间慢；放大器偏置电压温漂；带内强干扰导致LNA阻塞。",
+      "occurrence": "5",
+      "current_controls": "静态增益校准测试。 优化链路中的自动增益分配方案，ADC采集端增加算法优化采集前信号的线性度",
+      "detection": "4",
+      "rpn": "160",
+      "recommended_actions": "增强动态范围：接收机前端增加极速限幅器（Limiter）-尝试过会引入额外的噪声；选用高P1dB和IP3的低噪声放大器（LNA）-已实施。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "needs expert confirmation",
+      "rating_basis": "S=8 继承自历史案例的后果强度；O=5、D=4 继承自成品 DFMEA，但仍需结合本企业标尺校准；本行属于 direct family reference，仅建议作为补缺参考",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 收发机 / row 4"
+      ],
+      "max_match_score": 17,
+      "max_scope_hits": 2,
+      "confirmation_reasons": [
+        "该行主要来自跨模块家族类比，需要确认是否适用于当前模块责任范围"
+      ],
+      "reviewer_focus": "确认该类比是否适用于当前模块机理、接口和责任范围；校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "低噪声放大与接口子系统",
+      "analysis_object": "",
+      "function": "提供$\\ge$30dB增益，NF$\\le$1.2-1.8dB。",
+      "failure_mode": "增益波动或自激振荡",
+      "effect": "",
+      "severity": "8",
+      "cause": "工作环境温升导致偏置电流漂移；屏蔽腔隔离度不足。",
+      "occurrence": "4",
+      "current_controls": "屏蔽腔设计；金属外壳隔离。链路中对增益进行均衡化设计",
+      "detection": "3",
+      "rpn": "96",
+      "recommended_actions": "增加板载温度补偿电路；优化腔体电磁屏蔽分区。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "draft",
+      "rating_basis": "S=8 继承自历史案例的后果强度；O=4、D=3 继承自成品 DFMEA，但仍需结合本企业标尺校准",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 前置放大器 / row 3"
+      ],
+      "max_match_score": 23,
+      "max_scope_hits": 2,
+      "confirmation_reasons": [],
+      "reviewer_focus": "校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "控制逻辑与供电子系统",
+      "analysis_object": "",
+      "function": "提供稳定供电及控制信号。",
+      "failure_mode": "多芯线束线间干扰（Crosstalk）",
+      "effect": "",
+      "severity": "7",
+      "cause": "控制信号与大电流电源线未分层屏蔽。",
+      "occurrence": "4",
+      "current_controls": "软件滤波处理。",
+      "detection": "5",
+      "rpn": "140",
+      "recommended_actions": "线束采用屏蔽电缆；DB-37接口端增加滤波电容阵列。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "draft",
+      "rating_basis": "S=7 继承自历史案例的后果强度；O=4、D=5 继承自成品 DFMEA，但仍需结合本企业标尺校准",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 前置放大器 / row 7"
+      ],
+      "max_match_score": 20,
+      "max_scope_hits": 1,
+      "confirmation_reasons": [],
+      "reviewer_focus": "校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "控制逻辑与供电子系统",
+      "analysis_object": "",
+      "function": "保护模式切换（UNWORK vs OBSERVE）。",
+      "failure_mode": "逻辑死锁导致模式切换失败",
+      "effect": "",
+      "severity": "8",
+      "cause": "CPU受强电磁脉冲干扰死机；程序逻辑分支未覆盖异常态。",
+      "occurrence": "3",
+      "current_controls": "默认UNWORK模式。",
+      "detection": "5",
+      "rpn": "120",
+      "recommended_actions": "增加物理Watchdog复位电路；关键逻辑采用FPGA硬件状态机。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "draft",
+      "rating_basis": "S=8 继承自历史案例的后果强度；O=3、D=5 继承自成品 DFMEA，但仍需结合本企业标尺校准",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 前置放大器 / row 6"
+      ],
+      "max_match_score": 23,
+      "max_scope_hits": 3,
+      "confirmation_reasons": [],
+      "reviewer_focus": "校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": []
+    }
+  ],
+  "confirmation_queue": [
+    {
+      "scope": "T/R与保护子系统",
+      "row_key": "异常状态保护 (核心逻辑) / 保护动作严重滞后（器件已烧毁才触发）",
+      "why_confirmation_is_needed": "该行主要来自跨模块家族类比，需要确认是否适用于当前模块责任范围",
+      "suggested_reviewer_focus": "确认该类比是否适用于当前模块机理、接口和责任范围；校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 射频功放 / row 2"
+      ]
+    },
+    {
+      "scope": "T/R与保护子系统",
+      "row_key": "VSWR 失配检测 / 宽频段内（5-400MHz）反射功率测量严重失准",
+      "why_confirmation_is_needed": "该行主要来自跨模块家族类比，需要确认是否适用于当前模块责任范围",
+      "suggested_reviewer_focus": "确认该类比是否适用于当前模块机理、接口和责任范围；校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 射频功放 / row 5"
+      ]
+    },
+    {
+      "scope": "T/R与保护子系统",
+      "row_key": "热管理系统 / 局部热斑失控，温度传感器未及时感知",
+      "why_confirmation_is_needed": "该行主要来自跨模块家族类比，需要确认是否适用于当前模块责任范围",
+      "suggested_reviewer_focus": "确认该类比是否适用于当前模块机理、接口和责任范围；校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 射频功放 / row 6"
+      ]
+    },
+    {
+      "scope": "T/R与保护子系统",
+      "row_key": "故障复位逻辑 / 死板的手动复位导致自动化实验完全瘫痪",
+      "why_confirmation_is_needed": "该行主要来自跨模块家族类比，需要确认是否适用于当前模块责任范围",
+      "suggested_reviewer_focus": "确认该类比是否适用于当前模块机理、接口和责任范围；校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 射频功放 / row 7"
+      ]
+    },
+    {
+      "scope": "低噪声放大与接口子系统",
+      "row_key": "双通道射频放大 / 大动态脉冲下增益压缩或相位失真",
+      "why_confirmation_is_needed": "该行主要来自跨模块家族类比，需要确认是否适用于当前模块责任范围",
+      "suggested_reviewer_focus": "确认该类比是否适用于当前模块机理、接口和责任范围；校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 射频功放 / row 3"
+      ]
+    },
+    {
+      "scope": "低噪声放大与接口子系统",
+      "row_key": "射频接收路径 (微弱信号放大) / 接收链路非线性失真或提前饱和",
+      "why_confirmation_is_needed": "该行主要来自跨模块家族类比，需要确认是否适用于当前模块责任范围",
+      "suggested_reviewer_focus": "确认该类比是否适用于当前模块机理、接口和责任范围；校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 收发机 / row 4"
+      ]
+    }
+  ],
+  "top_risks": [
+    {
+      "scope": "T/R与保护子系统",
+      "failure_mode": "保护动作严重滞后（器件已烧毁才触发）",
+      "current_rpn": "480",
+      "why_it_matters": "客户：由于5s的检测周期远大于100ms的脉宽，反射功率瞬间击穿末级功率管或毁坏探头。",
+      "first_action_candidate": "引入纯硬件级联锁保护（Hard Interlock）：采用高速比较器直接切断射频输入开关或偏置电压，响应时间控制在微秒（$\\mu$s）级。5s周期仅用于U...",
+      "reference_type": "direct family reference"
+    },
+    {
+      "scope": "T/R与保护子系统",
+      "failure_mode": "宽频段内（5-400MHz）反射功率测量严重失准",
+      "current_rpn": "270",
+      "why_it_matters": "客户：假报警导致实验频频中断（过保护），或驻波已极大但不报警（漏保护）。",
+      "first_action_candidate": "已采用分段耦合器或在DSP端对不同频点的耦合度进行频率补偿（Look-up Table）；过滤瞬时尖峰防误报。",
+      "reference_type": "direct family reference"
+    },
+    {
+      "scope": "低噪声放大与接口子系统",
+      "failure_mode": "接口在大功率下产生电弧或击穿",
+      "current_rpn": "216",
+      "why_it_matters": "",
+      "first_action_candidate": "定期对接口进行电磁回波损耗（Return Loss）测试；使用力矩扳手规定装配标准。",
+      "reference_type": "current module"
+    },
+    {
+      "scope": "低噪声放大与接口子系统",
+      "failure_mode": "大动态脉冲下增益压缩或相位失真",
+      "current_rpn": "200",
+      "why_it_matters": "客户：射频脉冲翻转角不准，NMR信号强度异常，甚至无法激发出信号。",
+      "first_action_candidate": "增加包络反馈或动态偏置控制；使用包络跟踪（Envelope Tracking）技术补偿大功率下的增益压缩。",
+      "reference_type": "direct family reference"
+    },
+    {
+      "scope": "低噪声放大与接口子系统",
+      "failure_mode": "接收链路非线性失真或提前饱和",
+      "current_rpn": "160",
+      "why_it_matters": "",
+      "first_action_candidate": "增强动态范围：接收机前端增加极速限幅器（Limiter）-尝试过会引入额外的噪声；选用高P1dB和IP3的低噪声放大器（LNA）-已实施。",
+      "reference_type": "direct family reference"
+    },
+    {
+      "scope": "控制逻辑与供电子系统",
+      "failure_mode": "多芯线束线间干扰（Crosstalk）",
+      "current_rpn": "140",
+      "why_it_matters": "",
+      "first_action_candidate": "线束采用屏蔽电缆；DB-37接口端增加滤波电容阵列。",
+      "reference_type": "current module"
+    },
+    {
+      "scope": "T/R与保护子系统",
+      "failure_mode": "局部热斑失控，温度传感器未及时感知",
+      "current_rpn": "140",
+      "why_it_matters": "后工序：老化测试报废率高。 客户：夏天环境温度高时频繁过热死机。",
+      "first_action_candidate": "热敏电阻需贴紧功率管法兰；已增加风扇转速（RPM）实时监测，转速掉线直接预警。",
+      "reference_type": "direct family reference"
+    },
+    {
+      "scope": "T/R与保护子系统",
+      "failure_mode": "功率检测耦合器失效或响应过慢",
+      "current_rpn": "135",
+      "why_it_matters": "",
+      "first_action_candidate": "引入硬件联动跳闸：告警信号不经过上位机，直接硬件拉低功率门控。",
+      "reference_type": "current module"
+    }
+  ],
+  "suggested_actions": [
+    {
+      "scope": "T/R与保护子系统",
+      "row_key": "异常状态保护 (核心逻辑) / 保护动作严重滞后（器件已烧毁才触发）",
+      "current_rpn": "480",
+      "recommended_action": "引入纯硬件级联锁保护（Hard Interlock）：采用高速比较器直接切断射频输入开关或偏置电压，响应时间控制在微秒（$\\mu$s）级。5s周期仅用于UI刷新和软件复位逻辑。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "needs expert confirmation",
+      "reference_type": "direct family reference",
+      "source_case": "CAN400产品DFMEA.xlsx / 射频功放 / row 2"
+    },
+    {
+      "scope": "T/R与保护子系统",
+      "row_key": "VSWR 失配检测 / 宽频段内（5-400MHz）反射功率测量严重失准",
+      "current_rpn": "270",
+      "recommended_action": "已采用分段耦合器或在DSP端对不同频点的耦合度进行频率补偿（Look-up Table）；过滤瞬时尖峰防误报。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "needs expert confirmation",
+      "reference_type": "direct family reference",
+      "source_case": "CAN400产品DFMEA.xlsx / 射频功放 / row 5"
+    },
+    {
+      "scope": "低噪声放大与接口子系统",
+      "row_key": "射频信号稳定传输，低插入损耗。 / 接口在大功率下产生电弧或击穿",
+      "current_rpn": "216",
+      "recommended_action": "定期对接口进行电磁回波损耗（Return Loss）测试；使用力矩扳手规定装配标准。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "draft",
+      "reference_type": "current module",
+      "source_case": "CAN400产品DFMEA.xlsx / 前置放大器 / row 5"
+    },
+    {
+      "scope": "低噪声放大与接口子系统",
+      "row_key": "双通道射频放大 / 大动态脉冲下增益压缩或相位失真",
+      "current_rpn": "200",
+      "recommended_action": "增加包络反馈或动态偏置控制；使用包络跟踪（Envelope Tracking）技术补偿大功率下的增益压缩。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "needs expert confirmation",
+      "reference_type": "direct family reference",
+      "source_case": "CAN400产品DFMEA.xlsx / 射频功放 / row 3"
+    },
+    {
+      "scope": "低噪声放大与接口子系统",
+      "row_key": "射频接收路径 (微弱信号放大) / 接收链路非线性失真或提前饱和",
+      "current_rpn": "160",
+      "recommended_action": "增强动态范围：接收机前端增加极速限幅器（Limiter）-尝试过会引入额外的噪声；选用高P1dB和IP3的低噪声放大器（LNA）-已实施。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "needs expert confirmation",
+      "reference_type": "direct family reference",
+      "source_case": "CAN400产品DFMEA.xlsx / 收发机 / row 4"
+    },
+    {
+      "scope": "控制逻辑与供电子系统",
+      "row_key": "提供稳定供电及控制信号。 / 多芯线束线间干扰（Crosstalk）",
+      "current_rpn": "140",
+      "recommended_action": "线束采用屏蔽电缆；DB-37接口端增加滤波电容阵列。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "draft",
+      "reference_type": "current module",
+      "source_case": "CAN400产品DFMEA.xlsx / 前置放大器 / row 7"
+    },
+    {
+      "scope": "T/R与保护子系统",
+      "row_key": "热管理系统 / 局部热斑失控，温度传感器未及时感知",
+      "current_rpn": "140",
+      "recommended_action": "热敏电阻需贴紧功率管法兰；已增加风扇转速（RPM）实时监测，转速掉线直接预警。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "needs expert confirmation",
+      "reference_type": "direct family reference",
+      "source_case": "CAN400产品DFMEA.xlsx / 射频功放 / row 6"
+    },
+    {
+      "scope": "T/R与保护子系统",
+      "row_key": "功率超阈值时关闭射频输入并告警。 / 功率检测耦合器失效或响应过慢",
+      "current_rpn": "135",
+      "recommended_action": "引入硬件联动跳闸：告警信号不经过上位机，直接硬件拉低功率门控。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "draft",
+      "reference_type": "current module",
+      "source_case": "CAN400产品DFMEA.xlsx / 前置放大器 / row 4"
+    },
+    {
+      "scope": "控制逻辑与供电子系统",
+      "row_key": "保护模式切换（UNWORK vs OBSERVE）。 / 逻辑死锁导致模式切换失败",
+      "current_rpn": "120",
+      "recommended_action": "增加物理Watchdog复位电路；关键逻辑采用FPGA硬件状态机。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "draft",
+      "reference_type": "current module",
+      "source_case": "CAN400产品DFMEA.xlsx / 前置放大器 / row 6"
+    },
+    {
+      "scope": "T/R与保护子系统",
+      "row_key": "故障复位逻辑 / 死板的手动复位导致自动化实验完全瘫痪",
+      "current_rpn": "108",
+      "recommended_action": "引入智能重试机制（Auto-Recovery）：对于轻微且时间极短的故障（如瞬态VSWR尖峰），允许系统在降功率后自动重试3次，失败后再彻底锁死求助人工。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "needs expert confirmation",
+      "reference_type": "direct family reference",
+      "source_case": "CAN400产品DFMEA.xlsx / 射频功放 / row 7"
+    },
+    {
+      "scope": "低噪声放大与接口子系统",
+      "row_key": "提供$\\ge$30dB增益，NF$\\le$1.2-1.8dB。 / 增益波动或自激振荡",
+      "current_rpn": "96",
+      "recommended_action": "增加板载温度补偿电路；优化腔体电磁屏蔽分区。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "draft",
+      "reference_type": "current module",
+      "source_case": "CAN400产品DFMEA.xlsx / 前置放大器 / row 3"
+    }
+  ],
+  "source_trace": [
+    {
+      "scope": "T/R与保护子系统",
+      "row_key": "异常状态保护 (核心逻辑) / 保护动作严重滞后（器件已烧毁才触发）",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 射频功放 / row 2"
+      ]
+    },
+    {
+      "scope": "T/R与保护子系统",
+      "row_key": "VSWR 失配检测 / 宽频段内（5-400MHz）反射功率测量严重失准",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 射频功放 / row 5"
+      ]
+    },
+    {
+      "scope": "T/R与保护子系统",
+      "row_key": "热管理系统 / 局部热斑失控，温度传感器未及时感知",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 射频功放 / row 6"
+      ]
+    },
+    {
+      "scope": "T/R与保护子系统",
+      "row_key": "功率超阈值时关闭射频输入并告警。 / 功率检测耦合器失效或响应过慢",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 前置放大器 / row 4"
+      ]
+    },
+    {
+      "scope": "T/R与保护子系统",
+      "row_key": "发射时隔离高功率(300W+)，保护LNA；接收时快速导通。 / PIN二极管热击穿或响应滞后",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 前置放大器 / row 2"
+      ]
+    },
+    {
+      "scope": "T/R与保护子系统",
+      "row_key": "故障复位逻辑 / 死板的手动复位导致自动化实验完全瘫痪",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 射频功放 / row 7"
+      ]
+    },
+    {
+      "scope": "低噪声放大与接口子系统",
+      "row_key": "射频信号稳定传输，低插入损耗。 / 接口在大功率下产生电弧或击穿",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 前置放大器 / row 5"
+      ]
+    },
+    {
+      "scope": "低噪声放大与接口子系统",
+      "row_key": "双通道射频放大 / 大动态脉冲下增益压缩或相位失真",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 射频功放 / row 3"
+      ]
+    },
+    {
+      "scope": "低噪声放大与接口子系统",
+      "row_key": "射频接收路径 (微弱信号放大) / 接收链路非线性失真或提前饱和",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 收发机 / row 4"
+      ]
+    },
+    {
+      "scope": "低噪声放大与接口子系统",
+      "row_key": "提供$\\ge$30dB增益，NF$\\le$1.2-1.8dB。 / 增益波动或自激振荡",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 前置放大器 / row 3"
+      ]
+    },
+    {
+      "scope": "控制逻辑与供电子系统",
+      "row_key": "提供稳定供电及控制信号。 / 多芯线束线间干扰（Crosstalk）",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 前置放大器 / row 7"
+      ]
+    },
+    {
+      "scope": "控制逻辑与供电子系统",
+      "row_key": "保护模式切换（UNWORK vs OBSERVE）。 / 逻辑死锁导致模式切换失败",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 前置放大器 / row 6"
+      ]
+    }
+  ]
+}

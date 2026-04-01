@@ -1,0 +1,66 @@
+{
+  "rf_power_amp_review_round_1": {
+    "description": "Example review writeback for the RF power amplifier draft. Demonstrates score confirmation, owner assignment, scope move, and row confirmation.",
+    "source_artifact_hint": "validation/openclaw_runs/射频功放_auto_scope_draft.json",
+    "actions": [
+      {
+        "action_id": "confirm_reference_fit",
+        "target": {
+          "scope": "放大与通道切换子系统",
+          "row_key": "射频接收路径 (微弱信号放大) / 接收链路非线性失真或提前饱和"
+        },
+        "decision": "keep",
+        "review_comment": "评审确认该条失效模式对当前模块仍有参考价值，保留为家族参考。"
+      },
+      {
+        "action_id": "confirm_scores",
+        "target": {
+          "scope": "放大与通道切换子系统",
+          "row_key": "射频接收路径 (微弱信号放大) / 接收链路非线性失真或提前饱和"
+        },
+        "severity": "8",
+        "occurrence": "4",
+        "detection": "4",
+        "rating_basis": "经射频评审确认：按当前保护链路和出厂测试能力校准 S=8、O=4、D=4。",
+        "review_comment": "已补齐并确认评分。"
+      },
+      {
+        "action_id": "set_owner_target",
+        "target": {
+          "scope": "放大与通道切换子系统",
+          "row_key": "射频接收路径 (微弱信号放大) / 接收链路非线性失真或提前饱和"
+        },
+        "owner": "射频硬件负责人",
+        "target_date": "2026-04-18",
+        "review_comment": "纳入本轮整改闭环。"
+      },
+      {
+        "action_id": "confirm_row",
+        "target": {
+          "scope": "放大与通道切换子系统",
+          "row_key": "射频接收路径 (微弱信号放大) / 接收链路非线性失真或提前饱和"
+        },
+        "review_comment": "参考适用性、评分和责任节点均已确认。"
+      },
+      {
+        "action_id": "confirm_scope_owner",
+        "target": {
+          "scope": "异常保护与联锁子系统",
+          "row_key": "故障复位逻辑 / 死板的手动复位导致自动化实验完全瘫痪"
+        },
+        "new_scope": "热管理与复位子系统",
+        "review_comment": "复位策略与自动恢复归口到热管理与复位责任域。"
+      },
+      {
+        "action_id": "set_owner_target",
+        "target": {
+          "scope": "热管理与复位子系统",
+          "row_key": "故障复位逻辑 / 死板的手动复位导致自动化实验完全瘫痪"
+        },
+        "owner": "控制逻辑负责人",
+        "target_date": "2026-04-22",
+        "review_comment": "移动 scope 后补齐责任人和计划节点。"
+      }
+    ]
+  }
+}

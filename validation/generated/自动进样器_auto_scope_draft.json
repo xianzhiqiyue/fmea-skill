@@ -1,0 +1,805 @@
+{
+  "module": "自动进样器",
+  "fmea_type": "DFMEA",
+  "input_text": "示例：我们目前正在设计一套用于 NMR 场景的自动进样器系统，目标是在储样、抓取、转运、进样和退样过程中，实现样品管及转子的自动搬运，减少人工干预，并保证样品在整个运动链路中的安全性、一致性和定位精度。该模块需要与储样筒、进样筒以及控制系统协同工作，既要完成机械运动，也要完成位置检测和气路控制。\n\n自动进样器包含以下几个关键部分：\n\n1、整体连接与供电：系统通过控制接口为各运动模块、传感器和执行器提供稳定供电与信号传输，要求设备在连续动作、震动和长时间运行下仍能保持可靠连接，不因接口松动导致中途停机、断联或动作失控。\n\n2、竖直/水平气缸运动机构：自动进样器通过竖直和水平两个方向的气缸驱动样品完成抓取、平移和放置，要求滑块运动平稳，定位过程无明显晃动、偏摆或卡滞，能够精准把样品送到储样筒孔位、转盘孔位和进样筒交接位置。\n\n3、位置调节与固定结构：系统在储样筒、夹爪、转盘和进样筒等多个交接点之间需要保持孔位和轨迹的一致性。要求装调后位置能够长期稳定，不会因为震动、温度变化或长期使用而发生偏移，否则可能影响样品交接成功率。\n\n4、储样筒防掉落机构：储样筒需要在待抓取状态下可靠限制样品管位置，防止样品在未执行抓取或释放动作时自行滑落。该机构由机械限位件、弹性元件和驱动件配合实现，既要保证卡持可靠，也要在放行时动作顺畅。\n\n5、夹爪抓取模块：夹爪需要可靠抓取样品管和转子，在升降、横移和交接过程中不出现打滑、偏斜或掉落。夹持结构需要兼顾无损接触、耐磨性和长期重复动作后的稳定性。\n\n6、转盘检测模块：系统需要准确识别转盘 4 圈 72 个孔位内样品管的有无状态，为抓取、放置和路径调度提供判断依据。要求检测方案对透明样品管、现场灰尘和长期使用条件有足够鲁棒性，避免误判、漏判或信号不稳定。\n\n7、进样/退样气路控制：自动进样器在与进样筒协同时，需要通过气路实现缓冲、抬升或放样等动作。要求气压输出稳定，既不能让样品自由落体，也不能让样品因气流过猛而发生碰撞或损伤；同时系统应能兼顾不同气路支路、接头阻力和现场气源波动带来的影响。\n\n请基于以上模块描述，识别适合的 DFMEA 分析范围，召回相似历史案例，按严重度 S、发生频次 O、可探测度 D 的 10 分制形成首版 DFMEA 草稿，并给出建议措施、措施后的评分以及需要人工确认的项目。",
+  "scopes": [
+    {
+      "name": "运动与抓取子系统",
+      "query_terms": [
+        "气缸",
+        "滑块",
+        "夹爪",
+        "储样筒",
+        "进样筒",
+        "转盘",
+        "样品管",
+        "扭簧",
+        "导轨",
+        "定位销"
+      ],
+      "extracted_terms": [],
+      "auto_suggested": true,
+      "hit_count": 7,
+      "reason": "matched keywords: 气缸 / 滑块 / 夹爪 / 储样筒 / 进样筒 / 转盘 / 样品管"
+    },
+    {
+      "name": "检测与气路控制子系统",
+      "query_terms": [
+        "检测",
+        "传感器",
+        "气路",
+        "气压",
+        "供电",
+        "接口",
+        "光电",
+        "对射",
+        "电磁阀",
+        "减压阀"
+      ],
+      "extracted_terms": [
+        "传感器"
+      ],
+      "auto_suggested": true,
+      "hit_count": 6,
+      "reason": "matched keywords: 检测 / 传感器 / 气路 / 气压 / 供电 / 接口"
+    }
+  ],
+  "rows": [
+    {
+      "scope": "运动与抓取子系统",
+      "analysis_object": "竖直/水平气缸运动",
+      "function": "精准驱动样品到达指定位置，滑块运行平稳，无左右或侧向晃动。",
+      "failure_mode": "大气缸滑块左右晃动加剧，位置跑偏",
+      "effect": "",
+      "severity": "8",
+      "cause": "POM材质滑块长期摩擦磨损；仅靠顶丝补偿无法抵抗长期侧向力。",
+      "occurrence": "7",
+      "current_controls": "顶丝将POM滑块顶在气缸两侧防晃。",
+      "detection": "6",
+      "rpn": "336",
+      "recommended_actions": "结构升级：不要让气缸承受侧向和导向力。增加外部高精度直线导轨（如THK/银泰），气缸仅作驱动源。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "draft",
+      "rating_basis": "S=8 继承自历史案例的后果强度；O=7、D=6 继承自成品 DFMEA，但仍需结合本企业标尺校准",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 自动进样器 / row 3"
+      ],
+      "max_match_score": 32,
+      "max_scope_hits": 2,
+      "confirmation_reasons": [],
+      "reviewer_focus": "校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "运动与抓取子系统",
+      "analysis_object": "储样筒防掉落机构",
+      "function": "塞子在扭簧作用下可靠卡住样品管防掉落，在针型气缸驱动下顺畅退回放行。",
+      "failure_mode": "跷跷板扭簧疲劳断裂或弹性衰减",
+      "effect": "",
+      "severity": "9",
+      "cause": "弹簧长期高频次受交变应力导致金属疲劳。",
+      "occurrence": "4",
+      "current_controls": "针型气缸动作控制（但无扭簧状态检测）。",
+      "detection": "8",
+      "rpn": "288",
+      "recommended_actions": "增加闭环检测：更换高疲劳寿命弹簧；在跷跷板塞子侧增加一个微型光电或接近开关，直接检测“塞子是否到位闭合”。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "draft",
+      "rating_basis": "S=9 继承自历史案例的后果强度；O=4、D=8 继承自成品 DFMEA，但仍需结合本企业标尺校准",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 自动进样器 / row 5"
+      ],
+      "max_match_score": 23,
+      "max_scope_hits": 4,
+      "confirmation_reasons": [],
+      "reviewer_focus": "校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "运动与抓取子系统",
+      "analysis_object": "夹爪抓取模块",
+      "function": "通过PEEK材质V型槽可靠夹持样品管及转子，在升降/平移中不滑脱、不掉落。",
+      "failure_mode": "气爪抓取力不足或PEEK材质磨损打滑",
+      "effect": "",
+      "severity": "8",
+      "cause": "气路气压波动；PEEK材料表面长期摩擦变光滑。",
+      "occurrence": "4",
+      "current_controls": "坦克链供气；V型结构件设计。",
+      "detection": "5",
+      "rpn": "160",
+      "recommended_actions": "增加反馈与防滑：V型槽内贴敷高摩擦系数且不掉屑的弹性材料；气源入口增加数字压力开关，气压低时报警并禁止动作。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "draft",
+      "rating_basis": "S=8 继承自历史案例的后果强度；O=4、D=5 继承自成品 DFMEA，但仍需结合本企业标尺校准",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 自动进样器 / row 6"
+      ],
+      "max_match_score": 17,
+      "max_scope_hits": 2,
+      "confirmation_reasons": [],
+      "reviewer_focus": "校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "运动与抓取子系统",
+      "analysis_object": "气动及筒体组件",
+      "function": "样品管平稳上升与下降",
+      "failure_mode": "样品管在进样筒内卡阻，无法升降",
+      "effect": "后工序（进样流程）：流程中断，无法将样品送达测试区。",
+      "severity": "7",
+      "cause": "1. 进样筒内壁粗糙或加工变形；",
+      "occurrence": "4",
+      "current_controls": "1. 图纸要求气源洁净；",
+      "detection": "5",
+      "rpn": "140",
+      "recommended_actions": "1. 图纸明确进样筒内壁的光洁度(Ra)和直线度公差；",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "needs expert confirmation",
+      "rating_basis": "S=7 继承自历史案例的后果强度；O=4、D=5 继承自成品 DFMEA，但仍需结合本企业标尺校准；本行属于 direct family reference，仅建议作为补缺参考",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 进样筒 / row 7"
+      ],
+      "max_match_score": 14,
+      "max_scope_hits": 2,
+      "confirmation_reasons": [
+        "该行主要来自跨模块家族类比，需要确认是否适用于当前模块责任范围"
+      ],
+      "reviewer_focus": "确认该类比是否适用于当前模块机理、接口和责任范围；校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "运动与抓取子系统",
+      "analysis_object": "气动及筒体组件",
+      "function": "样品管平稳下降，落至匀场线圈顶部锥孔处",
+      "failure_mode": "样品管下降速度过快/直接砸底",
+      "effect": "客户：设备宕机，需支付高昂维修费。",
+      "severity": "",
+      "cause": "2. 进样筒内壁气道漏气；",
+      "occurrence": "",
+      "current_controls": "",
+      "detection": "",
+      "rpn": "",
+      "recommended_actions": "2. 软件增加“软着陆”缓降控制算法。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "needs expert confirmation",
+      "rating_basis": "S 未在源案例中明确给出；O/D 未完整继承，需专家补齐评分依据；本行属于 direct family reference，仅建议作为补缺参考",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 进样筒 / row 5"
+      ],
+      "max_match_score": 14,
+      "max_scope_hits": 2,
+      "confirmation_reasons": [
+        "源案例缺少完整评分字段：S/O/D",
+        "该行主要来自跨模块家族类比，需要确认是否适用于当前模块责任范围"
+      ],
+      "reviewer_focus": "确认该类比是否适用于当前模块机理、接口和责任范围；补齐 O/D 与现行检测控制",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "运动与抓取子系统",
+      "analysis_object": "气动及筒体组件",
+      "function": "样品管平稳上升与下降",
+      "failure_mode": "样品管在进样筒内卡阻，无法升降",
+      "effect": "客户：无法进行后续测试实验。",
+      "severity": "",
+      "cause": "2. 气源不洁净导致灰尘/杂质堆积；\n3. 气流推力不足。",
+      "occurrence": "",
+      "current_controls": "2. 机加工常规公差控制。",
+      "detection": "",
+      "rpn": "",
+      "recommended_actions": "2. 建议客户增加气源前端的精密过滤装置。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "needs expert confirmation",
+      "rating_basis": "S 未在源案例中明确给出；O/D 未完整继承，需专家补齐评分依据；本行属于 direct family reference，仅建议作为补缺参考",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 进样筒 / row 8",
+        "CAN400产品DFMEA.xlsx / 进样筒 / row 9"
+      ],
+      "max_match_score": 14,
+      "max_scope_hits": 2,
+      "confirmation_reasons": [
+        "源案例缺少完整评分字段：S/O/D",
+        "该行主要来自跨模块家族类比，需要确认是否适用于当前模块责任范围"
+      ],
+      "reviewer_focus": "确认该类比是否适用于当前模块机理、接口和责任范围；补齐 O/D 与现行检测控制",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "运动与抓取子系统",
+      "analysis_object": "转子与气动组件",
+      "function": "带动样品管旋转",
+      "failure_mode": "样品管完全不旋转",
+      "effect": "客户：测试结果无效。",
+      "severity": "",
+      "cause": "2. 转子与进样筒卡死。",
+      "occurrence": "",
+      "current_controls": "",
+      "detection": "",
+      "rpn": "",
+      "recommended_actions": "",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "needs expert confirmation",
+      "rating_basis": "S 未在源案例中明确给出；O/D 未完整继承，需专家补齐评分依据；本行属于 direct family reference，仅建议作为补缺参考",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 进样筒 / row 14"
+      ],
+      "max_match_score": 14,
+      "max_scope_hits": 2,
+      "confirmation_reasons": [
+        "源案例缺少完整评分字段：S/O/D",
+        "该行主要来自跨模块家族类比，需要确认是否适用于当前模块责任范围"
+      ],
+      "reviewer_focus": "确认该类比是否适用于当前模块机理、接口和责任范围；补齐 O/D 与现行检测控制",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "检测与气路控制子系统",
+      "analysis_object": "整体连接与供电",
+      "function": "提供稳定的电力与控制信号传输，确保各运动模块与传感器的正常通讯与供电。",
+      "failure_mode": "Type-C接口松动或接触不良",
+      "effect": "",
+      "severity": "9",
+      "cause": "设备运行时的持续震动导致接口物理松脱。",
+      "occurrence": "5",
+      "current_controls": "无特殊防脱落设计。",
+      "detection": "5",
+      "rpn": "225",
+      "recommended_actions": "更改接口标准：废弃Type-C，改用带螺纹锁紧的工业航空插头（如M8/M12）或带螺丝固定的端子排。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "draft",
+      "rating_basis": "S=9 继承自历史案例的后果强度；O=5、D=5 继承自成品 DFMEA，但仍需结合本企业标尺校准",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 自动进样器 / row 2"
+      ],
+      "max_match_score": 20,
+      "max_scope_hits": 3,
+      "confirmation_reasons": [],
+      "reviewer_focus": "校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "检测与气路控制子系统",
+      "analysis_object": "进/退样气路控制",
+      "function": "进样提供缓冲气防止自由落体；退样提供适宜抬升气将转子安全吹至储样筒。",
+      "failure_mode": "退样时底部抬升吹气气压过大/过小",
+      "effect": "",
+      "severity": "7",
+      "cause": "气源总压波动；快拆接头或深小孔气阻变化。",
+      "occurrence": "4",
+      "current_controls": "电磁阀控制，定制化气路分割。",
+      "detection": "5",
+      "rpn": "140",
+      "recommended_actions": "增加精密调压与缓冲：在抬升气路上单独增加高精度减压阀；储样筒顶部增加物理柔性缓冲垫（如硅胶垫）。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "draft",
+      "rating_basis": "S=7 继承自历史案例的后果强度；O=4、D=5 继承自成品 DFMEA，但仍需结合本企业标尺校准",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 自动进样器 / row 8"
+      ],
+      "max_match_score": 23,
+      "max_scope_hits": 2,
+      "confirmation_reasons": [],
+      "reviewer_focus": "校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "检测与气路控制子系统",
+      "analysis_object": "气动及筒体组件",
+      "function": "样品管平稳下降，落至匀场线圈顶部锥孔处",
+      "failure_mode": "样品管下降速度过快/直接砸底",
+      "effect": "后工序（探头检测）：样品管破裂导致样品泄漏，严重污染甚至损坏昂贵的探头。",
+      "severity": "8",
+      "cause": "1. 缓冲气罐气压不足或失效；",
+      "occurrence": "4",
+      "current_controls": "气路设计中引入了缓冲气罐防止冲击。",
+      "detection": "4",
+      "rpn": "128",
+      "recommended_actions": "1. 增加气压传感器实时监控气流压力，异常时GLCB触发闭锁；",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "needs expert confirmation",
+      "rating_basis": "S=8 继承自历史案例的后果强度；O=4、D=4 继承自成品 DFMEA，但仍需结合本企业标尺校准；本行属于 direct family reference，仅建议作为补缺参考",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 进样筒 / row 4"
+      ],
+      "max_match_score": 20,
+      "max_scope_hits": 2,
+      "confirmation_reasons": [
+        "该行主要来自跨模块家族类比，需要确认是否适用于当前模块责任范围",
+        "scope 归属存在边界，当前放在本 scope，但也可能属于：运动与抓取子系统"
+      ],
+      "reviewer_focus": "确认 scope 归属与责任边界；确认该类比是否适用于当前模块机理、接口和责任范围；校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": [
+        "运动与抓取子系统"
+      ]
+    },
+    {
+      "scope": "检测与气路控制子系统",
+      "analysis_object": "转盘检测模块",
+      "function": "准确检测转盘4圈72个孔位内样品管的有无情况，无漏报或误报。",
+      "failure_mode": "底部光电传感器误判样品有无",
+      "effect": "",
+      "severity": "7",
+      "cause": "玻璃样品管透明度高，反光/折射导致光电开关失效；底部孔体积灰。",
+      "occurrence": "5",
+      "current_controls": "发射接收型对射光电。",
+      "detection": "3",
+      "rpn": "105",
+      "recommended_actions": "优化传感器：选用专门针对透明物体的同轴偏振反射传感器，或加入超声波传感器辅助判断；增加定期清洁维护规程。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "draft",
+      "rating_basis": "S=7 继承自历史案例的后果强度；O=5、D=3 继承自成品 DFMEA，但仍需结合本企业标尺校准",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 自动进样器 / row 7"
+      ],
+      "max_match_score": 23,
+      "max_scope_hits": 3,
+      "confirmation_reasons": [],
+      "reviewer_focus": "校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "检测与气路控制子系统",
+      "analysis_object": "光电系统 (传感器)",
+      "function": "准确探测样品管/转子位置及转速",
+      "failure_mode": "传感器信号丢失或误报",
+      "effect": "后工序（动作执行）：GLCB接收错误信号，导致提前切断缓冲气或错误喷气。",
+      "severity": "8",
+      "cause": "1. 光纤头被灰尘遮挡；",
+      "occurrence": "3",
+      "current_controls": "采用机加工光纤传输信号，避免电气干扰。",
+      "detection": "4",
+      "rpn": "96",
+      "recommended_actions": "1. 进样筒顶部和底部的光纤探头处增加防尘结构设计；",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "needs expert confirmation",
+      "rating_basis": "S=8 继承自历史案例的后果强度；O=3、D=4 继承自成品 DFMEA，但仍需结合本企业标尺校准；本行属于 direct family reference，仅建议作为补缺参考",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 进样筒 / row 15"
+      ],
+      "max_match_score": 14,
+      "max_scope_hits": 2,
+      "confirmation_reasons": [
+        "该行主要来自跨模块家族类比，需要确认是否适用于当前模块责任范围"
+      ],
+      "reviewer_focus": "确认该类比是否适用于当前模块机理、接口和责任范围；校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "boundary_scopes": []
+    },
+    {
+      "scope": "检测与气路控制子系统",
+      "analysis_object": "光电系统 (传感器)",
+      "function": "准确探测样品管/转子位置及转速",
+      "failure_mode": "传感器信号丢失或误报",
+      "effect": "客户：可能引发“飞管”或砸碎管的安全隐患。",
+      "severity": "",
+      "cause": "2. 机加工光纤内部断裂导致衰减；\n3. 环境光干扰。",
+      "occurrence": "",
+      "current_controls": "",
+      "detection": "",
+      "rpn": "",
+      "recommended_actions": "2. 软件增加防呆逻辑（如：超时未检测到信号自动切入安全状态）。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "needs expert confirmation",
+      "rating_basis": "S 未在源案例中明确给出；O/D 未完整继承，需专家补齐评分依据；本行属于 direct family reference，仅建议作为补缺参考",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 进样筒 / row 16",
+        "CAN400产品DFMEA.xlsx / 进样筒 / row 17"
+      ],
+      "max_match_score": 17,
+      "max_scope_hits": 2,
+      "confirmation_reasons": [
+        "源案例缺少完整评分字段：S/O/D",
+        "该行主要来自跨模块家族类比，需要确认是否适用于当前模块责任范围"
+      ],
+      "reviewer_focus": "确认该类比是否适用于当前模块机理、接口和责任范围；补齐 O/D 与现行检测控制",
+      "boundary_scopes": []
+    }
+  ],
+  "confirmation_queue": [
+    {
+      "scope": "运动与抓取子系统",
+      "row_key": "气动及筒体组件 / 样品管在进样筒内卡阻，无法升降",
+      "why_confirmation_is_needed": "该行主要来自跨模块家族类比，需要确认是否适用于当前模块责任范围",
+      "suggested_reviewer_focus": "确认该类比是否适用于当前模块机理、接口和责任范围；校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 进样筒 / row 7"
+      ]
+    },
+    {
+      "scope": "运动与抓取子系统",
+      "row_key": "气动及筒体组件 / 样品管下降速度过快/直接砸底",
+      "why_confirmation_is_needed": "源案例缺少完整评分字段：S/O/D；该行主要来自跨模块家族类比，需要确认是否适用于当前模块责任范围",
+      "suggested_reviewer_focus": "确认该类比是否适用于当前模块机理、接口和责任范围；补齐 O/D 与现行检测控制",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 进样筒 / row 5"
+      ]
+    },
+    {
+      "scope": "运动与抓取子系统",
+      "row_key": "气动及筒体组件 / 样品管在进样筒内卡阻，无法升降",
+      "why_confirmation_is_needed": "源案例缺少完整评分字段：S/O/D；该行主要来自跨模块家族类比，需要确认是否适用于当前模块责任范围",
+      "suggested_reviewer_focus": "确认该类比是否适用于当前模块机理、接口和责任范围；补齐 O/D 与现行检测控制",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 进样筒 / row 8",
+        "CAN400产品DFMEA.xlsx / 进样筒 / row 9"
+      ]
+    },
+    {
+      "scope": "运动与抓取子系统",
+      "row_key": "转子与气动组件 / 样品管完全不旋转",
+      "why_confirmation_is_needed": "源案例缺少完整评分字段：S/O/D；该行主要来自跨模块家族类比，需要确认是否适用于当前模块责任范围",
+      "suggested_reviewer_focus": "确认该类比是否适用于当前模块机理、接口和责任范围；补齐 O/D 与现行检测控制",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 进样筒 / row 14"
+      ]
+    },
+    {
+      "scope": "检测与气路控制子系统",
+      "row_key": "气动及筒体组件 / 样品管下降速度过快/直接砸底",
+      "why_confirmation_is_needed": "该行主要来自跨模块家族类比，需要确认是否适用于当前模块责任范围；scope 归属存在边界，当前放在本 scope，但也可能属于：运动与抓取子系统",
+      "suggested_reviewer_focus": "确认 scope 归属与责任边界；确认该类比是否适用于当前模块机理、接口和责任范围；校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 进样筒 / row 4"
+      ]
+    },
+    {
+      "scope": "检测与气路控制子系统",
+      "row_key": "光电系统 (传感器) / 传感器信号丢失或误报",
+      "why_confirmation_is_needed": "该行主要来自跨模块家族类比，需要确认是否适用于当前模块责任范围",
+      "suggested_reviewer_focus": "确认该类比是否适用于当前模块机理、接口和责任范围；校准 O/D 与实际保护、测试和筛选能力是否匹配",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 进样筒 / row 15"
+      ]
+    },
+    {
+      "scope": "检测与气路控制子系统",
+      "row_key": "光电系统 (传感器) / 传感器信号丢失或误报",
+      "why_confirmation_is_needed": "源案例缺少完整评分字段：S/O/D；该行主要来自跨模块家族类比，需要确认是否适用于当前模块责任范围",
+      "suggested_reviewer_focus": "确认该类比是否适用于当前模块机理、接口和责任范围；补齐 O/D 与现行检测控制",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 进样筒 / row 16",
+        "CAN400产品DFMEA.xlsx / 进样筒 / row 17"
+      ]
+    }
+  ],
+  "top_risks": [
+    {
+      "scope": "运动与抓取子系统",
+      "failure_mode": "大气缸滑块左右晃动加剧，位置跑偏",
+      "current_rpn": "336",
+      "why_it_matters": "",
+      "first_action_candidate": "结构升级：不要让气缸承受侧向和导向力。增加外部高精度直线导轨（如THK/银泰），气缸仅作驱动源。",
+      "reference_type": "current module"
+    },
+    {
+      "scope": "运动与抓取子系统",
+      "failure_mode": "跷跷板扭簧疲劳断裂或弹性衰减",
+      "current_rpn": "288",
+      "why_it_matters": "",
+      "first_action_candidate": "增加闭环检测：更换高疲劳寿命弹簧；在跷跷板塞子侧增加一个微型光电或接近开关，直接检测“塞子是否到位闭合”。",
+      "reference_type": "current module"
+    },
+    {
+      "scope": "检测与气路控制子系统",
+      "failure_mode": "Type-C接口松动或接触不良",
+      "current_rpn": "225",
+      "why_it_matters": "",
+      "first_action_candidate": "更改接口标准：废弃Type-C，改用带螺纹锁紧的工业航空插头（如M8/M12）或带螺丝固定的端子排。",
+      "reference_type": "current module"
+    },
+    {
+      "scope": "运动与抓取子系统",
+      "failure_mode": "气爪抓取力不足或PEEK材质磨损打滑",
+      "current_rpn": "160",
+      "why_it_matters": "",
+      "first_action_candidate": "增加反馈与防滑：V型槽内贴敷高摩擦系数且不掉屑的弹性材料；气源入口增加数字压力开关，气压低时报警并禁止动作。",
+      "reference_type": "current module"
+    },
+    {
+      "scope": "检测与气路控制子系统",
+      "failure_mode": "退样时底部抬升吹气气压过大/过小",
+      "current_rpn": "140",
+      "why_it_matters": "",
+      "first_action_candidate": "增加精密调压与缓冲：在抬升气路上单独增加高精度减压阀；储样筒顶部增加物理柔性缓冲垫（如硅胶垫）。",
+      "reference_type": "current module"
+    },
+    {
+      "scope": "运动与抓取子系统",
+      "failure_mode": "样品管在进样筒内卡阻，无法升降",
+      "current_rpn": "140",
+      "why_it_matters": "后工序（进样流程）：流程中断，无法将样品送达测试区。",
+      "first_action_candidate": "1. 图纸明确进样筒内壁的光洁度(Ra)和直线度公差；",
+      "reference_type": "direct family reference"
+    },
+    {
+      "scope": "检测与气路控制子系统",
+      "failure_mode": "样品管下降速度过快/直接砸底",
+      "current_rpn": "128",
+      "why_it_matters": "后工序（探头检测）：样品管破裂导致样品泄漏，严重污染甚至损坏昂贵的探头。",
+      "first_action_candidate": "1. 增加气压传感器实时监控气流压力，异常时GLCB触发闭锁；",
+      "reference_type": "direct family reference"
+    },
+    {
+      "scope": "检测与气路控制子系统",
+      "failure_mode": "底部光电传感器误判样品有无",
+      "current_rpn": "105",
+      "why_it_matters": "",
+      "first_action_candidate": "优化传感器：选用专门针对透明物体的同轴偏振反射传感器，或加入超声波传感器辅助判断；增加定期清洁维护规程。",
+      "reference_type": "current module"
+    }
+  ],
+  "suggested_actions": [
+    {
+      "scope": "运动与抓取子系统",
+      "row_key": "竖直/水平气缸运动 / 大气缸滑块左右晃动加剧，位置跑偏",
+      "current_rpn": "336",
+      "recommended_action": "结构升级：不要让气缸承受侧向和导向力。增加外部高精度直线导轨（如THK/银泰），气缸仅作驱动源。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "draft",
+      "reference_type": "current module",
+      "source_case": "CAN400产品DFMEA.xlsx / 自动进样器 / row 3"
+    },
+    {
+      "scope": "运动与抓取子系统",
+      "row_key": "储样筒防掉落机构 / 跷跷板扭簧疲劳断裂或弹性衰减",
+      "current_rpn": "288",
+      "recommended_action": "增加闭环检测：更换高疲劳寿命弹簧；在跷跷板塞子侧增加一个微型光电或接近开关，直接检测“塞子是否到位闭合”。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "draft",
+      "reference_type": "current module",
+      "source_case": "CAN400产品DFMEA.xlsx / 自动进样器 / row 5"
+    },
+    {
+      "scope": "检测与气路控制子系统",
+      "row_key": "整体连接与供电 / Type-C接口松动或接触不良",
+      "current_rpn": "225",
+      "recommended_action": "更改接口标准：废弃Type-C，改用带螺纹锁紧的工业航空插头（如M8/M12）或带螺丝固定的端子排。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "draft",
+      "reference_type": "current module",
+      "source_case": "CAN400产品DFMEA.xlsx / 自动进样器 / row 2"
+    },
+    {
+      "scope": "运动与抓取子系统",
+      "row_key": "夹爪抓取模块 / 气爪抓取力不足或PEEK材质磨损打滑",
+      "current_rpn": "160",
+      "recommended_action": "增加反馈与防滑：V型槽内贴敷高摩擦系数且不掉屑的弹性材料；气源入口增加数字压力开关，气压低时报警并禁止动作。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "draft",
+      "reference_type": "current module",
+      "source_case": "CAN400产品DFMEA.xlsx / 自动进样器 / row 6"
+    },
+    {
+      "scope": "检测与气路控制子系统",
+      "row_key": "进/退样气路控制 / 退样时底部抬升吹气气压过大/过小",
+      "current_rpn": "140",
+      "recommended_action": "增加精密调压与缓冲：在抬升气路上单独增加高精度减压阀；储样筒顶部增加物理柔性缓冲垫（如硅胶垫）。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "draft",
+      "reference_type": "current module",
+      "source_case": "CAN400产品DFMEA.xlsx / 自动进样器 / row 8"
+    },
+    {
+      "scope": "运动与抓取子系统",
+      "row_key": "气动及筒体组件 / 样品管在进样筒内卡阻，无法升降",
+      "current_rpn": "140",
+      "recommended_action": "1. 图纸明确进样筒内壁的光洁度(Ra)和直线度公差；",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "needs expert confirmation",
+      "reference_type": "direct family reference",
+      "source_case": "CAN400产品DFMEA.xlsx / 进样筒 / row 7"
+    },
+    {
+      "scope": "检测与气路控制子系统",
+      "row_key": "气动及筒体组件 / 样品管下降速度过快/直接砸底",
+      "current_rpn": "128",
+      "recommended_action": "1. 增加气压传感器实时监控气流压力，异常时GLCB触发闭锁；",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "needs expert confirmation",
+      "reference_type": "direct family reference",
+      "source_case": "CAN400产品DFMEA.xlsx / 进样筒 / row 4"
+    },
+    {
+      "scope": "检测与气路控制子系统",
+      "row_key": "转盘检测模块 / 底部光电传感器误判样品有无",
+      "current_rpn": "105",
+      "recommended_action": "优化传感器：选用专门针对透明物体的同轴偏振反射传感器，或加入超声波传感器辅助判断；增加定期清洁维护规程。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "draft",
+      "reference_type": "current module",
+      "source_case": "CAN400产品DFMEA.xlsx / 自动进样器 / row 7"
+    },
+    {
+      "scope": "检测与气路控制子系统",
+      "row_key": "光电系统 (传感器) / 传感器信号丢失或误报",
+      "current_rpn": "96",
+      "recommended_action": "1. 进样筒顶部和底部的光纤探头处增加防尘结构设计；",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "needs expert confirmation",
+      "reference_type": "direct family reference",
+      "source_case": "CAN400产品DFMEA.xlsx / 进样筒 / row 15"
+    },
+    {
+      "scope": "检测与气路控制子系统",
+      "row_key": "光电系统 (传感器) / 传感器信号丢失或误报",
+      "current_rpn": "",
+      "recommended_action": "2. 软件增加防呆逻辑（如：超时未检测到信号自动切入安全状态）。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "needs expert confirmation",
+      "reference_type": "direct family reference",
+      "source_case": "CAN400产品DFMEA.xlsx / 进样筒 / row 16; CAN400产品DFMEA.xlsx / 进样筒 / row 17"
+    },
+    {
+      "scope": "运动与抓取子系统",
+      "row_key": "气动及筒体组件 / 样品管下降速度过快/直接砸底",
+      "current_rpn": "",
+      "recommended_action": "2. 软件增加“软着陆”缓降控制算法。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "needs expert confirmation",
+      "reference_type": "direct family reference",
+      "source_case": "CAN400产品DFMEA.xlsx / 进样筒 / row 5"
+    },
+    {
+      "scope": "运动与抓取子系统",
+      "row_key": "气动及筒体组件 / 样品管在进样筒内卡阻，无法升降",
+      "current_rpn": "",
+      "recommended_action": "2. 建议客户增加气源前端的精密过滤装置。",
+      "owner": "",
+      "target_date": "",
+      "confirmation_status": "needs expert confirmation",
+      "reference_type": "direct family reference",
+      "source_case": "CAN400产品DFMEA.xlsx / 进样筒 / row 8; CAN400产品DFMEA.xlsx / 进样筒 / row 9"
+    }
+  ],
+  "source_trace": [
+    {
+      "scope": "运动与抓取子系统",
+      "row_key": "竖直/水平气缸运动 / 大气缸滑块左右晃动加剧，位置跑偏",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 自动进样器 / row 3"
+      ]
+    },
+    {
+      "scope": "运动与抓取子系统",
+      "row_key": "储样筒防掉落机构 / 跷跷板扭簧疲劳断裂或弹性衰减",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 自动进样器 / row 5"
+      ]
+    },
+    {
+      "scope": "运动与抓取子系统",
+      "row_key": "夹爪抓取模块 / 气爪抓取力不足或PEEK材质磨损打滑",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 自动进样器 / row 6"
+      ]
+    },
+    {
+      "scope": "运动与抓取子系统",
+      "row_key": "气动及筒体组件 / 样品管在进样筒内卡阻，无法升降",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 进样筒 / row 7"
+      ]
+    },
+    {
+      "scope": "运动与抓取子系统",
+      "row_key": "气动及筒体组件 / 样品管下降速度过快/直接砸底",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 进样筒 / row 5"
+      ]
+    },
+    {
+      "scope": "运动与抓取子系统",
+      "row_key": "气动及筒体组件 / 样品管在进样筒内卡阻，无法升降",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 进样筒 / row 8",
+        "CAN400产品DFMEA.xlsx / 进样筒 / row 9"
+      ]
+    },
+    {
+      "scope": "运动与抓取子系统",
+      "row_key": "转子与气动组件 / 样品管完全不旋转",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 进样筒 / row 14"
+      ]
+    },
+    {
+      "scope": "检测与气路控制子系统",
+      "row_key": "整体连接与供电 / Type-C接口松动或接触不良",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 自动进样器 / row 2"
+      ]
+    },
+    {
+      "scope": "检测与气路控制子系统",
+      "row_key": "进/退样气路控制 / 退样时底部抬升吹气气压过大/过小",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 自动进样器 / row 8"
+      ]
+    },
+    {
+      "scope": "检测与气路控制子系统",
+      "row_key": "气动及筒体组件 / 样品管下降速度过快/直接砸底",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 进样筒 / row 4"
+      ]
+    },
+    {
+      "scope": "检测与气路控制子系统",
+      "row_key": "转盘检测模块 / 底部光电传感器误判样品有无",
+      "reference_type": "current module",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 自动进样器 / row 7"
+      ]
+    },
+    {
+      "scope": "检测与气路控制子系统",
+      "row_key": "光电系统 (传感器) / 传感器信号丢失或误报",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 进样筒 / row 15"
+      ]
+    },
+    {
+      "scope": "检测与气路控制子系统",
+      "row_key": "光电系统 (传感器) / 传感器信号丢失或误报",
+      "reference_type": "direct family reference",
+      "source_cases": [
+        "CAN400产品DFMEA.xlsx / 进样筒 / row 16",
+        "CAN400产品DFMEA.xlsx / 进样筒 / row 17"
+      ]
+    }
+  ]
+}
