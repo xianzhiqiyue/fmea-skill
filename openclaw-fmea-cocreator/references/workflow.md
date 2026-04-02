@@ -89,6 +89,12 @@ Expected result:
 
 Use when the user already has a table or sheet and wants help improving it.
 
+Useful helper:
+
+```bash
+python3 scripts/import_existing_fmea_excel.py --input-excel /path/to/existing.xlsx --excel-out /path/to/normalized.xlsx --json-out /path/to/normalized.json
+```
+
 Focus on:
 
 - missing failure modes
@@ -96,6 +102,14 @@ Focus on:
 - unrealistic ratings
 - vague controls or actions
 - opportunities to merge duplicate rows or split overloaded rows
+
+Behavior:
+
+- first normalize the imported workbook into the current OpenClaw schema
+- preserve scope sheets when possible
+- preserve `确认队列` reasons if the source workbook already contains them
+- prepend imported workbook traceability into `Source case`
+- then hand the normalized `.json` to review cards and review writeback actions
 
 ### High-risk action review
 

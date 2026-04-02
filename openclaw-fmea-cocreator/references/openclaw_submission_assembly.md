@@ -10,7 +10,7 @@ This is the execution-layer companion to:
 
 ## Purpose
 
-The current bridge should do six things:
+The current bridge should do seven things:
 
 1. validate whether a payload has the minimum fields
 2. merge distributed form fields into one drafting text body
@@ -18,6 +18,7 @@ The current bridge should do six things:
 4. run `draft_fmea_from_cases.py` to generate the Excel workbook
 5. when JSON output is enabled, optionally generate `cards.json` for OpenClaw review rendering
 6. after human review, optionally execute a writeback bundle and regenerate reviewed artifacts
+7. when an existing workbook path is provided, switch to workbook import instead of raw drafting
 
 ## Bridge script
 
@@ -25,6 +26,12 @@ Current bridge script:
 
 ```bash
 python3 scripts/run_openclaw_submission.py --payload-file /path/to/payload.json
+```
+
+Current existing-workbook import script:
+
+```bash
+python3 scripts/import_existing_fmea_excel.py --input-excel /path/to/existing.xlsx --excel-out /path/to/normalized.xlsx --json-out /path/to/normalized.json
 ```
 
 Current review writeback script:
@@ -54,16 +61,20 @@ If `--example-name` is used, the payload comes from `references/openclaw_submiss
 
 The bridge currently enforces:
 
-- `module_name` is required
-- `fmea_type` is required and must be `AFMEA` / `SFMEA` / `DFMEA`
-- `function_description` is required
-- `use_scenario` is required
-- at least one context field is required:
-  - `environment`
-  - `interfaces`
-  - `design_constraints`
-  - `historical_issues`
-  - `bom_or_key_parts`
+- for `new_fmea_draft`:
+  - `module_name` is required
+  - `fmea_type` is required and must be `AFMEA` / `SFMEA` / `DFMEA`
+  - `function_description` is required
+  - `use_scenario` is required
+  - at least one context field is required:
+    - `environment`
+    - `interfaces`
+    - `design_constraints`
+    - `historical_issues`
+    - `bom_or_key_parts`
+- for `review_existing_fmea` or `high_risk_review`:
+  - `existing_fmea_excel_path` or `existing_fmea_text` must be present
+  - if `existing_fmea_excel_path` is present, `module_name` and `fmea_type` may be omitted and later recovered from workbook `概览`
 - if `scope_mode = manual`, each scope must include:
   - `name`
   - `keywords`
@@ -94,6 +105,8 @@ If `scope_mode = manual`, the bridge also appends:
 - each scope keyword set
 - each scope note if present
 
+If `existing_fmea_excel_path` is present, this merged text becomes the import/review context note passed to the importer via `--context-file`.
+
 ### 4. Resolve output paths
 
 The bridge creates one output stem from:
@@ -113,7 +126,13 @@ Default output directory:
 
 - `validation/openclaw_runs/`
 
-### 5. Build final command
+### 5. Choose execution mode
+
+If `intent` is `review_existing_fmea` or `high_risk_review` and `existing_fmea_excel_path` is provided, the bridge calls `import_existing_fmea_excel.py`.
+
+Otherwise it calls `draft_fmea_from_cases.py`.
+
+### 6. Build final command
 
 The bridge converts payload fields into a command like:
 
@@ -134,6 +153,22 @@ If `scope_mode = manual`, it appends repeated scope arguments:
 
 If preview output is enabled:
 
+- append `--markdown-out`
+- append `--json-out`
+
+In import mode, the command becomes:
+
+```bash
+python3 scripts/import_existing_fmea_excel.py \
+  --input-excel /path/to/existing.xlsx \
+  --context-file /path/to/merged_input.txt \
+  --excel-out /path/to/output.xlsx
+```
+
+Optional:
+
+- append `--module` when provided
+- append `--fmea-type` when provided
 - append `--markdown-out`
 - append `--json-out`
 
@@ -158,6 +193,7 @@ The bridge will:
 The bridge prints a JSON object with:
 
 - `source`
+- `submission_mode`
 - `command`
 - `input_text_path`
 - `excel_path`
@@ -175,7 +211,7 @@ The current backend integration should follow this sequence:
 2. save the payload JSON for traceability
 3. call `run_openclaw_submission.py`
 4. collect the printed artifact paths
-5. return the `.xlsx` as the primary artifact
+5. return the `.xlsx` as the primary artifact, regardless of whether it came from draft or import mode
 6. optionally display the Markdown preview inline
 7. optionally use the JSON artifact for later edits
 8. use `cards.json` to render `确认队列` and `Top风险` cards in product
@@ -204,7 +240,7 @@ Supported mutating action ids:
 
 The bridge does not yet:
 
-- parse uploaded existing Excel FMEA directly
+- parse in-memory uploaded binaries directly without first saving a workbook path
 - create case-library records from confirmed rows
 - localize workbook column names to multiple enterprise templates
 

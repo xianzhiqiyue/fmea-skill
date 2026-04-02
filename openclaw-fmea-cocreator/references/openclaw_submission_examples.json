@@ -63,6 +63,25 @@
         "include_json_payload": true,
         "include_review_cards": true
       }
+    },
+    {
+      "name": "review_existing_fmea_rf_power_amp_import",
+      "description": "导入已有射频功放 FMEA Excel 后继续审查的示例。",
+      "payload": {
+        "intent": "review_existing_fmea",
+        "project_name": "CAN400 NMR 系统",
+        "module_name": "射频功放",
+        "fmea_type": "DFMEA",
+        "scope_mode": "auto",
+        "scope_notes": "已有工作簿先导入，再基于确认队列和 Top 风险继续评审。",
+        "existing_fmea_text": "当前已有一版 Excel 工作簿，需要导入后继续做确认队列审查和回写。",
+        "existing_fmea_excel_path": "validation/openclaw_runs/射频功放_auto_scope_draft.xlsx",
+        "attachments_summary": "已有工作簿来自首版 OpenClaw 草稿输出，包含确认队列、Top 风险和建议动作。",
+        "requested_output_name": "射频功放_existing_fmea_import.xlsx",
+        "include_markdown_preview": true,
+        "include_json_payload": true,
+        "include_review_cards": true
+      }
     }
   ]
 }

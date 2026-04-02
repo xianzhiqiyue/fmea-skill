@@ -8,6 +8,7 @@ The goal is to keep one clear contract between:
 - the skill's internal drafting steps
 - the generated Excel workbook
 - the optional JSON companion payload
+- the optional imported existing FMEA workbook
 
 Implementation artifacts in this directory:
 
@@ -27,6 +28,7 @@ The current skill is best understood as:
 4. Markdown is used as review preview
 5. JSON is used as a structured companion payload for automation or downstream systems
 6. review cards JSON can be used as the in-product card rendering payload for `确认队列` and `Top风险`
+7. when an existing workbook is provided, the skill first normalizes that workbook into the same Excel/JSON/cards contract
 
 Primary script:
 
@@ -52,6 +54,12 @@ Current review writeback executor:
 python3 scripts/apply_openclaw_review_actions.py --input-json /path/to/draft.json --actions-json /path/to/review_actions.json
 ```
 
+Existing workbook import helper:
+
+```bash
+python3 scripts/import_existing_fmea_excel.py --input-excel /path/to/existing.xlsx --excel-out /path/to/normalized.xlsx --json-out /path/to/normalized.json
+```
+
 ## 2. OpenClaw entry intents
 
 OpenClaw should expose these entry intents:
@@ -59,8 +67,8 @@ OpenClaw should expose these entry intents:
 | Intent id | User-facing meaning | Current support |
 | --- | --- | --- |
 | `new_fmea_draft` | 从模块描述共创首版 FMEA | yes |
-| `review_existing_fmea` | 对已有 FMEA 做补全或审查 | partial, workflow defined but form/upload path still to be built |
-| `high_risk_review` | 聚焦高 RPN 和建议动作 | partial, can be derived from existing draft |
+| `review_existing_fmea` | 对已有 FMEA 做补全或审查 | yes, workbook import path now supported |
+| `high_risk_review` | 聚焦高 RPN 和建议动作 | yes, can be driven from imported workbook or draft JSON |
 | `case_library_extract` | 把确认后的条目沉淀为案例 | partial, workflow defined but artifact path still to be built |
 
 For the current implementation, OpenClaw should default to `new_fmea_draft`.
@@ -90,6 +98,7 @@ These are the recommended OpenClaw input fields.
 | `customer_impact` | 客户或后工序影响 | long text | optional | helps severity drafting |
 | `attachments_summary` | 附件摘要 | long text | optional | if OpenClaw later supports file upload, summarize extracted content here |
 | `existing_fmea_text` | 已有 FMEA 内容 | long text | optional | for review mode |
+| `existing_fmea_excel_path` | 已有 FMEA Excel 路径 | string | optional | local or mounted workbook path for import-first review mode |
 | `requested_output_name` | 输出文件名 | string | optional | default can be auto-generated |
 
 ### 3.2 Manual scope fields
@@ -118,6 +127,14 @@ If the user only gives a minimal package, OpenClaw should still allow the run wh
   - `bom_or_key_parts`
 
 If these are not met, OpenClaw should not block forever. It should ask for missing critical fields first, then allow the skill to continue with explicit assumptions.
+
+For `review_existing_fmea` or `high_risk_review`, OpenClaw may also allow a lighter package:
+
+- `existing_fmea_excel_path`
+- optional `module_name`
+- optional `fmea_type`
+
+If `module_name` or `fmea_type` is omitted, the importer will try to recover them from the workbook `概览` sheet.
 
 ## 4. Interaction contract
 
@@ -155,6 +172,13 @@ The skill:
 - marks `Reference type`
 - marks `Confirmation status`
 - builds confirmation queue and suggested actions
+
+If `existing_fmea_excel_path` is present instead of a raw-description path, this round becomes:
+
+- import the workbook
+- detect scope sheets and normalized headers
+- preserve existing `确认队列` reasons when available
+- rebuild the standard Excel/JSON/cards contract
 
 ### Round 4: delivery
 
@@ -232,6 +256,10 @@ Each scope becomes one worksheet.
 | `Reference type` | `current module`, `direct family reference`, `broader analogy` |
 | `Source case` | workbook / sheet / row trace |
 
+When imported from an existing workbook, `Source case` should prepend:
+
+- `{imported_workbook_name} / {sheet_name} / row {row_number}`
+
 ### 5.4 Workbook `确认队列`
 
 | Column | Source |
@@ -286,8 +314,9 @@ For the current implementation, OpenClaw can map its fields to the script like t
 
 | OpenClaw field | Script mapping |
 | --- | --- |
-| `module_name` | `--module` |
+| `module_name` | `--module` when drafting, optional `--module` override when importing |
 | merged long-text fields | merged into one `--input-file` or `--input-text` body |
+| `existing_fmea_excel_path` | `--input-excel` |
 | `scope_mode = auto` | omit `--scope` |
 | `scope_mode = manual` | repeat `--scope "名称::关键词..."` |
 | output path | `--excel-out` |
@@ -337,8 +366,8 @@ Recommended merged input body order:
 
 OpenClaw should know these current limits:
 
-1. primary supported path is still `new_fmea_draft`
-2. existing FMEA review is process-supported but not yet a dedicated import parser
+1. primary supported paths are `new_fmea_draft` and workbook-based `review_existing_fmea`
+2. existing FMEA import currently expects one workbook path, not a raw uploaded binary stream in memory
 3. `Owner` and `Target date` are structurally supported, but usually remain blank until human review
 4. `O` and `D` must not be treated as enterprise-final unless the user explicitly confirms them
 5. current workbook column names are mostly English normalized labels

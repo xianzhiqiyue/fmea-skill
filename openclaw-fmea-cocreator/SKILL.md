@@ -155,6 +155,7 @@ If a machine-readable form definition or example payload is needed, also use `re
 If the task is about backend assembly, payload execution, or artifact path resolution, also read [references/openclaw_submission_assembly.md](references/openclaw_submission_assembly.md).
 If the task is about in-product review cards for `确认队列` or `Top风险`, also use `references/openclaw_review_cards_schema.json` and `scripts/build_openclaw_review_cards.py`.
 If the task is about writing human review decisions back into the workbook, also use `references/openclaw_review_action_protocol.json`, `references/openclaw_review_action_examples.json`, and `scripts/apply_openclaw_review_actions.py`.
+If the task starts from an existing FMEA workbook instead of raw text, also use `scripts/import_existing_fmea_excel.py`.
 
 Current script support:
 
@@ -169,6 +170,7 @@ python3 scripts/run_openclaw_submission.py --payload-file /path/to/payload.json
 python3 scripts/run_openclaw_submission.py --example-name auto_scope_dfmea_rf_power_amp --dry-run --print-input
 python3 scripts/build_openclaw_review_cards.py --input-json /path/to/draft.json --output-json /path/to/cards.json
 python3 scripts/apply_openclaw_review_actions.py --input-json /path/to/draft.json --actions-json /path/to/review_actions.json
+python3 scripts/import_existing_fmea_excel.py --input-excel /path/to/existing.xlsx --excel-out /path/to/normalized.xlsx --json-out /path/to/normalized.json
 ```
 
 ## When to read which reference

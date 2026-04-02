@@ -49,7 +49,7 @@ The default deliverable should be one `.xlsx` workbook with these worksheets:
 | Review comment | recommended | short human review notes appended during writeback |
 | Rating basis | recommended | short basis text for `S`, `O`, and `D` |
 | Reference type | recommended | `current module`, `direct family reference`, or `broader analogy` |
-| Source case | recommended | workbook, sheet, and row id when derived from historical examples |
+| Source case | recommended | workbook, sheet, and row id when derived from historical examples or imported from an existing workbook |
 
 ## Preferred row pattern
 
@@ -67,6 +67,7 @@ For Markdown preview, the minimum useful column set is:
 - one failure mode per row
 - do not combine unrelated causes in one vague blob when separate rows are clearer
 - preserve traceability to source materials
+- when importing an existing workbook, keep the imported workbook sheet/row as one visible `Source case`
 - if the user provides their own table format, adapt while preserving the same semantics
 - if a row is primarily inferred from a sibling module, keep that trace visible in `Reference type`
 - if a row sits on a scope boundary, keep the row and flag it for confirmation instead of forcing certainty

@@ -1,9 +1,9 @@
 {
   "form_id": "openclaw_fmea_draft",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "primary_intent": "new_fmea_draft",
   "title": "FMEA 共创",
-  "description": "从模块描述、历史问题、BOM 和约束条件生成 Excel 版 FMEA 共创草稿。",
+  "description": "从模块描述生成首版 FMEA，或导入已有 FMEA Excel 后继续审查与评审回写。",
   "artifact_contract": {
     "primary_artifact": "excel_workbook",
     "optional_artifacts": [
@@ -267,6 +267,20 @@
               "high_risk_review"
             ]
           }
+        },
+        {
+          "id": "existing_fmea_excel_path",
+          "label": "已有 FMEA Excel 路径",
+          "component": "text",
+          "required": false,
+          "placeholder": "例如：validation/openclaw_runs/射频功放_auto_scope_draft.xlsx",
+          "visible_when": {
+            "field": "intent",
+            "in": [
+              "review_existing_fmea",
+              "high_risk_review"
+            ]
+          }
         }
       ]
     },
@@ -307,7 +321,7 @@
     {
       "id": "minimum_context",
       "severity": "error",
-      "description": "至少需要模块名、FMEA 类型、功能描述、使用场景，以及至少一个扩展上下文字段。 "
+      "description": "新建草稿时至少需要模块名、FMEA 类型、功能描述、使用场景，以及至少一个扩展上下文字段。审查已有 FMEA 时可改为提供 existing_fmea_excel_path 或 existing_fmea_text。"
     },
     {
       "id": "manual_scope_requires_items",
@@ -322,6 +336,7 @@
   ],
   "submission_mapping": {
     "module_name": "--module",
+    "existing_fmea_excel_path": "--input-excel",
     "input_body": "--input-file or --input-text",
     "manual_scope_item": "--scope \"{name}::{keywords}\"",
     "excel_out": "--excel-out",
@@ -341,6 +356,7 @@
     "bom_or_key_parts",
     "customer_impact",
     "attachments_summary",
-    "existing_fmea_text"
+    "existing_fmea_text",
+    "existing_fmea_excel_path"
   ]
 }

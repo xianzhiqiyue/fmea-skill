@@ -13,6 +13,7 @@ SKILL_DIR = SCRIPT_DIR.parent
 PROJECT_ROOT = SKILL_DIR.parent
 EXAMPLES_PATH = SKILL_DIR / "references" / "openclaw_submission_examples.json"
 DRAFT_SCRIPT_PATH = SCRIPT_DIR / "draft_fmea_from_cases.py"
+IMPORT_SCRIPT_PATH = SCRIPT_DIR / "import_existing_fmea_excel.py"
 REVIEW_CARDS_SCRIPT_PATH = SCRIPT_DIR / "build_openclaw_review_cards.py"
 
 INPUT_BODY_ORDER = [
@@ -29,6 +30,7 @@ INPUT_BODY_ORDER = [
     "customer_impact",
     "attachments_summary",
     "existing_fmea_text",
+    "existing_fmea_excel_path",
 ]
 
 FIELD_LABELS = {
@@ -45,6 +47,7 @@ FIELD_LABELS = {
     "customer_impact": "客户或后工序影响",
     "attachments_summary": "附件摘要",
     "existing_fmea_text": "已有 FMEA 内容",
+    "existing_fmea_excel_path": "已有 FMEA Excel 路径",
 }
 
 MINIMUM_CORE_FIELDS = ["module_name", "fmea_type", "function_description", "use_scenario"]
@@ -73,10 +76,22 @@ def sanitize_stem(value: str) -> str:
     return cleaned or "openclaw_fmea_draft"
 
 
+def normalize_intent(payload: dict[str, Any]) -> str:
+    return normalize_text(payload.get("intent")) or "new_fmea_draft"
+
+
+def uses_existing_excel_import(payload: dict[str, Any]) -> bool:
+    intent = normalize_intent(payload)
+    return intent in {"review_existing_fmea", "high_risk_review"} and bool(normalize_text(payload.get("existing_fmea_excel_path")))
+
+
 def payload_output_stem(payload: dict[str, Any]) -> str:
     requested = normalize_text(payload.get("requested_output_name"))
     if requested:
         return Path(requested).stem
+    if uses_existing_excel_import(payload):
+        module_name = normalize_text(payload.get("module_name")) or Path(normalize_text(payload.get("existing_fmea_excel_path"))).stem
+        return f"{module_name}_existing_fmea_import"
     module_name = normalize_text(payload.get("module_name")) or "未命名模块"
     scope_mode = normalize_text(payload.get("scope_mode")) or "auto"
     return f"{module_name}_{scope_mode}_scope_draft"
@@ -103,19 +118,27 @@ def load_payload(args: argparse.Namespace) -> tuple[dict[str, Any], str]:
 
 def validate_payload(payload: dict[str, Any]) -> list[str]:
     errors: list[str] = []
+    intent = normalize_intent(payload)
+    import_mode = uses_existing_excel_import(payload)
 
-    for field in MINIMUM_CORE_FIELDS:
-        if not normalize_text(payload.get(field)):
-            errors.append(f"缺少必填字段: {field}")
-
-    if not any(normalize_text(payload.get(field)) for field in MINIMUM_CONTEXT_FIELDS):
-        errors.append("缺少最小上下文字段: environment/interfaces/design_constraints/historical_issues/bom_or_key_parts 至少需要一个")
+    if intent == "new_fmea_draft":
+        for field in MINIMUM_CORE_FIELDS:
+            if not normalize_text(payload.get(field)):
+                errors.append(f"缺少必填字段: {field}")
+        if not any(normalize_text(payload.get(field)) for field in MINIMUM_CONTEXT_FIELDS):
+            errors.append("缺少最小上下文字段: environment/interfaces/design_constraints/historical_issues/bom_or_key_parts 至少需要一个")
+    elif intent in {"review_existing_fmea", "high_risk_review"}:
+        if not import_mode and not normalize_text(payload.get("existing_fmea_text")):
+            errors.append("审查已有 FMEA 时，至少需要 existing_fmea_excel_path 或 existing_fmea_text 其中之一")
+    elif intent == "case_library_extract":
+        if not normalize_text(payload.get("existing_fmea_text")) and not import_mode:
+            errors.append("案例沉淀至少需要 existing_fmea_text 或 existing_fmea_excel_path")
 
     scope_mode = normalize_text(payload.get("scope_mode")) or "auto"
     if scope_mode not in {"auto", "manual"}:
         errors.append("scope_mode 只能是 auto 或 manual")
 
-    if scope_mode == "manual":
+    if scope_mode == "manual" and not import_mode:
         scopes = payload.get("scopes") or []
         if not isinstance(scopes, list) or not scopes:
             errors.append("scope_mode=manual 时必须提供 scopes 列表")
@@ -127,8 +150,10 @@ def validate_payload(payload: dict[str, Any]) -> list[str]:
                     errors.append(f"手工 scope 第 {index} 项必须同时提供 name 和 keywords")
 
     fmea_type = normalize_text(payload.get("fmea_type"))
-    if fmea_type not in {"AFMEA", "SFMEA", "DFMEA"}:
+    if fmea_type and fmea_type not in {"AFMEA", "SFMEA", "DFMEA"}:
         errors.append("fmea_type 只能是 AFMEA / SFMEA / DFMEA")
+    if intent == "new_fmea_draft" and not fmea_type:
+        errors.append("缺少必填字段: fmea_type")
 
     return errors
 
@@ -180,6 +205,13 @@ def build_scope_args(payload: dict[str, Any]) -> list[str]:
     return args
 
 
+def resolve_existing_excel_path(payload: dict[str, Any]) -> Path:
+    raw_path = Path(normalize_text(payload.get("existing_fmea_excel_path")))
+    if raw_path.is_absolute():
+        return raw_path
+    return PROJECT_ROOT / raw_path
+
+
 def resolved_output_paths(payload: dict[str, Any], output_dir: Path) -> dict[str, Path | None]:
     stem = sanitize_stem(payload_output_stem(payload))
     include_json_payload = as_bool(payload.get("include_json_payload"), True)
@@ -194,6 +226,27 @@ def resolved_output_paths(payload: dict[str, Any], output_dir: Path) -> dict[str
 
 
 def build_command(payload: dict[str, Any], input_path: Path, outputs: dict[str, Path | None]) -> list[str]:
+    if uses_existing_excel_import(payload):
+        command = [
+            sys.executable,
+            str(IMPORT_SCRIPT_PATH),
+            "--input-excel",
+            str(resolve_existing_excel_path(payload)),
+            "--excel-out",
+            str(outputs["excel"]),
+            "--context-file",
+            str(input_path),
+        ]
+        if normalize_text(payload.get("module_name")):
+            command.extend(["--module", normalize_text(payload["module_name"])])
+        if normalize_text(payload.get("fmea_type")):
+            command.extend(["--fmea-type", normalize_text(payload["fmea_type"])])
+        if outputs["markdown"] is not None:
+            command.extend(["--markdown-out", str(outputs["markdown"])])
+        if outputs["json"] is not None:
+            command.extend(["--json-out", str(outputs["json"])])
+        return command
+
     command = [
         sys.executable,
         str(DRAFT_SCRIPT_PATH),
@@ -243,6 +296,7 @@ def run_submission(payload: dict[str, Any], output_dir: Path, dry_run: bool) -> 
             )
 
     return {
+        "submission_mode": "existing_fmea_import" if uses_existing_excel_import(payload) else "new_fmea_draft",
         "command": command,
         "input_text_path": str(input_path),
         "excel_path": str(outputs["excel"]),
