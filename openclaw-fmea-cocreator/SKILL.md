@@ -1,6 +1,12 @@
 ---
 name: openclaw-fmea-cocreator
-description: Use when the user wants to co-create AFMEA, SFMEA, or DFMEA on OpenClaw; turn module descriptions, BOM or environment inputs into structured FMEA drafts; review or expand existing FMEA tables; retrieve similar historical failure cases; or convert quality materials into reusable FMEA knowledge and action items.
+version: 0.2.1
+description: Co-create AFMEA, SFMEA, or DFMEA for OpenClaw from module inputs, existing tables, or historical quality materials, with traceable drafts and follow-up actions.
+category: research
+tags:
+  - analysis
+  - workflow
+  - prompting
 ---
 
 # OpenClaw FMEA Co-creator
