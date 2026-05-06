@@ -2,7 +2,12 @@
 
 Use this normalized schema for most FMEA drafts and reviews.
 
-For OpenClaw delivery, prefer a stable Excel workbook package made of:
+For OpenClaw delivery, the primary artifact is a stable Excel workbook generated from the bundled `template.xlsx`.
+The repository sample workbook is a format reference only; its product-specific content is not part of the template contract.
+The generated workbook should preserve the standard template's sheet names, column positions, row styling, merged cells, column widths, formulas, and scoring reference sheet.
+Companion Markdown/JSON artifacts can still carry review queues and machine-readable details when requested.
+
+The companion payload should still be made of:
 
 1. `Scope split`
 2. `FMEA draft`
@@ -13,15 +18,18 @@ For OpenClaw delivery, prefer a stable Excel workbook package made of:
 
 ## Workbook layout
 
-The default deliverable should be one `.xlsx` workbook with these worksheets:
+The default deliverable should be one `.xlsx` workbook with the exact standard-template worksheets:
 
-1. `概览`
-2. `Scope规划`
-3. one worksheet per scope
-4. `确认队列`
-5. `Top风险`
-6. `建议动作`
-7. `来源追踪`
+1. `封面`
+2. `FMEA主表`
+3. `评分准则参考`
+
+All generated FMEA rows go into `FMEA主表`; use `生命周期维度` for scope/lifecycle grouping instead of creating one worksheet per scope.
+`FMEA主表` must keep the standard table position: headers in `B2:W2`, data rows beginning at row `3`, and formulas in `RPN` / `改进后RPN`.
+`评分准则参考` must be copied from the standard template without content rewrites so the workbook keeps the template reference structure exactly.
+
+Default rich drafts may use lifecycle-style grouping when the input scope calls for it, but lifecycle names, row counts, module names, product metrics, and risk examples are generated content, not template content.
+Rows expanded from lifecycle context should stay traceable and remain `needs expert confirmation`.
 
 ## Recommended columns
 
@@ -50,6 +58,29 @@ The default deliverable should be one `.xlsx` workbook with these worksheets:
 | Rating basis | recommended | short basis text for `S`, `O`, and `D` |
 | Reference type | recommended | `current module`, `direct family reference`, or `broader analogy` |
 | Source case | recommended | workbook, sheet, and row id when derived from historical examples or imported from an existing workbook |
+
+## Template column mapping
+
+| Normalized field | standard-template column |
+| --- | --- |
+| Row number | `序号` |
+| Scope | `生命周期维度` |
+| Analysis object | `模块/零件` |
+| Function or requirement | `功能及要求` |
+| Parameter indicators | `参数指标性能` |
+| Failure effect | `失效影响（后果）` |
+| S | `严重度 S` |
+| Failure mode | `潜在失效模式` |
+| Cause or mechanism | `失效原因` |
+| Current controls | `现行预防措施` and `现行探测控制` when source data is combined |
+| O | `频度 O` |
+| D | `探测度 D` |
+| RPN | `RPN` |
+| Rating basis / status / reference / source trace | `AI打分推导依据` |
+| Recommended actions | `建议措施` |
+| Owner | `措施负责人` |
+| Target date | `完成时间` |
+| Post-action S/O/D/RPN | `改进后S` / `改进后O` / `改进后D` / `改进后RPN` |
 
 ## Preferred row pattern
 

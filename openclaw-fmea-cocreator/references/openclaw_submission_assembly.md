@@ -74,7 +74,7 @@ The bridge currently enforces:
     - `bom_or_key_parts`
 - for `review_existing_fmea` or `high_risk_review`:
   - `existing_fmea_excel_path` or `existing_fmea_text` must be present
-  - if `existing_fmea_excel_path` is present, `module_name` and `fmea_type` may be omitted and later recovered from workbook `概览`
+  - if `existing_fmea_excel_path` is present, `module_name` and `fmea_type` may be omitted and later recovered from workbook `封面` or legacy `概览`
 - if `scope_mode = manual`, each scope must include:
   - `name`
   - `keywords`

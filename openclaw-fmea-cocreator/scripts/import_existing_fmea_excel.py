@@ -38,23 +38,27 @@ REFERENCE_TYPE_ALIASES = {
     "更广泛类比": "broader analogy",
 }
 IMPORT_HEADER_ALIASES = {
-    "scope": ["Scope", "分析范围", "scope", "子系统", "子系统/功能模块", "子系统/组件"],
-    "analysis_object": ["Analysis object", "零件名称", *draft.FIELD_ALIASES["analysis_object"]],
-    "function": ["Function or requirement", *draft.FIELD_ALIASES["function"]],
-    "failure_mode": ["Failure mode", *draft.FIELD_ALIASES["failure_mode"]],
-    "effect": ["Failure effect", *draft.FIELD_ALIASES["effect"]],
-    "severity": ["S", "Severity", *draft.FIELD_ALIASES["severity"]],
-    "cause": ["Cause or mechanism", "Cause", *draft.FIELD_ALIASES["cause"]],
-    "occurrence": ["O", "Occurrence", *draft.FIELD_ALIASES["occurrence"]],
-    "current_controls": ["Current controls", "Current control", *draft.FIELD_ALIASES["current_controls"]],
-    "detection": ["D", "Detection", *draft.FIELD_ALIASES["detection"]],
+    "scope": ["Scope", "分析范围", "scope", "子系统", "子系统/功能模块", "子系统/组件", "生命周期维度"],
+    "analysis_object": ["Analysis object", "零件名称", "模块/零件", *draft.FIELD_ALIASES["analysis_object"]],
+    "function": ["Function or requirement", "功能及要求", *draft.FIELD_ALIASES["function"]],
+    "failure_mode": ["Failure mode", "潜在失效模式", *draft.FIELD_ALIASES["failure_mode"]],
+    "effect": ["Failure effect", "失效影响（后果）", "失效影响(后果)", *draft.FIELD_ALIASES["effect"]],
+    "severity": ["S", "Severity", "严重度 S", *draft.FIELD_ALIASES["severity"]],
+    "cause": ["Cause or mechanism", "Cause", "失效原因", *draft.FIELD_ALIASES["cause"]],
+    "occurrence": ["O", "Occurrence", "频度 O", *draft.FIELD_ALIASES["occurrence"]],
+    "current_controls": ["Current controls", "Current control", "现行预防措施", "现行探测控制", *draft.FIELD_ALIASES["current_controls"]],
+    "detection": ["D", "Detection", "探测度 D", *draft.FIELD_ALIASES["detection"]],
     "rpn": ["RPN", "Current RPN", *draft.FIELD_ALIASES["rpn"]],
-    "recommended_actions": ["Recommended actions", "Recommended action", *draft.FIELD_ALIASES["recommended_actions"]],
-    "owner": ["Owner", *draft.FIELD_ALIASES["owner"]],
-    "target_date": ["Target date", "Target Date", *draft.FIELD_ALIASES["target_date"]],
+    "recommended_actions": ["Recommended actions", "Recommended action", "建议措施", *draft.FIELD_ALIASES["recommended_actions"]],
+    "post_action_severity": ["Post-action S", "改进后S", "措施后 S", *draft.FIELD_ALIASES["post_action_severity"]],
+    "post_action_occurrence": ["Post-action O", "改进后O", "措施后 O", *draft.FIELD_ALIASES["post_action_occurrence"]],
+    "post_action_detection": ["Post-action D", "改进后D", "措施后 D", *draft.FIELD_ALIASES["post_action_detection"]],
+    "post_action_rpn": ["Post-action RPN", "改进后RPN", "措施后 RPN", *draft.FIELD_ALIASES["post_action_rpn"]],
+    "owner": ["Owner", "措施负责人", *draft.FIELD_ALIASES["owner"]],
+    "target_date": ["Target date", "Target Date", "完成时间", *draft.FIELD_ALIASES["target_date"]],
     "confirmation_status": ["Confirmation status", "确认状态", "评审状态", "状态"],
     "review_comment": ["Review comment", "评审备注", "评审说明", "备注", "确认备注"],
-    "rating_basis": ["Rating basis", "评分依据", "打分依据"],
+    "rating_basis": ["Rating basis", "评分依据", "打分依据", "AI打分推导依据"],
     "reference_type": ["Reference type", "来源类型", "参考类型", "引用类型"],
     "source_case": ["Source case", "Source cases", "来源案例", "来源", "案例来源", "追溯来源"],
 }
@@ -158,8 +162,17 @@ def detect_header_row(ws: Any, aliases: dict[str, list[str]], max_scan_rows: int
 
 
 def parse_overview(workbook: Any) -> dict[str, str]:
-    if "概览" not in workbook.sheetnames:
+    if "概览" not in workbook.sheetnames and "封面" not in workbook.sheetnames:
         return {}
+    if "封面" in workbook.sheetnames:
+        ws = workbook["封面"]
+        overview: dict[str, str] = {}
+        for row in ws.iter_rows(min_row=1, max_row=min(ws.max_row, 24), min_col=2, max_col=3, values_only=True):
+            key = draft.normalize_space(str(row[0] or ""))
+            value = cell_text(row[1])
+            if key and value:
+                overview[key] = value
+        return overview
     ws = workbook["概览"]
     overview: dict[str, str] = {}
     for row in ws.iter_rows(min_row=1, max_row=min(ws.max_row, 20), min_col=1, max_col=2, values_only=True):
@@ -351,6 +364,15 @@ def parse_scope_sheet(
             reference_type=reference_type,
             source_cases=split_source_cases(raw_values.get("source_case", ""), import_trace),
             review_comment=raw_values.get("review_comment", ""),
+            post_action_severity=raw_values.get("post_action_severity", ""),
+            post_action_occurrence=raw_values.get("post_action_occurrence", ""),
+            post_action_detection=raw_values.get("post_action_detection", ""),
+            post_action_rpn=draft.compute_post_action_rpn(
+                raw_values.get("post_action_severity", ""),
+                raw_values.get("post_action_occurrence", ""),
+                raw_values.get("post_action_detection", ""),
+                raw_values.get("post_action_rpn", ""),
+            ),
             max_match_score=0,
             max_scope_hits=0,
             confirmation_reasons=[],
@@ -417,7 +439,7 @@ def build_scopes(scope_plan: dict[str, draft.ScopeDefinition], scope_rows: dict[
 
 
 def infer_module_and_type(args: argparse.Namespace, overview: dict[str, str]) -> tuple[str, str]:
-    module = args.module or overview.get("模块", "") or overview.get("模块/分析对象名称", "")
+    module = args.module or overview.get("模块", "") or overview.get("模块/分析对象名称", "") or overview.get("产品型号", "")
     fmea_type = args.fmea_type or overview.get("FMEA 类型", "") or "DFMEA"
     if not module:
         raise ValueError("无法从参数或工作簿概览中识别模块名，请提供 --module。")

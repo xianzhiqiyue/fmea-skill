@@ -8,12 +8,15 @@ This skill should behave like a collaborative FMEA facilitator, not just a table
 2. Decide whether the material should be treated as one scope or split into multiple scopes.
 3. Extract or request the minimum inputs needed to build a first draft.
 4. Normalize module names and retrieve similar historical cases.
-5. Draft a normalized FMEA table.
-6. Mark uncertain ratings and assumptions.
-7. Produce a review-oriented follow-up section.
-8. If the user confirms rows, suggest which ones should be added to the case library.
+5. For broad or OpenClaw-ready work, run a multi-specialist FMEA cluster.
+6. Draft and consolidate a normalized FMEA table.
+7. Mark uncertain ratings and assumptions.
+8. Produce a review-oriented follow-up section.
+9. If the user confirms rows, suggest which ones should be added to the case library.
 
-For OpenClaw delivery, package the result as:
+For OpenClaw delivery, use the reference workbook shape as the standard output format.
+Use the bundled `template.xlsx` as the standard output template; it must remain content-clean, with sample-specific document content removed.
+Package the result as:
 
 1. scope split summary
 2. per-scope FMEA draft worksheets
@@ -22,7 +25,9 @@ For OpenClaw delivery, package the result as:
 5. action list
 6. source trace
 
-The preferred artifact is one Excel workbook. Markdown can still be used as a review preview, and JSON can still be used as a structured interface payload.
+The preferred artifact is one Excel workbook with the standard sheets `封面`, `FMEA主表`, and `评分准则参考`.
+`FMEA主表` keeps headers in `B2:W2` and generated data from row `3`.
+Markdown can still be used as a review preview, and JSON can still be used as a structured interface payload.
 
 Retrieval and grouping rules:
 
@@ -36,6 +41,61 @@ Retrieval and grouping rules:
 - for tightly coupled technical families, define direct relatives explicitly instead of relying on keyword coincidence alone
 - classify every reused row as `current module`, `direct family reference`, or `broader analogy`
 - treat direct family rows as gap-filling support, not the default backbone, when the current module already has a stable risk skeleton
+
+## Multi-specialist cluster rule
+
+FMEA should be treated as a cross-functional review, not a single-perspective generation task.
+
+Use a multi-specialist agent cluster when:
+
+- the user asks for an OpenClaw-ready workbook or detailed draft
+- the module spans more than one discipline, lifecycle stage, subsystem, or interface
+- safety, reliability, field service, customer operation, logistics, or software/control risks materially affect the result
+- the input is sparse but a first draft still needs broad coverage
+
+If native subagents are available, assign bounded lanes to relevant specialist agents.
+If they are not available, run the same specialist passes sequentially and keep the viewpoint labels in the synthesis.
+
+Recommended lanes:
+
+| Lane | Specialist perspective | Must inspect / emphasize |
+| --- | --- | --- |
+| A | System / architecture | boundaries, interfaces, transfer chains, integration assumptions |
+| B | Design / module | function decomposition, design constraints, tolerances, component causes |
+| C | Reliability / test | validation coverage, lifetime assumptions, O/D evidence, test escapes |
+| D | Manufacturing / quality | process variation, supplier quality, inspection and prevention controls |
+| E | Safety / compliance | hazards, misuse, protection layers, high-severity rows |
+| F | Field service / maintenance | installation, calibration, wear, maintainability, diagnostics |
+| G | Customer / application | real workflows, misuse, acceptance criteria, task interruption |
+| H | Supply chain / logistics | packaging, storage, transport, incoming quality |
+| I | Software / controls | state logic, alarms, interlocks, configuration, data/control failures |
+
+Each specialist output must use the normalized row shape:
+
+- scope / lifecycle or subsystem grouping
+- analysis object
+- function or requirement
+- failure mode
+- effect
+- S with rationale
+- cause
+- O with rationale
+- current prevention and detection controls
+- D with rationale
+- recommended action
+- owner placeholder
+- target-date placeholder
+- reference type and source trace
+- assumptions and confirmation needs
+
+Consolidation rules:
+
+- merge duplicate rows only when the failure mode, cause, and effect are truly the same
+- keep separate rows when the same failure mode has different causes or different controls
+- do not average specialist scores silently; preserve score disagreements in `AI打分推导依据`
+- route disputed scope, score, ownership, or evidence basis into `Rows needing confirmation`
+- keep safety/compliance high-S concerns visible even if RPN is lower than other rows
+- after consolidation, rank top risks and list which professional role should confirm each uncertain row
 
 ## Scope split rule
 

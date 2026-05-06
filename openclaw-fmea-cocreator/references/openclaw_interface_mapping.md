@@ -134,7 +134,7 @@ For `review_existing_fmea` or `high_risk_review`, OpenClaw may also allow a ligh
 - optional `module_name`
 - optional `fmea_type`
 
-If `module_name` or `fmea_type` is omitted, the importer will try to recover them from the workbook `概览` sheet.
+If `module_name` or `fmea_type` is omitted, the importer will try to recover them from the workbook `封面` sheet first, then from the legacy `概览` sheet.
 
 ## 4. Interaction contract
 
@@ -155,7 +155,7 @@ The skill should:
 If `scope_mode = auto`, the skill:
 
 - suggests scopes from module profile and input text
-- records them in the workbook `Scope规划`
+- records them in the workbook `FMEA主表` column `生命周期维度`
 
 If `scope_mode = manual`, the skill:
 
@@ -176,8 +176,8 @@ The skill:
 If `existing_fmea_excel_path` is present instead of a raw-description path, this round becomes:
 
 - import the workbook
-- detect scope sheets and normalized headers
-- preserve existing `确认队列` reasons when available
+- detect `FMEA主表` or legacy scope sheets and normalized headers
+- preserve existing review/trace details when available
 - rebuild the standard Excel/JSON/cards contract
 
 ### Round 4: delivery
@@ -192,7 +192,7 @@ The skill returns:
 
 OpenClaw should allow the user to:
 
-- review `确认队列`
+- review the JSON/card-based confirmation queue
 - adjust scope ownership
 - confirm or overwrite `S/O/D`
 - fill `Owner` and `Target date`
@@ -209,104 +209,50 @@ Once OpenClaw collects the clicked review actions, it should:
 
 ## 5. Input-to-workbook mapping
 
-### 5.1 Workbook `概览`
+### 5.1 Workbook `封面`
 
 | Workbook cell group | Source |
 | --- | --- |
-| module | `module_name` |
-| FMEA type | `fmea_type` |
-| scope count | derived from auto/manual scopes |
-| row count | derived |
-| confirmation queue count | derived |
-| input summary | merged summary from function, scenario, environment, interfaces, constraints, historical issues, BOM |
+| report title | `module_name` + `fmea_type` |
+| `产品型号` | `module_name` |
+| `核心指标` | merged input summary from function, scenario, environment, interfaces, constraints, historical issues, BOM |
+| `分析维度` | auto/manual scope names |
+| `分析日期` | generation date |
 
-### 5.2 Workbook `Scope规划`
+### 5.2 Workbook `FMEA主表`
 
-| Column | Source |
-| --- | --- |
-| `Scope` | auto-suggested scope name or `scopes[].name` |
-| `检索关键词` | auto-extracted keywords or `scopes[].keywords` |
-| `来源` | `auto` or `manual` |
-| `命中数` | auto-scope keyword hit count |
-| `说明` | auto reason or manual note summary |
-
-### 5.3 Per-scope worksheets
-
-Each scope becomes one worksheet.
+All scopes are written into one template-styled worksheet. Scope ownership is preserved in `生命周期维度` rather than separate worksheets.
+The standard workbook format uses worksheet `FMEA主表`, headers in `B2:W2`, data rows from row `3`, current `RPN` formula in column `O`, and post-action `改进后RPN` formula in column `W`.
 
 | Worksheet column | Source |
 | --- | --- |
-| `Scope` | derived scope name |
-| `Analysis object` | drafted or retrieved row field |
-| `Function or requirement` | drafted or retrieved row field |
-| `Failure mode` | drafted or retrieved row field |
-| `Failure effect` | drafted or retrieved row field |
-| `S` | drafted or inherited |
-| `Cause or mechanism` | drafted or retrieved row field |
-| `O` | drafted or inherited |
-| `Current controls` | drafted or retrieved row field |
-| `D` | drafted or inherited |
+| `序号` | generated row number |
+| `生命周期维度` | derived scope name |
+| `模块/零件` | drafted or retrieved analysis object |
+| `功能及要求` | drafted or retrieved function / requirement |
+| `参数指标性能` | blank unless a concrete parameter is available |
+| `失效影响（后果）` | drafted or retrieved failure effect |
+| `严重度 S` | drafted or inherited |
+| `潜在失效模式` | drafted or retrieved failure mode |
+| `失效原因` | drafted or retrieved cause / mechanism |
+| `现行预防措施` | drafted or retrieved current controls |
+| `频度 O` | drafted or inherited |
+| `现行探测控制` | drafted or retrieved current controls when prevention/detection are not separated |
+| `探测度 D` | drafted or inherited |
 | `RPN` | inherited or computed |
-| `Recommended actions` | drafted or inherited |
-| `Owner` | currently blank unless provided later |
-| `Target date` | currently blank unless provided later |
-| `Confirmation status` | `draft`, `needs expert confirmation`, `confirmed` |
-| `Review comment` | accumulated human review notes |
-| `Rating basis` | generated explanation of S/O/D basis |
-| `Reference type` | `current module`, `direct family reference`, `broader analogy` |
-| `Source case` | workbook / sheet / row trace |
+| `AI打分推导依据` | generated S/O/D basis plus confirmation status, reference type, review comments, and source trace |
+| `建议措施` | drafted or inherited recommended actions |
+| `措施负责人` | current owner or blank |
+| `完成时间` | current target date or blank |
+| `改进后S/O/D/RPN` | blank unless reassessment values are provided |
 
-When imported from an existing workbook, `Source case` should prepend:
+When imported from an existing workbook, the source trace should prepend:
 
 - `{imported_workbook_name} / {sheet_name} / row {row_number}`
 
-### 5.4 Workbook `确认队列`
+### 5.3 Workbook `评分准则参考`
 
-| Column | Source |
-| --- | --- |
-| `Scope` | current row scope |
-| `Row key` | generated from object + failure mode |
-| `Why confirmation is needed` | generated reasons |
-| `Suggested reviewer focus` | generated review guidance |
-| `Review comment` | already written-back review note if the row is still unresolved |
-| `Reference type` | row reference type |
-| `Source case` | row traceability |
-
-### 5.5 Workbook `Top风险`
-
-| Column | Source |
-| --- | --- |
-| `Scope` | row scope |
-| `Row key` | stable row locator |
-| `Failure mode` | row failure mode |
-| `Current RPN` | row RPN |
-| `Why it matters` | condensed row effect |
-| `First action candidate` | first useful action text |
-| `Reference type` | row reference type |
-
-### 5.6 Workbook `建议动作`
-
-| Column | Source |
-| --- | --- |
-| `Scope` | row scope |
-| `Row key` | generated row key |
-| `Current RPN` | row RPN |
-| `Recommended action` | row recommended actions |
-| `Owner` | current value or blank |
-| `Target date` | current value or blank |
-| `Confirmation status` | row confirmation status |
-| `Review comment` | accumulated review note |
-| `Reference type` | row reference type |
-| `Source case` | row traceability |
-
-### 5.7 Workbook `来源追踪`
-
-| Column | Source |
-| --- | --- |
-| `Scope` | row scope |
-| `Row key` | generated row key |
-| `Reference type` | row reference type |
-| `Source case` | row traceability |
+This sheet is copied from the standard template unchanged and should remain available for expert scoring review.
 
 ## 6. OpenClaw field-to-script mapping
 

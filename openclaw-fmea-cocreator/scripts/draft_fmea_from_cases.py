@@ -4,13 +4,13 @@ import argparse
 import json
 import re
 from collections import Counter, defaultdict
+from copy import copy
 from dataclasses import asdict, dataclass, field
+from datetime import date
 from pathlib import Path
 from typing import Any
 
-from openpyxl import Workbook
-from openpyxl.styles import Alignment, Font, PatternFill
-from openpyxl.utils import get_column_letter
+from openpyxl import load_workbook
 
 from retrieve_cases import (
     ALIASES,
@@ -25,35 +25,43 @@ from retrieve_cases import (
 
 SKILL_DIR = Path(__file__).resolve().parent.parent
 PROJECT_ROOT = SKILL_DIR.parent
+PACKAGED_TEMPLATE_PATH = SKILL_DIR / "template.xlsx"
+REPO_TEMPLATE_PATH = PROJECT_ROOT / "template.xlsx"
+DEFAULT_TEMPLATE_PATH = PACKAGED_TEMPLATE_PATH if PACKAGED_TEMPLATE_PATH.exists() else REPO_TEMPLATE_PATH
 ALLOWED_THEMES = {"dfmea_sample_data", "knowledge_base_template"}
 
 FIELD_ALIASES = {
-    "analysis_object": ["零件名称", "子系统/功能模块", "子系统/组件", "子系统/部件", "模块", "关联项目/产品"],
+    "analysis_object": ["模块/零件", "零件名称", "子系统/功能模块", "子系统/组件", "子系统/部件", "模块", "关联项目/产品"],
     "function": [
+        "功能及要求",
         "功能要求",
         "功能描述",
         "标准化功能项",
         "产品寿命周期应用任务和环境剖面",
         "策划和控制内容",
     ],
+    "parameter_indicators": ["参数指标性能", "参数指标", "性能指标"],
     "failure_mode": ["潜在失效模式", "失效模式 (AI分类)"],
     "effect": [
+        "失效影响（后果）",
         "潜在失效后果 (客户/后工序)",
         "潜在失效后果（客户/后工序）",
         "失效的潜在后果（对客户或后工序的影响）",
         "失效后果 (S)",
     ],
-    "severity": ["严重度 (S)", "S"],
+    "severity": ["严重度\nS", "严重度 S", "严重度 (S)", "S"],
     "cause": ["潜在失效起因/机理", "潜在失效原因（机理）", "潜在失效原因", "根本原因分析 (Cause)"],
-    "occurrence": ["发生频次 (O)", "O"],
+    "occurrence": ["频度\nO", "频度 O", "发生频次 (O)", "O"],
     "current_controls": [
         "现行设计控制 (预防/探测)",
         "现行控制措施",
         "现行控制方法",
         "现行设计/过程控制措施",
         "现行控制措施",
+        "现行预防措施",
+        "现行探测控制",
     ],
-    "detection": ["可探测度 (D)", "D"],
+    "detection": ["探测度\nD", "探测度 D", "可探测度 (D)", "D"],
     "rpn": ["RPN", "初始 RPN"],
     "recommended_actions": [
         "建议改进措施 (控制/预防)",
@@ -61,12 +69,13 @@ FIELD_ALIASES = {
         "建议措施",
         "建议的预防/探测措施",
     ],
-    "post_action_severity": ["措施后 S", "改进后 S", "新S"],
-    "post_action_occurrence": ["措施后 O", "改进后 O", "新O"],
-    "post_action_detection": ["措施后 D", "改进后 D", "新D"],
-    "post_action_rpn": ["措施后 RPN", "改进后 RPN", "新RPN"],
-    "owner": ["责任人", "负责人"],
-    "target_date": ["计划完成时间", "结束时间"],
+    "rating_basis": ["AI打分推导依据", "评分依据", "打分依据"],
+    "post_action_severity": ["改进后S", "措施后 S", "改进后 S", "新S"],
+    "post_action_occurrence": ["改进后O", "措施后 O", "改进后 O", "新O"],
+    "post_action_detection": ["改进后D", "措施后 D", "改进后 D", "新D"],
+    "post_action_rpn": ["改进后RPN", "措施后 RPN", "改进后 RPN", "新RPN"],
+    "owner": ["措施负责人", "责任人", "负责人"],
+    "target_date": ["完成时间", "计划完成时间", "结束时间"],
 }
 
 STOPWORDS = {
@@ -269,6 +278,72 @@ SCOPE_PROFILES: dict[str, list[dict[str, Any]]] = {
     ],
 }
 
+LIFECYCLE_COVERAGE_PROFILES: list[dict[str, Any]] = [
+    {
+        "name": "产品类别设计",
+        "keywords": ["架构", "设计", "指标", "裕量", "保护", "安全", "功能", "接口", "验证", "竞品"],
+        "function_context": "产品设计阶段确保：{function}",
+        "effect_context": "设计缺陷会固化到整机基线，造成批量性能、安全或可靠性风险。关联后果：{effect}",
+        "cause_context": "需求分解、设计裕量、接口约束或验证覆盖不足。关联机理：{cause}",
+        "control_context": "需求评审、架构评审、仿真/样机验证、设计规则检查。现行控制：{controls}",
+        "action_context": "补充设计裕量、边界条件验证、保护阈值和评审检查表。建议延伸：{actions}",
+    },
+    {
+        "name": "物流运输",
+        "keywords": ["运输", "包装", "振动", "冲击", "跌落", "湿热", "静电", "搬运", "锁止", "到货"],
+        "function_context": "物流运输后仍满足：{function}",
+        "effect_context": "运输/搬运后隐性损伤会导致到货验收、安装或首次运行失败。关联后果：{effect}",
+        "cause_context": "长途振动、冲击、潮湿、ESD、包装固定或运输锁止不足。关联机理：{cause}",
+        "control_context": "包装评审、运输试验、冲击/温湿度记录、到货外观与功能检查。现行控制：{controls}",
+        "action_context": "增加专用包装、关键器件锁止、运输记录标签、到货复测项目。建议延伸：{actions}",
+    },
+    {
+        "name": "安装调试",
+        "keywords": ["安装", "调试", "接线", "校准", "接地", "联调", "验收", "配置", "SOP", "现场"],
+        "function_context": "安装调试阶段正确建立：{function}",
+        "effect_context": "安装配置偏差会在客户现场暴露为验收失败、性能不稳或安全保护误动作。关联后果：{effect}",
+        "cause_context": "接线/接地/配置/校准步骤遗漏，现场条件与工厂验证边界不一致。关联机理：{cause}",
+        "control_context": "安装SOP、联调清单、接地/接口核验、出厂参数备份、现场验收测试。现行控制：{controls}",
+        "action_context": "增加安装防错、参数模板、自动自检、强制验收记录和现场问题回写。建议延伸：{actions}",
+    },
+    {
+        "name": "客户操作",
+        "keywords": ["客户", "操作", "误操作", "权限", "参数", "报警", "提示", "互锁", "培训", "使用"],
+        "function_context": "客户日常操作中安全、稳定地完成：{function}",
+        "effect_context": "误操作或参数误设会导致实验中断、器件损伤、结果失真或客户投诉。关联后果：{effect}",
+        "cause_context": "用户经验差异、参数边界提示不足、权限/互锁不完整或报警解释不清。关联机理：{cause}",
+        "control_context": "操作权限、参数范围限制、报警提示、日志追踪、培训材料。现行控制：{controls}",
+        "action_context": "增加新手模式、关键操作二次确认、参数推荐、报警指导和操作日志复盘。建议延伸：{actions}",
+    },
+    {
+        "name": "任务执行",
+        "keywords": ["任务", "运行", "长时间", "脉冲", "稳定", "精度", "漂移", "动态", "输出", "性能"],
+        "function_context": "任务执行期间持续满足：{function}",
+        "effect_context": "任务过程中失效会直接影响实验数据、连续运行和核心性能。关联后果：{effect}",
+        "cause_context": "长时间运行、动态负载、热漂移、控制滞后或边界工况覆盖不足。关联机理：{cause}",
+        "control_context": "在线监测、性能自检、趋势记录、任务前后校验、保护联锁。现行控制：{controls}",
+        "action_context": "增加在线诊断、趋势预警、任务前自检、降额策略和异常自动记录。建议延伸：{actions}",
+    },
+    {
+        "name": "环境应力",
+        "keywords": ["环境", "温度", "湿度", "EMC", "电磁", "电源", "振动", "粉尘", "冷凝", "散热"],
+        "function_context": "环境应力变化下维持：{function}",
+        "effect_context": "温湿度、电磁、电源或振动应力会造成间歇性故障、误报警或性能漂移。关联后果：{effect}",
+        "cause_context": "客户现场环境超出假设、热/湿/电磁裕量不足或环境监测缺失。关联机理：{cause}",
+        "control_context": "环境规范、温湿度/电源/EMC监测、降额设计、环境适应性验证。现行控制：{controls}",
+        "action_context": "增加环境传感、EMC/电源裕量、热设计复核、环境超限联锁和客户环境预检。建议延伸：{actions}",
+    },
+    {
+        "name": "维护保养",
+        "keywords": ["维护", "保养", "校准", "寿命", "老化", "更换", "备件", "清洁", "诊断", "复位"],
+        "function_context": "维护保养后恢复并保持：{function}",
+        "effect_context": "维护不到位或寿命件退化会导致重复停机、性能慢性劣化和服务成本上升。关联后果：{effect}",
+        "cause_context": "寿命件老化、校准漂移、维护周期不清、备件/清洁/复位策略不足。关联机理：{cause}",
+        "control_context": "维护计划、寿命计数、校准记录、备件清单、远程诊断。现行控制：{controls}",
+        "action_context": "增加寿命预测、维护提醒、快换设计、远程诊断和保养记录闭环。建议延伸：{actions}",
+    },
+]
+
 
 @dataclass
 class ScopeDefinition:
@@ -301,6 +376,10 @@ class DraftRow:
     reference_type: str
     source_cases: list[str]
     review_comment: str = ""
+    post_action_severity: str = ""
+    post_action_occurrence: str = ""
+    post_action_detection: str = ""
+    post_action_rpn: str = ""
     max_match_score: int = 0
     max_scope_hits: int = 0
     confirmation_reasons: list[str] = field(default_factory=list)
@@ -452,6 +531,33 @@ def suggest_scopes(module: str, input_text: str, extracted_terms: list[str]) -> 
     return suggestions
 
 
+def suggest_lifecycle_scopes(module: str, input_text: str, extracted_terms: list[str]) -> list[ScopeDefinition]:
+    lowered = input_text.lower()
+    scopes: list[ScopeDefinition] = []
+    for profile in LIFECYCLE_COVERAGE_PROFILES:
+        keywords = profile["keywords"]
+        hit_keywords = [keyword for keyword in keywords if keyword.lower() in lowered]
+        query_terms: list[str] = []
+        for term in [module, *hit_keywords, *extracted_terms[:10], *keywords]:
+            if term and term not in query_terms:
+                query_terms.append(term)
+        scopes.append(
+            ScopeDefinition(
+                name=profile["name"],
+                query_terms=query_terms[:18],
+                extracted_terms=[term for term in extracted_terms if term in query_terms],
+                auto_suggested=True,
+                hit_count=len(hit_keywords),
+                reason=(
+                    f"lifecycle coverage profile; matched keywords: {' / '.join(hit_keywords[:8])}"
+                    if hit_keywords
+                    else "lifecycle coverage profile; added to avoid narrow subsystem-only FMEA coverage"
+                ),
+            )
+        )
+    return scopes
+
+
 def normalize_space(value: str) -> str:
     return re.sub(r"\s+", " ", value).strip()
 
@@ -491,6 +597,31 @@ def compute_rpn(severity: str, occurrence: str, detection: str, current_rpn: str
     if s_value is None or o_value is None or d_value is None:
         return ""
     return str(s_value * o_value * d_value)
+
+
+def compute_post_action_rpn(severity: str, occurrence: str, detection: str, current_rpn: str) -> str:
+    return compute_rpn(severity, occurrence, detection, current_rpn)
+
+
+def fill_missing_draft_scores(
+    severity: str,
+    occurrence: str,
+    detection: str,
+    rpn: str = "",
+) -> tuple[str, str, str, str, list[str]]:
+    """Fill missing S/O/D with conservative AI draft values so rows remain reviewable.
+
+    Missing source scores are still routed to the confirmation queue by callers.
+    These defaults are not enterprise facts; they are placeholders that make RPN
+    sorting and workbook formulas usable before expert calibration.
+    """
+
+    missing = [label for label, value in [("S", severity), ("O", occurrence), ("D", detection)] if not value]
+    severity = severity or "7"
+    occurrence = occurrence or "5"
+    detection = detection or "5"
+    rpn = compute_rpn(severity, occurrence, detection, rpn)
+    return severity, occurrence, detection, rpn, missing
 
 
 def combine_unique(values: list[str]) -> str:
@@ -838,6 +969,15 @@ def aggregate_rows(scope: ScopeDefinition, scopes: list[ScopeDefinition], matche
             next((value for value in [first_value(row, "rpn") for row in rows] if value), ""),
         )
         recommended_actions = combine_unique([first_value(row, "recommended_actions") for row in rows])
+        post_action_severity = next((value for value in [first_value(row, "post_action_severity") for row in rows] if value), "")
+        post_action_occurrence = next((value for value in [first_value(row, "post_action_occurrence") for row in rows] if value), "")
+        post_action_detection = next((value for value in [first_value(row, "post_action_detection") for row in rows] if value), "")
+        post_action_rpn = compute_post_action_rpn(
+            post_action_severity,
+            post_action_occurrence,
+            post_action_detection,
+            next((value for value in [first_value(row, "post_action_rpn") for row in rows] if value), ""),
+        )
         owner = combine_unique([first_value(row, "owner") for row in rows])
         target_date = combine_unique([first_value(row, "target_date") for row in rows])
         source_cases = []
@@ -852,23 +992,37 @@ def aggregate_rows(scope: ScopeDefinition, scopes: list[ScopeDefinition], matche
             for scope_name in boundary_scope_names(row, scope.name, scopes):
                 if scope_name not in boundary_scopes:
                     boundary_scopes.append(scope_name)
+        source_severity = severity
+        source_occurrence = occurrence
+        source_detection = detection
         confirmation_reasons = build_confirmation_reasons(
             reference_type,
             boundary_scopes,
             themes,
-            severity,
-            occurrence,
-            detection,
+            source_severity,
+            source_occurrence,
+            source_detection,
         )
         confirmation_status = build_confirmation_status(confirmation_reasons)
         rating_basis = build_rating_basis(
             themes,
             reference_type,
+            source_severity,
+            source_occurrence,
+            source_detection,
+        )
+        severity, occurrence, detection, rpn, filled_missing_scores = fill_missing_draft_scores(
             severity,
             occurrence,
             detection,
+            rpn,
         )
-        reviewer_focus = build_reviewer_focus(reference_type, boundary_scopes, occurrence, detection)
+        if filled_missing_scores:
+            rating_basis = (
+                f"{rating_basis}；源案例缺少 {'/'.join(filled_missing_scores)}，"
+                f"已填入保守 AI 草稿 S/O/D={severity}/{occurrence}/{detection}，必须专家确认"
+            )
+        reviewer_focus = build_reviewer_focus(reference_type, boundary_scopes, source_occurrence, source_detection)
 
         draft_rows.append(
             DraftRow(
@@ -893,6 +1047,10 @@ def aggregate_rows(scope: ScopeDefinition, scopes: list[ScopeDefinition], matche
                 confirmation_reasons=confirmation_reasons,
                 reviewer_focus=reviewer_focus,
                 boundary_scopes=boundary_scopes,
+                post_action_severity=post_action_severity,
+                post_action_occurrence=post_action_occurrence,
+                post_action_detection=post_action_detection,
+                post_action_rpn=post_action_rpn,
                 max_match_score=max(match.score for match in matches_for_row),
                 max_scope_hits=max(scope_hit_count(row, scope.query_terms) for row in rows),
             )
@@ -910,164 +1068,373 @@ def aggregate_rows(scope: ScopeDefinition, scopes: list[ScopeDefinition], matche
     return draft_rows
 
 
+def lifecycle_profile_by_name(scope_name: str) -> dict[str, Any]:
+    for profile in LIFECYCLE_COVERAGE_PROFILES:
+        if profile["name"] == scope_name:
+            return profile
+    return {
+        "name": scope_name,
+        "keywords": [],
+        "target_rows": 4,
+        "function_context": "{function}",
+        "effect_context": "{effect}",
+        "cause_context": "{cause}",
+        "control_context": "{controls}",
+        "action_context": "{actions}",
+    }
+
+
+def contextualize_profile_text(profile: dict[str, Any], field_name: str, **values: str) -> str:
+    template = profile.get(field_name, "{value}")
+    normalized = {key: normalize_space(value) or "待补充" for key, value in values.items()}
+    return normalize_space(template.format(**normalized))
+
+
+def rank_seed_rows(matches: list[Match], module: str | None, scope: ScopeDefinition) -> list[tuple[Match, dict[str, str]]]:
+    cache: dict[Path, Any] = {}
+    ranked: list[tuple[tuple[int, int, int, int, str], Match, dict[str, str]]] = []
+    for match in matches:
+        if match.theme not in ALLOWED_THEMES:
+            continue
+        row = read_match_row(match, cache)
+        if not any(dedupe_key(row)):
+            continue
+        family_rank = module_family_rank(match.sheet, module)
+        focus_score = scope_focus_score(row, scope.query_terms)
+        rpn = safe_int(first_value(row, "rpn")) or 0
+        ranked.append(((-family_rank, -focus_score, -rpn, -match.score, match.excel_row), match, row))
+    ranked.sort(key=lambda item: item[0])
+    return [(match, row) for _, match, row in ranked]
+
+
+def draft_row_from_seed(scope: ScopeDefinition, profile: dict[str, Any], match: Match, row: dict[str, str], module: str | None) -> DraftRow:
+    analysis_object = first_value(row, "analysis_object") or module or scope.name
+    function = first_value(row, "function")
+    failure_mode = first_value(row, "failure_mode")
+    effect = first_value(row, "effect")
+    severity = first_value(row, "severity")
+    cause = first_value(row, "cause")
+    occurrence = first_value(row, "occurrence")
+    controls = first_value(row, "current_controls")
+    detection = first_value(row, "detection")
+    rpn = compute_rpn(severity, occurrence, detection, first_value(row, "rpn"))
+    recommended_actions = first_value(row, "recommended_actions")
+    post_action_severity = first_value(row, "post_action_severity")
+    post_action_occurrence = first_value(row, "post_action_occurrence")
+    post_action_detection = first_value(row, "post_action_detection")
+    post_action_rpn = compute_post_action_rpn(
+        post_action_severity,
+        post_action_occurrence,
+        post_action_detection,
+        first_value(row, "post_action_rpn"),
+    )
+    reference_type = build_reference_type([match], module)
+    source_cases = [f"{match.workbook} / {match.sheet} / row {match.excel_row}"]
+    themes = {match.theme}
+    source_severity = severity
+    source_occurrence = occurrence
+    source_detection = detection
+    confirmation_reasons = build_confirmation_reasons(reference_type, [], themes, source_severity, source_occurrence, source_detection)
+    confirmation_reasons.append(f"{scope.name} 维度为覆盖扩展生成，需要专家确认该生命周期场景、控制措施和评分是否适用")
+    rating_basis = build_rating_basis(themes, reference_type, source_severity, source_occurrence, source_detection)
+    severity, occurrence, detection, rpn, filled_missing_scores = fill_missing_draft_scores(
+        severity,
+        occurrence,
+        detection,
+        rpn,
+    )
+    if filled_missing_scores:
+        rating_basis = (
+            f"{rating_basis}；源案例缺少 {'/'.join(filled_missing_scores)}，"
+            f"已填入保守 AI 草稿 S/O/D={severity}/{occurrence}/{detection}，必须专家确认"
+        )
+    rating_basis = f"{rating_basis}；按 {scope.name} 生命周期维度扩展，参考源案例但不视为已确认结论"
+
+    return DraftRow(
+        scope=scope.name,
+        analysis_object=analysis_object,
+        function=contextualize_profile_text(profile, "function_context", function=function),
+        failure_mode=failure_mode,
+        effect=contextualize_profile_text(profile, "effect_context", effect=effect),
+        severity=severity,
+        cause=contextualize_profile_text(profile, "cause_context", cause=cause),
+        occurrence=occurrence,
+        current_controls=contextualize_profile_text(profile, "control_context", controls=controls),
+        detection=detection,
+        rpn=rpn,
+        recommended_actions=contextualize_profile_text(profile, "action_context", actions=recommended_actions),
+        owner=first_value(row, "owner"),
+        target_date=first_value(row, "target_date"),
+        confirmation_status="needs expert confirmation",
+        rating_basis=rating_basis,
+        reference_type=reference_type,
+        source_cases=source_cases,
+        confirmation_reasons=confirmation_reasons,
+        reviewer_focus=build_reviewer_focus(reference_type, [], source_occurrence, source_detection),
+        post_action_severity=post_action_severity,
+        post_action_occurrence=post_action_occurrence,
+        post_action_detection=post_action_detection,
+        post_action_rpn=post_action_rpn,
+        max_match_score=match.score,
+        max_scope_hits=scope_hit_count(row, scope.query_terms),
+    )
+
+
+def fallback_lifecycle_row(scope: ScopeDefinition, profile: dict[str, Any], module: str, index: int) -> DraftRow:
+    failure_mode = f"{module}{scope.name}场景风险未充分识别"
+    confirmation_reasons = [f"{scope.name} 维度缺少足够历史案例，需要补充模块实测、现场和维护数据"]
+    return DraftRow(
+        scope=scope.name,
+        analysis_object=module,
+        function=contextualize_profile_text(profile, "function_context", function=f"{module}在{scope.name}阶段保持功能和安全边界"),
+        failure_mode=failure_mode,
+        effect=contextualize_profile_text(profile, "effect_context", effect="可能造成性能下降、交付延期、实验中断或服务成本上升"),
+        severity="7",
+        cause=contextualize_profile_text(profile, "cause_context", cause="缺少本维度历史案例和边界条件定义"),
+        occurrence="5",
+        current_controls=contextualize_profile_text(profile, "control_context", controls="待补充"),
+        detection="5",
+        rpn="175",
+        recommended_actions=contextualize_profile_text(profile, "action_context", actions="补充场景清单、控制计划、验证记录和责任人"),
+        owner="责任工程师待定",
+        target_date="待定",
+        confirmation_status="needs expert confirmation",
+        rating_basis=f"第 {index} 条覆盖补缺行；无足够源案例，已填入保守 AI 草稿 S/O/D=7/5/5，需人工确认",
+        reference_type="broader analogy",
+        source_cases=[],
+        confirmation_reasons=confirmation_reasons,
+        reviewer_focus="确认是否需要保留该生命周期风险，并补齐机理、现行控制、S/O/D 与责任人",
+    )
+
+
+def build_lifecycle_coverage_rows(
+    module: str,
+    input_text: str,
+    extracted_terms: list[str],
+    scopes: list[ScopeDefinition],
+    min_rows: int,
+) -> dict[str, list[DraftRow]]:
+    scope_rows: dict[str, list[DraftRow]] = {}
+    base_query_terms = [module, *extracted_terms[:12], *tokenize(input_text)[:24]]
+    rows_remaining = max(min_rows, sum(lifecycle_profile_by_name(scope.name).get("target_rows", 0) for scope in scopes))
+    scopes_remaining = len(scopes)
+
+    for scope in scopes:
+        profile = lifecycle_profile_by_name(scope.name)
+        default_target = int(profile.get("target_rows", 4))
+        target_rows = max(default_target, rows_remaining // max(scopes_remaining, 1))
+        rows_remaining -= target_rows
+        scopes_remaining -= 1
+
+        query = " ".join([*base_query_terms, *scope.query_terms, *profile.get("keywords", [])])
+        seed_rows = rank_seed_rows(collect_matches(query, module), module, scope)
+
+        used_keys: set[tuple[str, str]] = set()
+        draft_rows: list[DraftRow] = []
+        for match, row in seed_rows:
+            key = (first_value(row, "analysis_object"), first_value(row, "failure_mode"))
+            if key in used_keys:
+                continue
+            used_keys.add(key)
+            draft_rows.append(draft_row_from_seed(scope, profile, match, row, module))
+            if len(draft_rows) >= target_rows:
+                break
+
+        while len(draft_rows) < target_rows:
+            draft_rows.append(fallback_lifecycle_row(scope, profile, module, len(draft_rows) + 1))
+
+        draft_rows.sort(
+            key=lambda item: (
+                -(safe_int(item.rpn) or -1),
+                -item.max_match_score,
+                item.analysis_object,
+                item.failure_mode,
+            )
+        )
+        scope_rows[scope.name] = draft_rows
+
+    return scope_rows
+
+
 def format_md_cell(value: str) -> str:
     return value.replace("|", "\\|").replace("\n", "<br>")
 
 
-def safe_sheet_title(title: str, used_titles: set[str]) -> str:
-    cleaned = re.sub(r"[\[\]\:*?/\\]", "_", title).strip() or "Sheet"
-    cleaned = cleaned[:31]
-    if cleaned not in used_titles:
-        used_titles.add(cleaned)
-        return cleaned
-
-    index = 2
-    while True:
-        suffix = f"_{index}"
-        candidate = f"{cleaned[: 31 - len(suffix)]}{suffix}"
-        if candidate not in used_titles:
-            used_titles.add(candidate)
-            return candidate
-        index += 1
-
-
-def write_sheet_table(ws: Any, headers: list[str], rows: list[list[Any]], freeze: str = "A2") -> None:
-    header_fill = PatternFill(fill_type="solid", fgColor="D9EAD3")
-    header_font = Font(bold=True)
-    wrap_alignment = Alignment(vertical="top", wrap_text=True)
-
-    ws.append(headers)
-    for cell in ws[1]:
-        cell.fill = header_fill
-        cell.font = header_font
-        cell.alignment = wrap_alignment
-
-    for row in rows:
-        ws.append(row)
-
-    for row in ws.iter_rows():
-        for cell in row:
-            cell.alignment = wrap_alignment
-
-    if ws.max_row >= 1 and ws.max_column >= 1:
-        ws.auto_filter.ref = ws.dimensions
-    ws.freeze_panes = freeze
-
-    for column_cells in ws.columns:
-        letter = get_column_letter(column_cells[0].column)
-        max_length = 0
-        for cell in column_cells:
-            text = "" if cell.value is None else str(cell.value)
-            longest = max((len(line) for line in text.splitlines()), default=0)
-            max_length = max(max_length, longest)
-        ws.column_dimensions[letter].width = min(max(max_length + 2, 12), 48)
+def capture_row_style(ws: Any, source_row: int, min_col: int = 2, max_col: int = 23) -> dict[str, Any]:
+    row_dimension = ws.row_dimensions[source_row]
+    return {
+        "height": row_dimension.height,
+        "hidden": row_dimension.hidden,
+        "outlineLevel": row_dimension.outlineLevel,
+        "cells": [
+            {
+                "_style": copy(ws.cell(row=source_row, column=column)._style),
+                "font": copy(ws.cell(row=source_row, column=column).font),
+                "fill": copy(ws.cell(row=source_row, column=column).fill),
+                "border": copy(ws.cell(row=source_row, column=column).border),
+                "alignment": copy(ws.cell(row=source_row, column=column).alignment),
+                "number_format": ws.cell(row=source_row, column=column).number_format,
+                "protection": copy(ws.cell(row=source_row, column=column).protection),
+            }
+            for column in range(min_col, max_col + 1)
+        ],
+    }
 
 
-def render_excel_workbook(
+def apply_row_style_snapshot(ws: Any, snapshot: dict[str, Any], target_row: int, min_col: int = 2) -> None:
+    target_dimension = ws.row_dimensions[target_row]
+    target_dimension.height = snapshot["height"]
+    target_dimension.hidden = snapshot["hidden"]
+    target_dimension.outlineLevel = snapshot["outlineLevel"]
+
+    for column_offset, style in enumerate(snapshot["cells"], start=min_col):
+        target = ws.cell(row=target_row, column=column_offset)
+        target._style = copy(style["_style"])
+        target.font = copy(style["font"])
+        target.fill = copy(style["fill"])
+        target.border = copy(style["border"])
+        target.alignment = copy(style["alignment"])
+        target.number_format = style["number_format"]
+        target.protection = copy(style["protection"])
+
+
+def set_if_sheet_cell(workbook: Any, sheet_name: str, cell_ref: str, value: Any) -> None:
+    if sheet_name in workbook.sheetnames:
+        workbook[sheet_name][cell_ref] = value
+
+
+def summarize_input_for_cover(input_text: str, limit: int = 180) -> str:
+    summary = normalize_space(input_text)
+    if len(summary) <= limit:
+        return summary
+    return summary[:limit].rstrip() + "..."
+
+
+def build_rating_basis_cell(row: DraftRow) -> str:
+    parts = [row.rating_basis.strip()]
+    if row.confirmation_status:
+        parts.append(f"确认状态：{row.confirmation_status}")
+    if row.reference_type:
+        parts.append(f"参考类型：{row.reference_type}")
+    if row.review_comment:
+        parts.append(f"评审备注：{row.review_comment}")
+    if row.source_cases:
+        parts.append(f"来源：{'; '.join(row.source_cases[:3])}")
+    return "\n".join(part for part in parts if part)
+
+
+def extract_parameter_indicators(*texts: str, limit: int = 3) -> str:
+    candidates: list[str] = []
+    pattern = re.compile(
+        r"[^。；;\n，,]*("
+        r"(?:≤|≥|<|>|±|=|不超过|不少于|小于|大于)"
+        r"\s*[\d.]+|[\d.]+\s*(?:ms|μs|us|s|Hz|kHz|MHz|GHz|W|kW|V|mV|A|mA|℃|°C|%|Ω|ohm|dB|ppm|nm|μm|um|Pa)"
+        r")[^。；;\n，,]*"
+    )
+    for text in texts:
+        for match in pattern.finditer(text or ""):
+            candidate = normalize_space(match.group(0))
+            if candidate and candidate not in candidates:
+                candidates.append(candidate)
+            if len(candidates) >= limit:
+                return "；".join(candidates)
+    return "；".join(candidates)
+
+
+def split_current_controls(controls: str) -> tuple[str, str]:
+    text = normalize_space(controls)
+    if not text:
+        return "", ""
+
+    prevention = ""
+    detection = ""
+    prevention_match = re.search(r"预防[:：]\s*(.*?)(?:探测[:：]|$)", text)
+    detection_match = re.search(r"探测[:：]\s*(.*)$", text)
+    if prevention_match:
+        prevention = normalize_space(prevention_match.group(1))
+    if detection_match:
+        detection = normalize_space(detection_match.group(1))
+    if prevention or detection:
+        return prevention or text, detection or text
+
+    return text, text
+
+
+def infer_owner(row: DraftRow) -> str:
+    text = " ".join([row.scope, row.analysis_object, row.function, row.failure_mode, row.cause])
+    owner_rules = [
+        ("软件", "软件工程师"),
+        ("算法", "算法工程师"),
+        ("逻辑", "控制逻辑工程师"),
+        ("热", "热设计工程师"),
+        ("温度", "热设计工程师"),
+        ("散热", "热设计工程师"),
+        ("结构", "结构工程师"),
+        ("机械", "机械工程师"),
+        ("接地", "电气工程师"),
+        ("电源", "电气工程师"),
+        ("EMC", "EMC工程师"),
+        ("电磁", "EMC工程师"),
+        ("射频", "射频工程师"),
+        ("功率", "射频工程师"),
+        ("保护", "系统工程师"),
+        ("测试", "测试工程师"),
+        ("物流", "供应链/物流工程师"),
+        ("运输", "供应链/物流工程师"),
+        ("维护", "客户服务工程师"),
+        ("保养", "客户服务工程师"),
+    ]
+    for keyword, owner in owner_rules:
+        if keyword in text:
+            return owner
+    return "责任工程师待定"
+
+
+def build_template_row_values(index: int, module: str, row: DraftRow) -> list[Any]:
+    prevention_controls, detection_controls = split_current_controls(row.current_controls)
+    parameter_indicators = extract_parameter_indicators(row.function, row.effect, row.cause, row.recommended_actions)
+    return [
+        index,
+        row.scope,
+        row.analysis_object or module,
+        row.function,
+        parameter_indicators,
+        row.effect,
+        row.severity,
+        row.failure_mode,
+        row.cause,
+        prevention_controls,
+        row.occurrence,
+        detection_controls,
+        row.detection,
+        row.rpn,
+        build_rating_basis_cell(row),
+        row.recommended_actions,
+        row.owner or infer_owner(row),
+        row.target_date or "待定",
+        row.post_action_severity,
+        row.post_action_occurrence,
+        row.post_action_detection,
+        row.post_action_rpn,
+    ]
+
+
+def template_fmea_rows(
     module: str,
-    fmea_type: str,
-    input_text: str,
     scopes: list[ScopeDefinition],
     scope_rows: dict[str, list[DraftRow]],
-    excel_path: Path,
-) -> None:
-    confirmation_queue = build_confirmation_queue(scope_rows)
-    top_risks = build_top_risks(scope_rows)
-    suggested_actions = build_suggested_actions(scope_rows)
-    source_trace = build_source_trace(scope_rows)
-
-    workbook = Workbook()
-    used_titles: set[str] = set()
-
-    overview = workbook.active
-    overview.title = safe_sheet_title("概览", used_titles)
-    overview["A1"] = "模块"
-    overview["B1"] = module
-    overview["A2"] = "FMEA 类型"
-    overview["B2"] = fmea_type
-    overview["A3"] = "Scope 数量"
-    overview["B3"] = len(scopes)
-    overview["A4"] = "草稿行数"
-    overview["B4"] = sum(len(rows) for rows in scope_rows.values())
-    overview["A5"] = "确认队列数"
-    overview["B5"] = len(confirmation_queue)
-    overview["A6"] = "输入摘要"
-    overview["B6"] = input_text[:1000] + ("..." if len(input_text) > 1000 else "")
-    for row in overview.iter_rows(min_row=1, max_row=6, min_col=1, max_col=2):
-        for cell in row:
-            cell.alignment = Alignment(vertical="top", wrap_text=True)
-    overview.column_dimensions["A"].width = 16
-    overview.column_dimensions["B"].width = 90
-
-    scope_plan = workbook.create_sheet(safe_sheet_title("Scope规划", used_titles))
-    write_sheet_table(
-        scope_plan,
-        ["Scope", "检索关键词", "来源", "命中数", "说明"],
-        [
-            [
-                scope.name,
-                " / ".join(scope.query_terms or scope.extracted_terms),
-                "auto" if scope.auto_suggested else "manual",
-                scope.hit_count,
-                scope.reason,
-            ]
-            for scope in scopes
-        ],
-    )
-
-    for index, scope in enumerate(scopes, start=1):
-        ws = workbook.create_sheet(safe_sheet_title(f"{index:02d}-{scope.name}", used_titles))
+) -> list[list[Any]]:
+    output_rows: list[list[Any]] = []
+    index = 1
+    for scope in scopes:
         rows = scope_rows.get(scope.name, [])
-        write_sheet_table(
-            ws,
-            [
-                "Scope",
-                "Analysis object",
-                "Function or requirement",
-                "Failure mode",
-                "Failure effect",
-                "S",
-                "Cause or mechanism",
-                "O",
-                "Current controls",
-                "D",
-                "RPN",
-                "Recommended actions",
-                "Owner",
-                "Target date",
-                "Confirmation status",
-                "Review comment",
-                "Rating basis",
-                "Reference type",
-                "Source case",
-            ],
-            [
+        if not rows:
+            output_rows.append(
                 [
-                    row.scope,
-                    row.analysis_object,
-                    row.function,
-                    row.failure_mode,
-                    row.effect,
-                    row.severity,
-                    row.cause,
-                    row.occurrence,
-                    row.current_controls,
-                    row.detection,
-                    row.rpn,
-                    row.recommended_actions,
-                    row.owner,
-                    row.target_date,
-                    row.confirmation_status,
-                    row.review_comment,
-                    row.rating_basis,
-                    row.reference_type,
-                    "; ".join(row.source_cases),
-                ]
-                for row in rows
-            ]
-            or [
-                [
+                    index,
                     scope.name,
+                    module,
+                    "",
                     "",
                     "",
                     "",
@@ -1079,100 +1446,101 @@ def render_excel_workbook(
                     "",
                     "",
                     "未召回到足够案例，建议补充输入或手工定义 scope。",
+                    "补充模块功能、失效模式、S/O/D 评分依据和现行控制。",
                     "",
                     "",
-                    "needs expert confirmation",
                     "",
-                    "需要补充输入后再判断",
-                    "broader analogy",
+                    "",
+                    "",
                     "",
                 ]
-            ],
-        )
+            )
+            index += 1
+            continue
+        for row in rows:
+            output_rows.append(build_template_row_values(index, module, row))
+            index += 1
+    return output_rows
 
-    confirmation_ws = workbook.create_sheet(safe_sheet_title("确认队列", used_titles))
-    write_sheet_table(
-        confirmation_ws,
-        ["Scope", "Row key", "Why confirmation is needed", "Suggested reviewer focus", "Review comment", "Reference type", "Source case"],
-        [
-            [
-                item.scope,
-                item.row_key,
-                item.why_confirmation_is_needed,
-                item.suggested_reviewer_focus,
-                item.review_comment,
-                item.reference_type,
-                "; ".join(item.source_cases),
-            ]
-            for item in confirmation_queue
-        ]
-        or [["", "", "当前没有额外确认队列，仍建议在评审中校准 O/D。", "", "", "", ""]],
-    )
 
-    top_risk_ws = workbook.create_sheet(safe_sheet_title("Top风险", used_titles))
-    write_sheet_table(
-        top_risk_ws,
-        ["Scope", "Row key", "Failure mode", "Current RPN", "Why it matters", "First action candidate", "Reference type"],
-        [
-            [
-                item["scope"],
-                item["row_key"],
-                item["failure_mode"],
-                item["current_rpn"],
-                item["why_it_matters"],
-                item["first_action_candidate"],
-                item["reference_type"],
-            ]
-            for item in top_risks
-        ],
-    )
+def render_template_cover(
+    workbook: Any,
+    module: str,
+    fmea_type: str,
+    input_text: str,
+    scopes: list[ScopeDefinition],
+    scope_rows: dict[str, list[DraftRow]],
+) -> None:
+    if "封面" not in workbook.sheetnames:
+        return
 
-    action_ws = workbook.create_sheet(safe_sheet_title("建议动作", used_titles))
-    write_sheet_table(
-        action_ws,
-        [
-            "Scope",
-            "Row key",
-            "Current RPN",
-            "Recommended action",
-            "Owner",
-            "Target date",
-            "Confirmation status",
-            "Review comment",
-            "Reference type",
-            "Source case",
-        ],
-        [
-            [
-                item["scope"],
-                item["row_key"],
-                item["current_rpn"],
-                item["recommended_action"],
-                item["owner"],
-                item["target_date"],
-                item["confirmation_status"],
-                item["review_comment"],
-                item["reference_type"],
-                item["source_case"],
-            ]
-            for item in suggested_actions
-        ],
-    )
+    sheet_count_text = " / ".join(scope.name for scope in scopes[:8])
+    if len(scopes) > 8:
+        sheet_count_text += f" / 等 {len(scopes)} 个范围"
+    indicators = extract_parameter_indicators(input_text, limit=4)
+    if not indicators:
+        indicators = f"{module or '当前模块'}关键功能、接口、环境、维护与客户使用场景"
 
-    trace_ws = workbook.create_sheet(safe_sheet_title("来源追踪", used_titles))
-    write_sheet_table(
-        trace_ws,
-        ["Scope", "Row key", "Reference type", "Source case"],
-        [
-            [
-                item["scope"],
-                item["row_key"],
-                item["reference_type"],
-                "; ".join(item["source_cases"]),
-            ]
-            for item in source_trace
-        ],
-    )
+    set_if_sheet_cell(workbook, "封面", "B2", f"{module or '未命名模块'} {fmea_type}分析报告")
+    set_if_sheet_cell(workbook, "封面", "B3", f"Application FMEA for {module or 'Current Module'} - Product Lifecycle Approach")
+    set_if_sheet_cell(workbook, "封面", "C6", module or "未指定")
+    set_if_sheet_cell(workbook, "封面", "C7", indicators)
+    set_if_sheet_cell(workbook, "封面", "C8", "AIAG-VDA FMEA Handbook（第1版）七步法")
+    set_if_sheet_cell(workbook, "封面", "C9", sheet_count_text or "未拆分")
+    set_if_sheet_cell(workbook, "封面", "C10", "历史FMEA案例库 / 相邻模块类比 / 当前输入约束")
+    set_if_sheet_cell(workbook, "封面", "C11", date.today().isoformat())
+    set_if_sheet_cell(workbook, "封面", "C12", "V1.0")
+
+    if workbook["封面"]["C17"].value:
+        workbook["封面"]["C17"] = f"按 template.xlsx 样式输出的 {sum(len(rows) for rows in scope_rows.values())} 条 FMEA 草稿记录"
+
+
+def render_template_fmea_sheet(workbook: Any, module: str, scopes: list[ScopeDefinition], scope_rows: dict[str, list[DraftRow]]) -> None:
+    if "FMEA主表" not in workbook.sheetnames:
+        raise ValueError("标准输出模板中缺少必需工作表：FMEA主表")
+
+    ws = workbook["FMEA主表"]
+    if ws["B2"].value != "序号":
+        raise ValueError("标准输出模板的 FMEA主表 必须保持标准格式：B2:W2 为表头，B列为序号")
+
+    template_odd_row = 3 if ws.max_row >= 3 else 2
+    template_even_row = 4 if ws.max_row >= 4 else template_odd_row
+    data_start_row = 3
+    min_col = 2
+    max_col = 23
+    odd_style = capture_row_style(ws, template_odd_row, min_col=min_col, max_col=max_col)
+    even_style = capture_row_style(ws, template_even_row, min_col=min_col, max_col=max_col)
+
+    if ws.max_row >= data_start_row:
+        ws.delete_rows(data_start_row, ws.max_row - data_start_row + 1)
+
+    for row_offset, values in enumerate(template_fmea_rows(module, scopes, scope_rows), start=0):
+        target_row = data_start_row + row_offset
+        row_style = odd_style if row_offset % 2 == 0 else even_style
+        apply_row_style_snapshot(ws, row_style, target_row, min_col=min_col)
+        for column_offset, value in enumerate(values, start=min_col):
+            ws.cell(row=target_row, column=column_offset, value=value)
+        ws.cell(row=target_row, column=15, value=f"=H{target_row}*L{target_row}*N{target_row}")
+        ws.cell(row=target_row, column=23, value=f"=T{target_row}*U{target_row}*V{target_row}")
+
+    if ws.max_row >= 2:
+        ws.auto_filter.ref = f"B2:W{ws.max_row}"
+
+
+def render_excel_workbook(
+    module: str,
+    fmea_type: str,
+    input_text: str,
+    scopes: list[ScopeDefinition],
+    scope_rows: dict[str, list[DraftRow]],
+    excel_path: Path,
+) -> None:
+    if not DEFAULT_TEMPLATE_PATH.exists():
+        raise FileNotFoundError(f"未找到 Excel 输出模板：{DEFAULT_TEMPLATE_PATH}")
+
+    workbook = load_workbook(DEFAULT_TEMPLATE_PATH)
+    render_template_cover(workbook, module, fmea_type, input_text, scopes, scope_rows)
+    render_template_fmea_sheet(workbook, module, scopes, scope_rows)
 
     excel_path.parent.mkdir(parents=True, exist_ok=True)
     workbook.save(excel_path)
@@ -1352,7 +1720,19 @@ def main() -> None:
         default=[],
         help="Optional scope definition in the form 'Scope Name::keyword1 keyword2'. Repeatable.",
     )
-    parser.add_argument("--top-k", type=int, default=12, help="Number of source matches to keep per scope.")
+    parser.add_argument("--top-k", type=int, default=30, help="Number of source matches to keep per scope.")
+    parser.add_argument(
+        "--coverage-mode",
+        choices=["lifecycle", "subsystem"],
+        default="lifecycle",
+        help="Use template-style lifecycle coverage by default; choose subsystem to keep the older narrow subsystem grouping.",
+    )
+    parser.add_argument(
+        "--min-rows",
+        type=int,
+        default=28,
+        help="Minimum FMEA rows to draft in lifecycle coverage mode.",
+    )
     parser.add_argument("--excel-out", help="Optional path to save the generated Excel workbook.")
     parser.add_argument("--markdown-out", help="Optional path to save the generated Markdown draft.")
     parser.add_argument("--json-out", help="Optional path to save the generated JSON draft.")
@@ -1362,7 +1742,10 @@ def main() -> None:
     extracted_terms = extract_query_terms(input_text, args.module)
 
     scopes = [parse_scope(raw_scope) for raw_scope in args.scope]
-    if not scopes:
+    use_lifecycle_coverage = args.coverage_mode == "lifecycle" and not scopes
+    if use_lifecycle_coverage:
+        scopes = suggest_lifecycle_scopes(args.module, input_text, extracted_terms)
+    elif not scopes:
         scopes = suggest_scopes(args.module, input_text, extracted_terms)
         if not scopes:
             scopes = [
@@ -1379,12 +1762,15 @@ def main() -> None:
         for scope in scopes:
             scope.extracted_terms = [term for term in extracted_terms if term in scope.query_terms or term in input_text]
 
-    scope_rows: dict[str, list[DraftRow]] = {}
-    for scope in scopes:
-        query = " ".join(scope.query_terms or scope.extracted_terms)
-        matches = collect_matches(query, args.module)
-        matches = [match for match in matches if match.theme in ALLOWED_THEMES][: args.top_k]
-        scope_rows[scope.name] = aggregate_rows(scope, scopes, matches, args.module)
+    if use_lifecycle_coverage:
+        scope_rows = build_lifecycle_coverage_rows(args.module, input_text, extracted_terms, scopes, args.min_rows)
+    else:
+        scope_rows: dict[str, list[DraftRow]] = {}
+        for scope in scopes:
+            query = " ".join(scope.query_terms or scope.extracted_terms)
+            matches = collect_matches(query, args.module)
+            matches = [match for match in matches if match.theme in ALLOWED_THEMES][: args.top_k]
+            scope_rows[scope.name] = aggregate_rows(scope, scopes, matches, args.module)
 
     markdown = render_markdown(args.module, args.fmea_type, input_text, scopes, scope_rows)
     payload = build_json_payload(args.module, args.fmea_type, input_text, scopes, scope_rows)

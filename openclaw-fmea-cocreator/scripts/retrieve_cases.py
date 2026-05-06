@@ -9,7 +9,9 @@ from pathlib import Path
 
 
 SKILL_DIR = Path(__file__).resolve().parent.parent
-DATA_ROOT = SKILL_DIR.parent / "excel_materials" / "workbooks"
+PACKAGED_DATA_ROOT = SKILL_DIR / "excel_materials" / "workbooks"
+REPO_DATA_ROOT = SKILL_DIR.parent / "excel_materials" / "workbooks"
+DATA_ROOT = PACKAGED_DATA_ROOT if PACKAGED_DATA_ROOT.exists() else REPO_DATA_ROOT
 
 ALIASES = {
     "变温系统": ["低温系统", "压缩机制冷单元", "液氮低温制冷系统"],

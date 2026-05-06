@@ -1,6 +1,6 @@
 ---
 name: openclaw-fmea-cocreator
-version: 0.2.1
+version: 0.2.2
 description: Co-create AFMEA, SFMEA, or DFMEA for OpenClaw from module inputs, existing tables, or historical quality materials, with traceable drafts and follow-up actions.
 category: research
 tags:
@@ -27,9 +27,10 @@ This skill helps Codex:
 1. classify the task as `AFMEA`, `SFMEA`, or `DFMEA`
 2. collect missing inputs in a structured way
 3. retrieve similar historical failure cases
-4. draft a normalized FMEA table
-5. separate AI suggestions from human-confirmed judgments
-6. output both the FMEA table and a follow-up action list
+4. coordinate a small multi-specialist agent cluster when the scope needs multiple expert viewpoints
+5. draft a normalized FMEA table
+6. separate AI suggestions from human-confirmed judgments
+7. output both the FMEA table and a follow-up action list
 
 ## Core workflow
 
@@ -91,6 +92,43 @@ If the automatic scope suggestion is not ideal, rerun with explicit `--scope "�
 
 If needed, read [references/case_sources.md](references/case_sources.md).
 
+### 3.1 Use a multi-specialist agent cluster for rich drafts
+
+When the user asks for a detailed workbook, use the workbook shape demonstrated by the reference sample as the canonical output format.
+The bundled `template.xlsx` is the standard output template and must stay content-clean: preserve workbook structure, styles, formulas, and headers, but do not preserve sample document content as template content.
+Do not stop at a narrow subsystem recall when the requested analysis scope requires broader lifecycle-style coverage.
+
+For any non-trivial FMEA, guide the agent to think and work as a cross-functional FMEA team, not as one generic analyst.
+When the runtime supports native subagents and the scope is broad enough to benefit, split the work across bounded specialist agents.
+Choose only the roles that match the user's product/module; do not invent irrelevant roles.
+
+Default specialist viewpoints:
+
+| Specialist viewpoint | Primary lens | Typical rows it should contribute |
+| --- | --- | --- |
+| System / architecture engineer | system boundary, interfaces, energy/material/information transfer | SFMEA boundary failures, integration failures, interface mismatches |
+| Design / module engineer | function, requirement, tolerance, component design | DFMEA design failure modes, design causes, prevention controls |
+| Reliability / test engineer | validation coverage, lifetime, stress, detection limits | O/D rationale, test escapes, accelerated-life and verification gaps |
+| Manufacturing / quality engineer | assembly, process variation, inspection, supplier quality | process-induced design risks, current controls, measurable prevention |
+| Safety / compliance engineer | hazards, regulatory constraints, misuse, protection layers | high-S rows, safety interlocks, warning and mitigation adequacy |
+| Field service / maintenance engineer | installation, calibration, serviceability, wear, spare parts | service and maintenance failure modes, diagnostic and action rows |
+| Customer / application engineer | real use scenarios, misuse, task interruption, acceptance criteria | customer-impact wording, operation risks, usability controls |
+| Supply chain / logistics engineer | packaging, transport, storage, incoming quality | logistics/storage damage, supplier and incoming-control rows |
+| Software / controls engineer | state machine, alarms, interlocks, data/configuration, cyber-physical control | software/control failure modes and detection/rollback controls |
+
+Each specialist agent should return rows in the same normalized schema and must include:
+
+- one failure mode per row
+- concrete cause/effect/control/action text
+- S/O/D/RPN rationale
+- owner and target-date placeholder
+- traceability to historical cases or explicit `broader analogy` marking
+- assumptions and low-confidence ratings
+
+The leader agent consolidates the specialist outputs into `FMEA主表`.
+During consolidation, deduplicate overlapping rows, keep the clearest cause/effect separation, preserve dissenting score rationale in `AI打分推导依据`, and route conflicts into `Rows needing confirmation`.
+Keep all AI-expanded lifecycle rows in `needs expert confirmation` unless enterprise evidence confirms the scores.
+
 ### 4. Draft the FMEA in a normalized schema
 
 Always prefer the normalized output structure in [references/output_schema.md](references/output_schema.md).
@@ -136,11 +174,17 @@ When this skill is used as an OpenClaw workflow building block, the default outp
 
 Minimum delivery rules:
 
-- keep one worksheet per scope in the Excel workbook
+- generate the primary workbook from the bundled `template.xlsx`; repo-local development may use a root `template.xlsx` only as a fallback
+- treat the sample workbook only as a format reference: preserve sheet names, column positions, formulas, merged cells, widths, row styles, and the scoring reference sheet, but not sample-specific content
+- keep the workbook sheet set and visual style aligned with the standard template (`封面`, `FMEA主表`, `评分准则参考`)
+- write all FMEA rows into `FMEA主表`; use `生命周期维度` to preserve scope/lifecycle grouping
+- preserve the template `评分准则参考` worksheet exactly as the standard template provides it; use [references/scoring_guardrails.md](references/scoring_guardrails.md) for draft scoring rationale, not for rewriting that sheet
+- when using lifecycle coverage, derive grouping and row count from the user's module/input; do not hardcode sample workbook dimensions or row distribution as template requirements
+- for broad or OpenClaw-ready FMEA drafts, use a multi-specialist agent cluster when available; if subagents are unavailable, simulate the same role passes sequentially and label which professional viewpoint produced each cluster of risks
 - label each row as `current module`, `direct family reference`, or `broader analogy`
 - keep `O` and `D` in `draft` state unless the user or source gave enough enterprise evidence
 - call out boundary rows whose scope ownership is ambiguous
-- preserve workbook and sheet traceability whenever a historical row influenced the draft
+- preserve historical traceability in the `AI打分推导依据` cell whenever a historical row influenced the draft
 - keep Markdown or JSON only as preview or system interface companions when useful
 
 ## Output expectations
@@ -167,6 +211,8 @@ Current script support:
 
 ```bash
 python3 scripts/draft_fmea_from_cases.py --module "模块名" --input-file /path/to/input.txt --excel-out /path/to/output.xlsx
+python3 scripts/draft_fmea_from_cases.py --module "模块名" --input-file /path/to/input.txt --coverage-mode lifecycle --min-rows 28 --excel-out /path/to/output.xlsx
+python3 scripts/draft_fmea_from_cases.py --module "模块名" --input-file /path/to/input.txt --coverage-mode subsystem --excel-out /path/to/output.xlsx
 ```
 
 OpenClaw bridge support:
