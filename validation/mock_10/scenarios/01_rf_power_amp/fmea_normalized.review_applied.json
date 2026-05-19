@@ -1,0 +1,2599 @@
+{
+  "module_root": "射频功放",
+  "fmea_type": "DFMEA",
+  "rows": [
+    {
+      "row_id": "T.1.1/driver_gain_insufficient",
+      "leaf_id": "T.1.1",
+      "scope_path": "",
+      "failure_mode": "驱动级增益偏低，末级功放管激励不足",
+      "failure_mode_canonical": "driver_gain_insufficient",
+      "p_diagram_anchor": "piece_to_piece:驱动级增益批次差异 × error_states:输出功率下降 >3 dB（功放管失效或偏置丢失）",
+      "cause": "[设计/模块] 驱动级晶体管Gm批次偏低（下限-15%），加上偏置电阻容差叠加，静态工作点偏移至线性区边界",
+      "effect_customer": "NMR发射脉冲峰值功率不足，信噪比下降，图像质量劣化",
+      "effect_downstream": "末级功放管欠激励，输出功率低于额定3 dB以上",
+      "effect_system": "发射链路增益预算超出余量，整机无法通过功率验收",
+      "current_controls_prevention": "[设计/模块] 驱动级设计留有+3 dB增益余量；选型时筛选Gm在额定±10%以内的器件",
+      "current_controls_detection": "[设计/模块] 出厂ATE测试驱动级单独增益（覆盖-40/+85°C两点）",
+      "recommended_actions": [
+        "增加驱动级增益温度补偿电路（负温度系数偏置）",
+        "ATE测试增加脉冲模式下增益一致性测试（而非仅CW）",
+        "驱动级晶体管Gm分选入库（±5%级别）"
+      ],
+      "severity": 6,
+      "occurrence": 4,
+      "detection": 3,
+      "rpn": 72,
+      "rating_history": {
+        "role_view": [
+          {
+            "role": "设计/模块",
+            "s": 6,
+            "o": 4,
+            "d": 3
+          }
+        ],
+        "historical_view": {
+          "s": null,
+          "o": null,
+          "d": null,
+          "source": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      },
+      "multi_role_corroborated": false,
+      "source_traces": [
+        {
+          "type": "role_inference",
+          "role": "设计/模块"
+        },
+        {
+          "type": "historical",
+          "ref": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      ],
+      "evidence_grade": "historical-supported",
+      "confidence": 0.75,
+      "confidence_breakdown": {
+        "role_agreement": 0.167,
+        "evidence_strength": 1.0,
+        "sod_grounding": 1.0,
+        "pdiagram_coverage": 1.0
+      },
+      "needs_human_confirmation": false,
+      "review_status": "promoted",
+      "review_meta": {
+        "reviewer": "qa-01",
+        "reviewed_at": "2026-05-19T10:20:00+08:00",
+        "case_tags": [
+          "射频功放"
+        ]
+      }
+    },
+    {
+      "row_id": "T.1.1/driver_input_mismatch_ringing",
+      "leaf_id": "T.1.1",
+      "scope_path": "",
+      "failure_mode": "SMD元件焊接锡量不均导致匹配网络参数偏离",
+      "failure_mode_canonical": "driver_input_mismatch_ringing",
+      "p_diagram_anchor": "piece_to_piece:焊接锡量不均导致的寄生电感/电容差异 × unintended_outputs:脉冲上升沿过冲导致相位误差",
+      "cause": "[设计/模块] SMD元件焊盘寄生电感偏差（焊锡量不均），输入匹配网络偏离设计Q值，产生欠阻尼振铃 ; [制造/工艺] 0402 SMD电容/电感在回流焊后因焊点高度差异，等效寄生电感偏差±0.3 nH，驱动级输入匹配网络从设计S11<-20 dB恶化至-10 dB",
+      "effect_customer": "驱动级输入反射增大，功率传输效率下降，脉冲上升沿性能恶化",
+      "effect_downstream": "末级功放管激励不足，整机功率下降",
+      "effect_system": "整机射频性能不一致（批次间差异增大）",
+      "current_controls_prevention": "[设计/模块] PCB设计规范规定关键匹配元件焊盘采用无源方式减小焊点寄生；波峰焊工艺管控 ; [制造/工艺] 钢网开口设计控制锡量（误差±10%）；AOI检查焊接质量",
+      "current_controls_detection": "[设计/模块] 出厂时域脉冲响应测试（示波器测量上升沿及振铃幅度） ; [制造/工艺] ATE网络分析仪测试S11（批量测试）",
+      "recommended_actions": [
+        "对输入匹配网络增加阻尼电阻（损耗-Q网络设计）",
+        "将关键匹配SMD从0402升级到0603减少焊接变异",
+        "建立上升沿振铃幅度出厂合格判据（<5%过冲）",
+        "关键匹配元件从0402升级到0603，减少焊点高度差异对寄生参数的影响",
+        "增加AOI对关键匹配元件的锡量测量（3D AOI）",
+        "建立S11参数批次分布数据库，监控工艺漂移趋势"
+      ],
+      "severity": 5,
+      "occurrence": 4,
+      "detection": 4,
+      "rpn": 80,
+      "rating_history": {
+        "role_view": [
+          {
+            "role": "设计/模块",
+            "s": 5,
+            "o": 3,
+            "d": 4
+          },
+          {
+            "role": "制造/工艺",
+            "s": 5,
+            "o": 4,
+            "d": 3
+          }
+        ],
+        "historical_view": {
+          "s": null,
+          "o": null,
+          "d": null,
+          "source": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      },
+      "multi_role_corroborated": true,
+      "source_traces": [
+        {
+          "type": "role_inference",
+          "role": "设计/模块"
+        },
+        {
+          "type": "role_inference",
+          "role": "制造/工艺"
+        },
+        {
+          "type": "historical",
+          "ref": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      ],
+      "evidence_grade": "evidence-backed",
+      "confidence": 0.8,
+      "confidence_breakdown": {
+        "role_agreement": 0.333,
+        "evidence_strength": 1.0,
+        "sod_grounding": 1.0,
+        "pdiagram_coverage": 1.0
+      },
+      "needs_human_confirmation": false,
+      "review_status": "pending",
+      "review_meta": {}
+    },
+    {
+      "row_id": "T.1.2/pa_transistor_thermal_runaway",
+      "leaf_id": "T.1.2",
+      "scope_path": "",
+      "failure_mode": "功放管静态电流过大导致热失控",
+      "failure_mode_canonical": "pa_transistor_thermal_runaway",
+      "p_diagram_anchor": "piece_to_piece:功放管 Idss/Vp 批次散差（±15%） × error_states:功放管热失控损毁",
+      "cause": "[设计/模块] Idss批次偏高（+15%极端），加上偏置电阻容差未向下补偿，静态漏电流超额定，结温快速上升，正温度系数的Idss进一步增大，形成热失控闭环 ; [可靠性/试验] 机柜散热受限（进风口堵塞或风扇降速），环境温度升高10°C以上，与高占空比实验叠加，功放管结温超过Tjmax，热失控正反馈触发",
+      "effect_customer": "设备无法使用，需返厂维修；NMR扫描中断可能导致患者重新检查",
+      "effect_downstream": "功放管永久损毁，波及匹配网络（焊盘）和PCB走线",
+      "effect_system": "整机停机，发射链路需更换功放管及重新调试",
+      "current_controls_prevention": "[设计/模块] 偏置电路设计留有10%余量；功放管出厂100%Idss筛选（±10%范围） ; [可靠性/试验] 过温保护电路设定85°C关断；用户手册要求保持机柜通风",
+      "current_controls_detection": "[设计/模块] 出厂功率测试+壳温监测（若壳温>75°C时人工检查） ; [可靠性/试验] 壳温监控传感器；出厂85°C高温测试（非满功率运行）",
+      "recommended_actions": [
+        "增加偏置电流温度补偿（负温度系数元件）",
+        "功放管选型时要求器件厂家提供热阻θjc数据并计算最坏情况结温",
+        "软启动上电逻辑中增加Idss过流检测（>120%额定自动切断）",
+        "增加可靠性测试：满功率+最高环境温度+最高占空比三重应力组合测试",
+        "增加风扇转速监控，风扇转速<50%时自动降低功放占空比上限",
+        "FMEA标注：热失控需要独立保护层（不能仅依赖软件过温保护）"
+      ],
+      "severity": 10,
+      "occurrence": 4,
+      "detection": 6,
+      "rpn": 240,
+      "rating_history": {
+        "role_view": [
+          {
+            "role": "设计/模块",
+            "s": 10,
+            "o": 3,
+            "d": 6
+          },
+          {
+            "role": "可靠性/试验",
+            "s": 10,
+            "o": 4,
+            "d": 6
+          }
+        ],
+        "historical_view": {
+          "s": null,
+          "o": null,
+          "d": null,
+          "source": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      },
+      "multi_role_corroborated": true,
+      "source_traces": [
+        {
+          "type": "role_inference",
+          "role": "设计/模块"
+        },
+        {
+          "type": "role_inference",
+          "role": "可靠性/试验"
+        },
+        {
+          "type": "historical",
+          "ref": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      ],
+      "evidence_grade": "evidence-backed",
+      "confidence": 0.8,
+      "confidence_breakdown": {
+        "role_agreement": 0.333,
+        "evidence_strength": 1.0,
+        "sod_grounding": 1.0,
+        "pdiagram_coverage": 1.0
+      },
+      "needs_human_confirmation": false,
+      "review_status": "edited",
+      "review_meta": {
+        "reviewer": "qa-01",
+        "reviewed_at": "2026-05-19T10:05:00+08:00"
+      }
+    },
+    {
+      "row_id": "T.1.2/pa_transistor_vswr_damage",
+      "leaf_id": "T.1.2",
+      "scope_path": "",
+      "failure_mode": "负载失配导致功放管反射功率过大损毁",
+      "failure_mode_canonical": "pa_transistor_vswr_damage",
+      "p_diagram_anchor": "system_interactions:探头阻抗失配（负载 VSWR > 3:1） × error_states:输出功率下降 >3 dB（功放管失效或偏置丢失）",
+      "cause": "[设计/模块] 探头VSWR>3:1时，反射能量回流到功放管输出端，管子瞬时承受超额定电压（Vds_peak > BVdss），产生雪崩击穿 ; [安全/服务] 用户在射频发射使能状态下拔插探头，连接器断开瞬间阻抗从50Ω跳变为开路（VSWR→∞），反射能量瞬间导致功放管损毁；保护电路响应时间不足以在管子损坏前关断 ; [系统/接口] 探头更换后VSWR>3:1，功放管输出端反射能量超过BVdss，瞬间击穿漏-源结",
+      "effect_customer": "设备停机，功放管损毁；若防护电路未及时响应，损失更大",
+      "effect_downstream": "功放管漏-源击穿，匹配网络元件可能同时受损",
+      "effect_system": "需更换功放管并重新调试整机",
+      "current_controls_prevention": "[设计/模块] 反射功率保护电路（驻波保护），定向耦合器实时采样反射端 ; [安全/服务] 用户手册警告：更换探头前必须先关闭RF发射使能 ; [系统/接口] 反射保护电路；操作规程要求先关机再换探头",
+      "current_controls_detection": "[设计/模块] 保护电路触发后控制器记录事件日志 ; [安全/服务] 保护电路触发后记录日志；但损坏通常在保护触发前已发生 ; [系统/接口] 保护触发后控制器日志记录；但损坏在保护前已发生（响应时间是否足够是关键）",
+      "recommended_actions": [
+        "优化反射保护响应时间至<100 ns（目前设计需验证）",
+        "在功放管输出端增加环形器（Circulator），将反射能量导入50Ω负载",
+        "用户操作规程中强调更换探头前必须先关闭发射使能",
+        "增加探头连接器机械互锁：探头连接器半拔时触发硬件联锁，强制关断RF使能（独立保护层）",
+        "连接器选型改为具有先断后合设计的射频连接器（如N型带弹簧触点接地）",
+        "用户界面增加探头状态指示灯，RF发射时显示警告色",
+        "固件增加探头连接状态监测，检测到阻抗异常时自动停止发射并告警",
+        "接口设计增加软件互锁：探头连接器状态传感器检测到探头拔插时，自动禁止发射使能",
+        "引入环形器（Circulator）在系统级隔离反射能量，不依赖保护电路响应时间",
+        "系统级FMEA中标注：VSWR>3:1的反射保护是单点保护，需增加冗余手段"
+      ],
+      "severity": 10,
+      "occurrence": 5,
+      "detection": 7,
+      "rpn": 350,
+      "rating_history": {
+        "role_view": [
+          {
+            "role": "设计/模块",
+            "s": 10,
+            "o": 4,
+            "d": 5
+          },
+          {
+            "role": "安全/服务",
+            "s": 10,
+            "o": 5,
+            "d": 7
+          },
+          {
+            "role": "系统/接口",
+            "s": 10,
+            "o": 4,
+            "d": 5
+          }
+        ],
+        "historical_view": {
+          "s": null,
+          "o": null,
+          "d": null,
+          "source": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      },
+      "multi_role_corroborated": true,
+      "source_traces": [
+        {
+          "type": "role_inference",
+          "role": "设计/模块"
+        },
+        {
+          "type": "role_inference",
+          "role": "安全/服务"
+        },
+        {
+          "type": "role_inference",
+          "role": "系统/接口"
+        },
+        {
+          "type": "historical",
+          "ref": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      ],
+      "evidence_grade": "evidence-backed",
+      "confidence": 0.85,
+      "confidence_breakdown": {
+        "role_agreement": 0.5,
+        "evidence_strength": 1.0,
+        "sod_grounding": 1.0,
+        "pdiagram_coverage": 1.0
+      },
+      "needs_human_confirmation": false,
+      "review_status": "confirmed",
+      "review_meta": {
+        "reviewer": "qa-01",
+        "reviewed_at": "2026-05-19T10:00:00+08:00"
+      }
+    },
+    {
+      "row_id": "T.1.3/coupler_coupling_factor_deviation",
+      "leaf_id": "T.1.3",
+      "scope_path": "",
+      "failure_mode": "定向耦合器耦合系数偏差导致反射功率检测误报",
+      "failure_mode_canonical": "coupler_coupling_factor_deviation",
+      "p_diagram_anchor": "piece_to_piece:定向耦合器耦合系数一致性（±0.5 dB） × error_states:反射功率触发保护后无法自动恢复",
+      "cause": "[设计/模块] 定向耦合器耦合系数批次偏差±0.5 dB，使实际反射功率采样值偏低，保护电路感知到的VSWR比真实值低，低估风险；或偏高时误触发保护",
+      "effect_customer": "反射保护失效（偏低时）功放管损毁；或频繁误触发停机影响实验",
+      "effect_downstream": "保护电路基于错误阈值工作，整体保护链可靠性下降",
+      "effect_system": "系统功率检测不准确，无法可信地监控发射状态",
+      "current_controls_prevention": "[设计/模块] 定向耦合器来料检验，耦合系数100%测试（±0.3 dB范围）",
+      "current_controls_detection": "[设计/模块] 整机调试时用功率计交叉验证定向耦合器读数与标准端口",
+      "recommended_actions": [
+        "收紧来料耦合系数规格至±0.2 dB",
+        "整机出厂测试增加反射功率检测精度验证步骤",
+        "固件中增加耦合系数补偿系数配置（校准值存EEPROM）"
+      ],
+      "severity": 8,
+      "occurrence": 4,
+      "detection": 4,
+      "rpn": 128,
+      "rating_history": {
+        "role_view": [
+          {
+            "role": "设计/模块",
+            "s": 8,
+            "o": 4,
+            "d": 4
+          }
+        ],
+        "historical_view": {
+          "s": null,
+          "o": null,
+          "d": null,
+          "source": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      },
+      "multi_role_corroborated": false,
+      "source_traces": [
+        {
+          "type": "role_inference",
+          "role": "设计/模块"
+        },
+        {
+          "type": "historical",
+          "ref": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      ],
+      "evidence_grade": "historical-supported",
+      "confidence": 0.75,
+      "confidence_breakdown": {
+        "role_agreement": 0.167,
+        "evidence_strength": 1.0,
+        "sod_grounding": 1.0,
+        "pdiagram_coverage": 1.0
+      },
+      "needs_human_confirmation": false,
+      "review_status": "pending",
+      "review_meta": {}
+    },
+    {
+      "row_id": "T.2.1/heatsink_surface_flatness_poor",
+      "leaf_id": "T.2.1",
+      "scope_path": "",
+      "failure_mode": "散热器表面平整度不达标导致热阻偏高",
+      "failure_mode_canonical": "heatsink_surface_flatness_poor",
+      "p_diagram_anchor": "piece_to_piece:散热器表面平整度批次差（Ra > 1.6 μm 时TIM接触面积下降） × error_states:功放管结温超限触发过温保护",
+      "cause": "[设计/模块] 铝合金散热器基板CNC加工后平整度未达规格（Ra>1.6μm），TIM实际接触面积减小20-30%，等效热阻升高，功放管壳温超额定",
+      "effect_customer": "触发过温保护停机，影响NMR扫描流程连续性",
+      "effect_downstream": "功放管持续高温工作加速老化，寿命缩短",
+      "effect_system": "热管理裕量耗尽，无法支持高占空比实验场景",
+      "current_controls_prevention": "[设计/模块] 散热器来料检验规格（平整度≤0.05 mm/100 mm）",
+      "current_controls_detection": "[设计/模块] 整机热成像测试（额定功耗下100°C环境测试）",
+      "recommended_actions": [
+        "散热器来料增加平整度100%检验（感应式平面度仪）",
+        "设计文件增加散热器安装面粗糙度Ra≤0.8 μm要求",
+        "整机出厂测试增加热阻验证（测量结温-壳温差）"
+      ],
+      "severity": 7,
+      "occurrence": 3,
+      "detection": 4,
+      "rpn": 84,
+      "rating_history": {
+        "role_view": [
+          {
+            "role": "设计/模块",
+            "s": 7,
+            "o": 3,
+            "d": 4
+          }
+        ],
+        "historical_view": {
+          "s": null,
+          "o": null,
+          "d": null,
+          "source": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      },
+      "multi_role_corroborated": false,
+      "source_traces": [
+        {
+          "type": "role_inference",
+          "role": "设计/模块"
+        },
+        {
+          "type": "historical",
+          "ref": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      ],
+      "evidence_grade": "historical-supported",
+      "confidence": 0.75,
+      "confidence_breakdown": {
+        "role_agreement": 0.167,
+        "evidence_strength": 1.0,
+        "sod_grounding": 1.0,
+        "pdiagram_coverage": 1.0
+      },
+      "needs_human_confirmation": false,
+      "review_status": "pending",
+      "review_meta": {}
+    },
+    {
+      "row_id": "T.3.1/otp_ntc_threshold_offset",
+      "leaf_id": "T.3.1",
+      "scope_path": "",
+      "failure_mode": "NTC长期老化漂移导致保护阈值偏移",
+      "failure_mode_canonical": "otp_ntc_threshold_offset",
+      "p_diagram_anchor": "wear_aging:NTC 长期漂移（阻值老化，±5% per 5年） × error_states:过温保护失效（阈值偏移或电路失效），功放管热损毁",
+      "cause": "[设计/模块] NTC热敏电阻批次阻值偏差±2°C等效，加上分压电阻容差（±1%），保护触发温度实际值比设定值高或低5°C以上 ; [可靠性/试验] NTC热敏电阻长期工作在高温环境下（70-85°C附近），元器件老化导致阻值漂移±5%/5年，等效保护触发温度偏移±5°C以上",
+      "effect_customer": "阈值正漂：功放管实际过温才触发保护，增加热损伤风险；阈值负漂：误触发增加",
+      "effect_downstream": "保护链可靠性下降，无法保证在设计寿命内持续有效",
+      "effect_system": "整机热安全设计寿命末期不符合规格",
+      "current_controls_prevention": "[设计/模块] NTC选型精度等级（±1%阻值，±1°C等效）；分压电阻选用±0.1%精密电阻 ; [可靠性/试验] NTC选型时要求长期稳定性≤1%/5年",
+      "current_controls_detection": "[设计/模块] 整机出厂时注入已知温度校准NTC输出并验证保护触发点 ; [可靠性/试验] 无定期保护电路校准规程，仅出厂测试一次",
+      "recommended_actions": [
+        "保护阈值设计余量加大（如实际85°C保护，设定80°C触发）",
+        "增加双传感器冗余（两路NTC一致性交叉比对）",
+        "出厂测试规程增加温度注入法精确校验保护触发温度",
+        "增加高温寿命试验（NTC在85°C老化2000小时），测量阻值漂移量",
+        "维护规程增加5年期保护功能验证（温度注入法）",
+        "过温保护电路增加自诊断功能（定期校验NTC阻值是否在范围内）"
+      ],
+      "severity": 9,
+      "occurrence": 4,
+      "detection": 8,
+      "rpn": 288,
+      "rating_history": {
+        "role_view": [
+          {
+            "role": "设计/模块",
+            "s": 9,
+            "o": 3,
+            "d": 4
+          },
+          {
+            "role": "可靠性/试验",
+            "s": 9,
+            "o": 4,
+            "d": 8
+          }
+        ],
+        "historical_view": {
+          "s": null,
+          "o": null,
+          "d": null,
+          "source": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      },
+      "multi_role_corroborated": true,
+      "source_traces": [
+        {
+          "type": "role_inference",
+          "role": "设计/模块"
+        },
+        {
+          "type": "role_inference",
+          "role": "可靠性/试验"
+        },
+        {
+          "type": "historical",
+          "ref": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      ],
+      "evidence_grade": "evidence-backed",
+      "confidence": 0.8,
+      "confidence_breakdown": {
+        "role_agreement": 0.333,
+        "evidence_strength": 1.0,
+        "sod_grounding": 1.0,
+        "pdiagram_coverage": 1.0
+      },
+      "needs_human_confirmation": false,
+      "review_status": "pending",
+      "review_meta": {}
+    },
+    {
+      "row_id": "T.4.2/gate_bias_voltage_drift",
+      "leaf_id": "T.4.2",
+      "scope_path": "",
+      "failure_mode": "栅极偏置电压偏移导致功放管工作点偏离额定",
+      "failure_mode_canonical": "gate_bias_voltage_drift",
+      "p_diagram_anchor": "piece_to_piece:偏置电路元器件（电阻/电容）容差（±5%） × error_states:偏置异常导致功放管工作点偏移，增益下降",
+      "cause": "[设计/模块] 偏置电阻容差叠加（±5%，最坏情况），栅极偏置Vgs偏移±100mV以上，功放管静态工作点移出A类线性区，增益下降和非线性增加",
+      "effect_customer": "NMR发射脉冲线性度下降，谐波增加，可能影响图像质量",
+      "effect_downstream": "末级功放管在非额定工作点工作，长期可靠性下降",
+      "effect_system": "系统功率输出和增益不满足指标",
+      "current_controls_prevention": "[设计/模块] 偏置电路使用精密电阻（±1%）；LDO提供稳定参考电压",
+      "current_controls_detection": "[设计/模块] ATE测试覆盖偏置电压精度；整机功率测试间接反映",
+      "recommended_actions": [
+        "增加偏置电压调节电位器（出厂时校准到最优工作点）",
+        "加入监控ADC实时采集Vgs并通过串口上报给整机控制器",
+        "LDO选型时要求温漂系数<50 ppm/°C"
+      ],
+      "severity": 6,
+      "occurrence": 4,
+      "detection": 3,
+      "rpn": 72,
+      "rating_history": {
+        "role_view": [
+          {
+            "role": "设计/模块",
+            "s": 6,
+            "o": 4,
+            "d": 3
+          }
+        ],
+        "historical_view": {
+          "s": null,
+          "o": null,
+          "d": null,
+          "source": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      },
+      "multi_role_corroborated": false,
+      "source_traces": [
+        {
+          "type": "role_inference",
+          "role": "设计/模块"
+        },
+        {
+          "type": "historical",
+          "ref": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      ],
+      "evidence_grade": "historical-supported",
+      "confidence": 0.75,
+      "confidence_breakdown": {
+        "role_agreement": 0.167,
+        "evidence_strength": 1.0,
+        "sod_grounding": 1.0,
+        "pdiagram_coverage": 1.0
+      },
+      "needs_human_confirmation": false,
+      "review_status": "rejected",
+      "review_meta": {
+        "reviewer": "qa-01",
+        "reviewed_at": "2026-05-19T10:10:00+08:00",
+        "reason": "本机型不适用"
+      }
+    },
+    {
+      "row_id": "T.1.2/pa_transistor_solder_void_thermal",
+      "leaf_id": "T.1.2",
+      "scope_path": "",
+      "failure_mode": "功放管焊接虚焊导致热阻偏高引起热失控",
+      "failure_mode_canonical": "pa_transistor_solder_void_thermal",
+      "p_diagram_anchor": "piece_to_piece:功放管 Idss/Vp 批次散差（±15%） × error_states:功放管热失控损毁",
+      "cause": "[制造/工艺] 功放管大功率封装（如法兰型TO-254）焊接时，焊料中空洞（void）面积超过总焊接面积20%，等效热阻增加，工作时局部热点温度高于设计值",
+      "effect_customer": "功放管过热损毁，设备停机；首次使用后数小时内发生",
+      "effect_downstream": "焊接空洞在早期失效（infant mortality）阶段集中暴露",
+      "effect_system": "早期失效率偏高，损害品牌可靠性",
+      "current_controls_prevention": "[制造/工艺] 焊接工艺规程要求空洞率<15%；回流焊温度曲线管控",
+      "current_controls_detection": "[制造/工艺] X-ray检测功放管焊接空洞（抽检比例5%）",
+      "recommended_actions": [
+        "将功放管X-ray检测改为100%检测（大功率封装焊接是高风险项目）",
+        "引入真空回流焊工艺，将空洞率降至<5%",
+        "出厂老炼测试（Burn-in，100%额定功率，2小时）筛除早期失效"
+      ],
+      "severity": 10,
+      "occurrence": 4,
+      "detection": 5,
+      "rpn": 200,
+      "rating_history": {
+        "role_view": [
+          {
+            "role": "制造/工艺",
+            "s": 10,
+            "o": 4,
+            "d": 5
+          }
+        ],
+        "historical_view": {
+          "s": null,
+          "o": null,
+          "d": null,
+          "source": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      },
+      "multi_role_corroborated": false,
+      "source_traces": [
+        {
+          "type": "role_inference",
+          "role": "制造/工艺"
+        },
+        {
+          "type": "historical",
+          "ref": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      ],
+      "evidence_grade": "historical-supported",
+      "confidence": 0.75,
+      "confidence_breakdown": {
+        "role_agreement": 0.167,
+        "evidence_strength": 1.0,
+        "sod_grounding": 1.0,
+        "pdiagram_coverage": 1.0
+      },
+      "needs_human_confirmation": false,
+      "review_status": "pending",
+      "review_meta": {}
+    },
+    {
+      "row_id": "T.2.2/heatsink_mounting_torque_inconsistent",
+      "leaf_id": "T.2.2",
+      "scope_path": "",
+      "failure_mode": "散热器安装螺钉力矩不一致导致TIM接触压力不足",
+      "failure_mode_canonical": "heatsink_mounting_torque_inconsistent",
+      "p_diagram_anchor": "piece_to_piece:螺钉紧固力矩一致性（装配批次差） × error_states:功放管结温超限触发过温保护",
+      "cause": "[制造/工艺] 装配工序中散热器安装螺钉未使用力矩扳手，或力矩扳手未定期校准，导致4颗螺钉力矩差异>30%，TIM受压不均，实际接触热阻高于设计值",
+      "effect_customer": "功放管壳温高于预期，触发过温保护停机",
+      "effect_downstream": "散热系统热阻偏离设计，整机热裕量下降",
+      "effect_system": "批次间热性能不一致",
+      "current_controls_prevention": "[制造/工艺] 装配SOP规定螺钉拧紧顺序；但未强制要求力矩扳手",
+      "current_controls_detection": "[制造/工艺] 整机热测试（抽检，非100%）",
+      "recommended_actions": [
+        "SOP中强制要求使用数字力矩扳手，目标力矩±5%",
+        "将散热器安装增加防错设计（弹簧螺钉预设力矩）",
+        "100%出厂热测试（5分钟额定功率运行，测量壳温）"
+      ],
+      "severity": 7,
+      "occurrence": 5,
+      "detection": 5,
+      "rpn": 175,
+      "rating_history": {
+        "role_view": [
+          {
+            "role": "制造/工艺",
+            "s": 7,
+            "o": 5,
+            "d": 5
+          }
+        ],
+        "historical_view": {
+          "s": null,
+          "o": null,
+          "d": null,
+          "source": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      },
+      "multi_role_corroborated": false,
+      "source_traces": [
+        {
+          "type": "role_inference",
+          "role": "制造/工艺"
+        },
+        {
+          "type": "historical",
+          "ref": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      ],
+      "evidence_grade": "historical-supported",
+      "confidence": 0.75,
+      "confidence_breakdown": {
+        "role_agreement": 0.167,
+        "evidence_strength": 1.0,
+        "sod_grounding": 1.0,
+        "pdiagram_coverage": 1.0
+      },
+      "needs_human_confirmation": false,
+      "review_status": "pending",
+      "review_meta": {}
+    },
+    {
+      "row_id": "T.3.2/vswr_detector_diode_vf_offset",
+      "leaf_id": "T.3.2",
+      "scope_path": "",
+      "failure_mode": "检波二极管Vf批次差导致保护阈值偏移",
+      "failure_mode_canonical": "vswr_detector_diode_vf_offset",
+      "p_diagram_anchor": "piece_to_piece:定向耦合器检波二极管 Vf 批次差（影响功率检测精度） × error_states:反射保护失效，负载失配时功放管损毁",
+      "cause": "[制造/工艺] 检波二极管（如肖特基）Vf批次差±50 mV，导致反射功率检测电压偏移，等效保护阈值偏离设计值±1 dB，当Vf偏高时保护触发功率高于预设，增加功放管VSWR损坏风险",
+      "effect_customer": "阈值偏高时保护延迟，功放管遭受超额反射功率",
+      "effect_downstream": "保护可靠性批次间不一致",
+      "effect_system": "VSWR保护功能不达标",
+      "current_controls_prevention": "[制造/工艺] 检波二极管来料检验（Vf@1mA测试，±30 mV范围）",
+      "current_controls_detection": "[制造/工艺] 整机VSWR保护功能测试（用模拟负载验证触发点）",
+      "recommended_actions": [
+        "检波二极管100%来料筛选（Vf分档，只用±20 mV档）",
+        "保护电路改用温度补偿基准源替代二极管检波，消除Vf批次差影响",
+        "出厂测试增加保护阈值精度验证（标准信号注入法）"
+      ],
+      "severity": 9,
+      "occurrence": 3,
+      "detection": 4,
+      "rpn": 108,
+      "rating_history": {
+        "role_view": [
+          {
+            "role": "制造/工艺",
+            "s": 9,
+            "o": 3,
+            "d": 4
+          }
+        ],
+        "historical_view": {
+          "s": null,
+          "o": null,
+          "d": null,
+          "source": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      },
+      "multi_role_corroborated": false,
+      "source_traces": [
+        {
+          "type": "role_inference",
+          "role": "制造/工艺"
+        },
+        {
+          "type": "historical",
+          "ref": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      ],
+      "evidence_grade": "historical-supported",
+      "confidence": 0.75,
+      "confidence_breakdown": {
+        "role_agreement": 0.167,
+        "evidence_strength": 1.0,
+        "sod_grounding": 1.0,
+        "pdiagram_coverage": 1.0
+      },
+      "needs_human_confirmation": false,
+      "review_status": "pending",
+      "review_meta": {}
+    },
+    {
+      "row_id": "T.1.2/pa_transistor_vth_drift_aging",
+      "leaf_id": "T.1.2",
+      "scope_path": "",
+      "failure_mode": "功放管阈值电压正漂移导致输出功率逐年衰减",
+      "failure_mode_canonical": "pa_transistor_vth_drift_aging",
+      "p_diagram_anchor": "wear_aging:功放管长期偏置漂移（Vth 正漂移，寿命 >3 年） × error_states:输出功率下降 >3 dB（功放管失效或偏置丢失）",
+      "cause": "[可靠性/试验] LDMOS功放管长期在高温高电流下工作，热载流子注入和界面态积累导致Vth正漂移，静态工作点向截止区移动，增益下降约1 dB/年",
+      "effect_customer": "NMR发射功率逐年衰减，1-2年后图像信噪比不满足临床要求",
+      "effect_downstream": "整机增益余量被逐步消耗，某时刻突然跌出规格",
+      "effect_system": "设备可靠性随时间退化，不满足5年设计寿命要求",
+      "current_controls_prevention": "[可靠性/试验] 功放管选型时要求厂家提供老化漂移数据；偏置电路留有10%调节余量",
+      "current_controls_detection": "[可靠性/试验] 现有ATE测试仅在交货时测试，无定期性能退化监控机制",
+      "recommended_actions": [
+        "建立功放管老化寿命试验（HTOL，150°C，1000小时），验证Vth漂移量",
+        "整机设计中增加Vgs自动校准逻辑（根据功率反馈自动微调偏置）",
+        "用户手册增加年度性能标定要求，及早发现退化"
+      ],
+      "severity": 7,
+      "occurrence": 5,
+      "detection": 7,
+      "rpn": 245,
+      "rating_history": {
+        "role_view": [
+          {
+            "role": "可靠性/试验",
+            "s": 7,
+            "o": 5,
+            "d": 7
+          }
+        ],
+        "historical_view": {
+          "s": null,
+          "o": null,
+          "d": null,
+          "source": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      },
+      "multi_role_corroborated": false,
+      "source_traces": [
+        {
+          "type": "role_inference",
+          "role": "可靠性/试验"
+        },
+        {
+          "type": "historical",
+          "ref": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      ],
+      "evidence_grade": "historical-supported",
+      "confidence": 0.75,
+      "confidence_breakdown": {
+        "role_agreement": 0.167,
+        "evidence_strength": 1.0,
+        "sod_grounding": 1.0,
+        "pdiagram_coverage": 1.0
+      },
+      "needs_human_confirmation": false,
+      "review_status": "pending",
+      "review_meta": {}
+    },
+    {
+      "row_id": "T.2.2/tim_dry_out_thermal_degradation",
+      "leaf_id": "T.2.2",
+      "scope_path": "",
+      "failure_mode": "导热硅脂干化热阻升高导致功放管长期高温加速退化",
+      "failure_mode_canonical": "tim_dry_out_thermal_degradation",
+      "p_diagram_anchor": "wear_aging:TIM 干化分层（长期高温循环，>2 年） × error_states:持续高温下功放管加速退化（寿命缩短）",
+      "cause": "[可靠性/试验] 硅脂在高温循环（每次实验热循环20-80°C）下，挥发性组分逐渐散失，经2年后导热系数从3.5 W/mK下降至2.0 W/mK，热阻升高约60%",
+      "effect_customer": "功放管结温逐渐升高，加速Vth漂移和老化，2-3年后功率衰减加速",
+      "effect_downstream": "散热子系统有效热阻偏离设计值，过温保护触发频率增加",
+      "effect_system": "整机热可靠性随时间退化",
+      "current_controls_prevention": "[可靠性/试验] TIM材料选型要求挥发性<0.1% per year",
+      "current_controls_detection": "[可靠性/试验] 当前无定期TIM状态检查规程；热成像仪可检测但未纳入维护计划",
+      "recommended_actions": [
+        "将TIM更换纳入2年期预防维护计划",
+        "评估使用相变TIM（Phase Change Material）替代硅脂，改善可靠性",
+        "建立加速老化试验（热循环2000次）验证TIM寿命与热阻退化曲线"
+      ],
+      "severity": 7,
+      "occurrence": 6,
+      "detection": 8,
+      "rpn": 336,
+      "rating_history": {
+        "role_view": [
+          {
+            "role": "可靠性/试验",
+            "s": 7,
+            "o": 6,
+            "d": 8
+          }
+        ],
+        "historical_view": {
+          "s": null,
+          "o": null,
+          "d": null,
+          "source": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      },
+      "multi_role_corroborated": false,
+      "source_traces": [
+        {
+          "type": "role_inference",
+          "role": "可靠性/试验"
+        },
+        {
+          "type": "historical",
+          "ref": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      ],
+      "evidence_grade": "historical-supported",
+      "confidence": 0.75,
+      "confidence_breakdown": {
+        "role_agreement": 0.167,
+        "evidence_strength": 1.0,
+        "sod_grounding": 1.0,
+        "pdiagram_coverage": 1.0
+      },
+      "needs_human_confirmation": false,
+      "review_status": "pending",
+      "review_meta": {}
+    },
+    {
+      "row_id": "T.4.1/psu_filter_cap_esr_aging",
+      "leaf_id": "T.4.1",
+      "scope_path": "",
+      "failure_mode": "滤波电容ESR老化导致电源纹波增大",
+      "failure_mode_canonical": "psu_filter_cap_esr_aging",
+      "p_diagram_anchor": "wear_aging:LDO/稳压电容 ESR 老化（输出纹波增大） × error_states:偏置电压丢失导致功放管输出功率为零",
+      "cause": "[可靠性/试验] 铝电解电容在高温工作环境下，电解液逐渐蒸发，ESR升高，输出纹波从20 mV增大到100 mV以上，超过偏置电路允许的纹波容限",
+      "effect_customer": "射频输出AM噪底升高，NMR图像信噪比下降",
+      "effect_downstream": "偏置电路参考电压不稳定，功放管工作点抖动",
+      "effect_system": "电源质量不满足RF偏置电路要求",
+      "current_controls_prevention": "[可靠性/试验] 电容选型额定105°C，使用寿命2000小时以上",
+      "current_controls_detection": "[可靠性/试验] 出厂测试测量纹波（但不覆盖老化后状态）",
+      "recommended_actions": [
+        "更换固态电解电容（低ESR，无电解液蒸发机理）",
+        "增加纹波实时监控ADC，纹波超阈值时告警",
+        "维护规程增加3年期电容健康检查（ESR测量）"
+      ],
+      "severity": 6,
+      "occurrence": 5,
+      "detection": 7,
+      "rpn": 210,
+      "rating_history": {
+        "role_view": [
+          {
+            "role": "可靠性/试验",
+            "s": 6,
+            "o": 5,
+            "d": 7
+          }
+        ],
+        "historical_view": {
+          "s": null,
+          "o": null,
+          "d": null,
+          "source": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      },
+      "multi_role_corroborated": false,
+      "source_traces": [
+        {
+          "type": "role_inference",
+          "role": "可靠性/试验"
+        },
+        {
+          "type": "historical",
+          "ref": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      ],
+      "evidence_grade": "historical-supported",
+      "confidence": 0.75,
+      "confidence_breakdown": {
+        "role_agreement": 0.167,
+        "evidence_strength": 1.0,
+        "sod_grounding": 1.0,
+        "pdiagram_coverage": 1.0
+      },
+      "needs_human_confirmation": false,
+      "review_status": "pending",
+      "review_meta": {}
+    },
+    {
+      "row_id": "T.2.1/heatsink_coating_degradation",
+      "leaf_id": "T.2.1",
+      "scope_path": "",
+      "failure_mode": "散热器氧化涂层老化导致辐射换热能力下降",
+      "failure_mode_canonical": "heatsink_coating_degradation",
+      "p_diagram_anchor": "wear_aging:散热齿表面氧化涂层退化（辐射换热效率下降） × error_states:散热器壳温>90°C 触发系统告警停机",
+      "cause": "[可靠性/试验] 铝合金散热器阳极氧化涂层在高温（>80°C）长期工作后，发射率从0.85降至0.6以下，辐射换热贡献减少，总热阻升高",
+      "effect_customer": "散热能力下降，高占空比实验时壳温偏高，触发过温停机",
+      "effect_downstream": "过温保护触发频率增加",
+      "effect_system": "散热系统老化余量不足",
+      "current_controls_prevention": "[可靠性/试验] 散热器材料规格要求阳极氧化处理，涂层厚度≥15 μm",
+      "current_controls_detection": "[可靠性/试验] 无定期散热性能监测",
+      "recommended_actions": [
+        "评估使用高温稳定涂层（如陶瓷涂层）替代铝阳极氧化",
+        "增加散热器定期清洁和视觉检查（3年期维护）",
+        "建立散热器老化热阻测试（基于温升测量）"
+      ],
+      "severity": 5,
+      "occurrence": 4,
+      "detection": 8,
+      "rpn": 160,
+      "rating_history": {
+        "role_view": [
+          {
+            "role": "可靠性/试验",
+            "s": 5,
+            "o": 4,
+            "d": 8
+          }
+        ],
+        "historical_view": {
+          "s": null,
+          "o": null,
+          "d": null,
+          "source": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      },
+      "multi_role_corroborated": false,
+      "source_traces": [
+        {
+          "type": "role_inference",
+          "role": "可靠性/试验"
+        },
+        {
+          "type": "historical",
+          "ref": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      ],
+      "evidence_grade": "historical-supported",
+      "confidence": 0.75,
+      "confidence_breakdown": {
+        "role_agreement": 0.167,
+        "evidence_strength": 1.0,
+        "sod_grounding": 1.0,
+        "pdiagram_coverage": 1.0
+      },
+      "needs_human_confirmation": false,
+      "review_status": "deferred",
+      "review_meta": {
+        "reviewer": "qa-01",
+        "reviewed_at": "2026-05-19T10:15:00+08:00",
+        "revisit_after": "2026-06-01"
+      }
+    },
+    {
+      "row_id": "T.3.1/otp_bypass_during_service",
+      "leaf_id": "T.3.1",
+      "scope_path": "",
+      "failure_mode": "维修人员短接过温保护导致功放管热损毁",
+      "failure_mode_canonical": "otp_bypass_during_service",
+      "p_diagram_anchor": "customer_usage:客户手动短接保护输出绕过保护（维修场景） × error_states:过温保护失效（阈值偏移或电路失效），功放管热损毁",
+      "cause": "[安全/服务] 维修工程师在现场调试时为排除保护误触发故障，临时短接过温保护电路输出；调试完成后忘记恢复，导致功放管在无热保护状态下工作",
+      "effect_customer": "功放管热损毁，设备停机；维修后整机安全降级",
+      "effect_downstream": "现场维修引入新的安全风险，责任认定困难",
+      "effect_system": "过温保护被绕过后无独立备份保护层",
+      "current_controls_prevention": "[安全/服务] 维修手册规定禁止短接保护；但无硬件防护",
+      "current_controls_detection": "[安全/服务] 无自动检测保护电路是否被旁路的机制",
+      "recommended_actions": [
+        "过温保护电路增加自诊断功能：上电时检测保护电路完整性（如注入测试信号），若检测到异常则禁止整机启动",
+        "在保护电路关键节点增加硬件标识（一次性导线/保险）防止旁路",
+        "维修手册增加'保护电路完整性检查'作为维修后强制验收步骤"
+      ],
+      "severity": 10,
+      "occurrence": 3,
+      "detection": 9,
+      "rpn": 270,
+      "rating_history": {
+        "role_view": [
+          {
+            "role": "安全/服务",
+            "s": 10,
+            "o": 3,
+            "d": 9
+          }
+        ],
+        "historical_view": {
+          "s": null,
+          "o": null,
+          "d": null,
+          "source": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      },
+      "multi_role_corroborated": false,
+      "source_traces": [
+        {
+          "type": "role_inference",
+          "role": "安全/服务"
+        },
+        {
+          "type": "historical",
+          "ref": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      ],
+      "evidence_grade": "historical-supported",
+      "confidence": 0.75,
+      "confidence_breakdown": {
+        "role_agreement": 0.167,
+        "evidence_strength": 1.0,
+        "sod_grounding": 1.0,
+        "pdiagram_coverage": 1.0
+      },
+      "needs_human_confirmation": false,
+      "review_status": "pending",
+      "review_meta": {}
+    },
+    {
+      "row_id": "T.3.2/vswr_protection_retry_thermal_accumulation",
+      "leaf_id": "T.3.2",
+      "scope_path": "",
+      "failure_mode": "保护触发后快速反复重试导致热量累积损毁功放管",
+      "failure_mode_canonical": "vswr_protection_retry_thermal_accumulation",
+      "p_diagram_anchor": "customer_usage:频繁重试（保护触发后短时间内复位，热量未散） × error_states:反射保护失效，负载失配时功放管损毁",
+      "cause": "[安全/服务] 用户在高VSWR状态下反复触发保护→快速复位→重新发射，每次短暂发射向功放管注入热量，冷却不足，热量累积，经多次循环后结温超限",
+      "effect_customer": "保护电路正常工作但功放管仍损毁，用户认为设备设计有问题",
+      "effect_downstream": "保护电路本身无缺陷，但系统级防护不完整",
+      "effect_system": "缺少快速连续故障防护逻辑（重试次数限制）",
+      "current_controls_prevention": "[安全/服务] 保护电路触发后手动复位才能继续发射",
+      "current_controls_detection": "[安全/服务] 控制器记录保护触发次数，但无频率限制",
+      "recommended_actions": [
+        "固件增加保护触发频率限制：同一故障10分钟内触发3次以上，进入锁定模式，需管理员解锁",
+        "增加保护触发后强制冷却等待时间（如触发后禁止发射60秒）",
+        "用户界面显示剩余冷却时间，并显示故障代码引导用户解决根因"
+      ],
+      "severity": 9,
+      "occurrence": 4,
+      "detection": 8,
+      "rpn": 288,
+      "rating_history": {
+        "role_view": [
+          {
+            "role": "安全/服务",
+            "s": 9,
+            "o": 4,
+            "d": 8
+          }
+        ],
+        "historical_view": {
+          "s": null,
+          "o": null,
+          "d": null,
+          "source": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      },
+      "multi_role_corroborated": false,
+      "source_traces": [
+        {
+          "type": "role_inference",
+          "role": "安全/服务"
+        },
+        {
+          "type": "historical",
+          "ref": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      ],
+      "evidence_grade": "historical-supported",
+      "confidence": 0.75,
+      "confidence_breakdown": {
+        "role_agreement": 0.167,
+        "evidence_strength": 1.0,
+        "sod_grounding": 1.0,
+        "pdiagram_coverage": 1.0
+      },
+      "needs_human_confirmation": false,
+      "review_status": "pending",
+      "review_meta": {}
+    },
+    {
+      "row_id": "T.2.1/heatsink_airflow_obstruction",
+      "leaf_id": "T.2.1",
+      "scope_path": "",
+      "failure_mode": "用户改装机柜风道导致散热器冷却不足",
+      "failure_mode_canonical": "heatsink_airflow_obstruction",
+      "p_diagram_anchor": "customer_usage:用户自行改装机柜挡板影响风道 × error_states:散热器壳温>90°C 触发系统告警停机",
+      "cause": "[安全/服务] 用户为整理线缆或安装附加设备，自行修改机柜内部导风板、封堵风道孔，导致到达射频功放散热器的气流量降低50%以上，散热能力严重不足",
+      "effect_customer": "散热器壳温快速上升，触发过温保护，实验被迫中断",
+      "effect_downstream": "功放管持续高温工作，加速老化",
+      "effect_system": "整机散热设计假设（规定风道配置）失效",
+      "current_controls_prevention": "[安全/服务] 用户手册禁止改装机柜内部结构",
+      "current_controls_detection": "[安全/服务] 壳温传感器监控；过温保护触发",
+      "recommended_actions": [
+        "机柜设计增加物理风道引导结构（不可拆卸导风板），防止用户改装",
+        "增加进风口风速传感器，风速低于阈值时显示警告（预防性告警，在过温保护触发前）",
+        "用户培训材料增加机柜配置要求说明，并在安装时现场确认"
+      ],
+      "severity": 7,
+      "occurrence": 4,
+      "detection": 5,
+      "rpn": 140,
+      "rating_history": {
+        "role_view": [
+          {
+            "role": "安全/服务",
+            "s": 7,
+            "o": 4,
+            "d": 5
+          }
+        ],
+        "historical_view": {
+          "s": null,
+          "o": null,
+          "d": null,
+          "source": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      },
+      "multi_role_corroborated": false,
+      "source_traces": [
+        {
+          "type": "role_inference",
+          "role": "安全/服务"
+        },
+        {
+          "type": "historical",
+          "ref": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      ],
+      "evidence_grade": "historical-supported",
+      "confidence": 0.75,
+      "confidence_breakdown": {
+        "role_agreement": 0.167,
+        "evidence_strength": 1.0,
+        "sod_grounding": 1.0,
+        "pdiagram_coverage": 1.0
+      },
+      "needs_human_confirmation": false,
+      "review_status": "pending",
+      "review_meta": {}
+    },
+    {
+      "row_id": "T.3.2/rf_enable_race_condition",
+      "leaf_id": "T.3.2",
+      "scope_path": "",
+      "failure_mode": "门控使能信号竞争导致保护未及时关断时仍发射RF脉冲",
+      "failure_mode_canonical": "rf_enable_race_condition",
+      "p_diagram_anchor": "system_interactions:序列控制器复位逻辑与保护电路状态竞争 × error_states:使能信号竞争导致误发射（安全隐患）",
+      "cause": "[软件/控制] 序列控制器发出发射使能信号与反射保护硬件关断信号之间存在时序竞争窗口（<50 ns），在保护响应完成前，下一个脉冲可能已经开始发射",
+      "effect_customer": "VSWR保护触发后下一个脉冲仍短暂发射，功放管承受多余的反射能量",
+      "effect_downstream": "保护的实际保护效果比预期差，连续快速脉冲序列中保护失效",
+      "effect_system": "软件控制逻辑和硬件保护逻辑之间的时序不确定性",
+      "current_controls_prevention": "[软件/控制] 硬件保护电路响应时间<100 ns设计规格",
+      "current_controls_detection": "[软件/控制] 时序分析（设计评审），但未通过试验验证最坏情况时序",
+      "recommended_actions": [
+        "增加专用门控逻辑：保护信号优先级高于使能信号，使能信号必须在保护状态清除后才能发出（硬件状态机）",
+        "系统集成测试增加最坏情况时序测试（短脉冲高重复频率+VSWR保护触发组合）",
+        "固件禁止在保护清除状态完成握手前发送新的发射序列"
+      ],
+      "severity": 9,
+      "occurrence": 3,
+      "detection": 6,
+      "rpn": 162,
+      "rating_history": {
+        "role_view": [
+          {
+            "role": "软件/控制",
+            "s": 9,
+            "o": 3,
+            "d": 6
+          }
+        ],
+        "historical_view": {
+          "s": null,
+          "o": null,
+          "d": null,
+          "source": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      },
+      "multi_role_corroborated": false,
+      "source_traces": [
+        {
+          "type": "role_inference",
+          "role": "软件/控制"
+        },
+        {
+          "type": "historical",
+          "ref": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      ],
+      "evidence_grade": "historical-supported",
+      "confidence": 0.75,
+      "confidence_breakdown": {
+        "role_agreement": 0.167,
+        "evidence_strength": 1.0,
+        "sod_grounding": 1.0,
+        "pdiagram_coverage": 1.0
+      },
+      "needs_human_confirmation": false,
+      "review_status": "pending",
+      "review_meta": {}
+    },
+    {
+      "row_id": "T.3.1/otp_software_reset_deadlock",
+      "leaf_id": "T.3.1",
+      "scope_path": "",
+      "failure_mode": "软件复位时序与硬件保护锁存产生竞争导致复位失败",
+      "failure_mode_canonical": "otp_software_reset_deadlock",
+      "p_diagram_anchor": "system_interactions:序列控制器复位逻辑与保护电路状态竞争 × error_states:保护触发后锁存无法自动恢复",
+      "cause": "[软件/控制] 控制器软件在保护锁存状态未完全清除时发出复位命令，硬件锁存器在复位脉冲宽度不足时无法可靠清除，导致保护锁存持续，整机无法恢复发射功能",
+      "effect_customer": "保护触发后设备无法恢复工作，需断电重启，NMR扫描中断",
+      "effect_downstream": "软硬件接口时序设计缺陷，复现概率可能随固件版本变化",
+      "effect_system": "设备可用性下降，客户体验差",
+      "current_controls_prevention": "[软件/控制] 固件规定保护复位时序（等待50 ms后再发复位命令）",
+      "current_controls_detection": "[软件/控制] 系统集成测试中测试保护恢复流程，但未测试边界时序",
+      "recommended_actions": [
+        "增加硬件复位握手：复位信号需持续≥100 μs，保护锁存器确认清除后向控制器发送ACK",
+        "固件测试增加边界条件：最短合法复位脉冲宽度验证",
+        "增加保护复位超时保护：软件发出复位后5秒内未收到ACK则上报故障码"
+      ],
+      "severity": 6,
+      "occurrence": 4,
+      "detection": 5,
+      "rpn": 120,
+      "rating_history": {
+        "role_view": [
+          {
+            "role": "软件/控制",
+            "s": 6,
+            "o": 4,
+            "d": 5
+          }
+        ],
+        "historical_view": {
+          "s": null,
+          "o": null,
+          "d": null,
+          "source": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      },
+      "multi_role_corroborated": false,
+      "source_traces": [
+        {
+          "type": "role_inference",
+          "role": "软件/控制"
+        },
+        {
+          "type": "historical",
+          "ref": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      ],
+      "evidence_grade": "historical-supported",
+      "confidence": 0.75,
+      "confidence_breakdown": {
+        "role_agreement": 0.167,
+        "evidence_strength": 1.0,
+        "sod_grounding": 1.0,
+        "pdiagram_coverage": 1.0
+      },
+      "needs_human_confirmation": false,
+      "review_status": "pending",
+      "review_meta": {}
+    },
+    {
+      "row_id": "T.4.2/power_sequence_gate_overvoltage",
+      "leaf_id": "T.4.2",
+      "scope_path": "",
+      "failure_mode": "上电时序控制逻辑错误导致功放管栅极过压",
+      "failure_mode_canonical": "power_sequence_gate_overvoltage",
+      "p_diagram_anchor": "customer_usage:非正常下电顺序（先关射频使能，再关电源） × error_states:上电时序错误导致功放管栅极过压损伤",
+      "cause": "[软件/控制] 控制器上电时序固件Bug或硬件时序电路设计缺陷，导致RF使能信号在偏置建立之前已发出，功放管在无偏置保护状态下接受驱动信号，栅极瞬间过压",
+      "effect_customer": "功放管栅极氧化层损伤，立即或潜在性导致性能下降和提前失效",
+      "effect_downstream": "若是潜在损伤，设备出厂测试可能通过但现场早期失效",
+      "effect_system": "上电流程安全性不可信",
+      "current_controls_prevention": "[软件/控制] 硬件时序电路（RC延迟）保证偏置先于RF使能建立",
+      "current_controls_detection": "[软件/控制] 出厂上电功能测试；但潜在损伤难以检测",
+      "recommended_actions": [
+        "增加上电时序自检：控制器读取偏置ADC值，确认偏置在规格范围内后才允许RF使能",
+        "硬件时序电路增加冗余（双路RC+比较器，OR逻辑输出RF使能许可）",
+        "出厂测试增加上电时序实测（示波器记录偏置建立时间vs RF使能时间）"
+      ],
+      "severity": 8,
+      "occurrence": 3,
+      "detection": 6,
+      "rpn": 144,
+      "rating_history": {
+        "role_view": [
+          {
+            "role": "软件/控制",
+            "s": 8,
+            "o": 3,
+            "d": 6
+          }
+        ],
+        "historical_view": {
+          "s": null,
+          "o": null,
+          "d": null,
+          "source": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      },
+      "multi_role_corroborated": false,
+      "source_traces": [
+        {
+          "type": "role_inference",
+          "role": "软件/控制"
+        },
+        {
+          "type": "historical",
+          "ref": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      ],
+      "evidence_grade": "historical-supported",
+      "confidence": 0.75,
+      "confidence_breakdown": {
+        "role_agreement": 0.167,
+        "evidence_strength": 1.0,
+        "sod_grounding": 1.0,
+        "pdiagram_coverage": 1.0
+      },
+      "needs_human_confirmation": false,
+      "review_status": "pending",
+      "review_meta": {}
+    },
+    {
+      "row_id": "T.1.3/coupler_isolation_inadequate",
+      "leaf_id": "T.1.3",
+      "scope_path": "",
+      "failure_mode": "定向耦合器隔离度不足导致反射信号回流干扰功率检测",
+      "failure_mode_canonical": "coupler_isolation_inadequate",
+      "p_diagram_anchor": "system_interactions:上游综合器幅度/相位漂移传递至驱动级输入 × intended_outputs:400 MHz 稳定射频脉冲，峰值功率 ≥ 额定值（如 1 kW）",
+      "cause": "[系统/接口] 定向耦合器方向性（Directivity）不足（<20 dB），反射信号从输出端口泄漏到正向端口，污染功率监控读数",
+      "effect_customer": "反射功率保护判断错误，可能漏保护（读数偏低）或误触发（读数偏高）",
+      "effect_downstream": "功率监控系统可靠性下降",
+      "effect_system": "无法准确区分正向功率和反射功率，VSWR保护功能不可信",
+      "current_controls_prevention": "[系统/接口] 耦合器选型规格要求方向性≥25 dB",
+      "current_controls_detection": "[系统/接口] 来料测试方向性参数；整机功率计交叉验证",
+      "recommended_actions": [
+        "增加方向性验证为来料100%检验项目",
+        "整机VSWR保护功能测试增加边界条件（模拟Directivity=20 dB时保护触发准确性）"
+      ],
+      "severity": 8,
+      "occurrence": 3,
+      "detection": 4,
+      "rpn": 96,
+      "rating_history": {
+        "role_view": [
+          {
+            "role": "系统/接口",
+            "s": 8,
+            "o": 3,
+            "d": 4
+          }
+        ],
+        "historical_view": {
+          "s": null,
+          "o": null,
+          "d": null,
+          "source": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      },
+      "multi_role_corroborated": false,
+      "source_traces": [
+        {
+          "type": "role_inference",
+          "role": "系统/接口"
+        },
+        {
+          "type": "historical",
+          "ref": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      ],
+      "evidence_grade": "historical-supported",
+      "confidence": 0.75,
+      "confidence_breakdown": {
+        "role_agreement": 0.167,
+        "evidence_strength": 1.0,
+        "sod_grounding": 1.0,
+        "pdiagram_coverage": 1.0
+      },
+      "needs_human_confirmation": false,
+      "review_status": "pending",
+      "review_meta": {}
+    },
+    {
+      "row_id": "T.3.2/vswr_protection_state_deadlock",
+      "leaf_id": "T.3.2",
+      "scope_path": "",
+      "failure_mode": "保护电路与序列控制器状态机竞争导致系统死锁",
+      "failure_mode_canonical": "vswr_protection_state_deadlock",
+      "p_diagram_anchor": "system_interactions:序列控制器复位逻辑与保护电路状态竞争 × error_states:反射功率触发保护后无法自动恢复",
+      "cause": "[系统/接口] 保护电路触发后，锁存状态需要控制器显式复位；但序列控制器在发射序列执行中尝试复位时序与保护电路锁存信号竞争，导致状态不确定",
+      "effect_customer": "设备保护触发后无法自动或手动恢复，需要断电重启，中断NMR实验",
+      "effect_downstream": "控制器状态机需要额外处理保护复位握手逻辑",
+      "effect_system": "系统恢复流程不可靠，影响设备可用性",
+      "current_controls_prevention": "[系统/接口] 控制器固件规定保护复位握手时序",
+      "current_controls_detection": "[系统/接口] 系统集成测试中测试保护触发→复位流程",
+      "recommended_actions": [
+        "定义明确的保护状态机：ACTIVE→LATCHED→RESET_REQUESTED→CLEARED，严格握手协议",
+        "增加系统测试用例：在不同序列阶段触发VSWR保护，验证恢复流程",
+        "控制器固件增加保护复位超时检测（超过5秒未恢复自动上报故障码）"
+      ],
+      "severity": 6,
+      "occurrence": 4,
+      "detection": 5,
+      "rpn": 120,
+      "rating_history": {
+        "role_view": [
+          {
+            "role": "系统/接口",
+            "s": 6,
+            "o": 4,
+            "d": 5
+          }
+        ],
+        "historical_view": {
+          "s": null,
+          "o": null,
+          "d": null,
+          "source": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      },
+      "multi_role_corroborated": false,
+      "source_traces": [
+        {
+          "type": "role_inference",
+          "role": "系统/接口"
+        },
+        {
+          "type": "historical",
+          "ref": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      ],
+      "evidence_grade": "historical-supported",
+      "confidence": 0.75,
+      "confidence_breakdown": {
+        "role_agreement": 0.167,
+        "evidence_strength": 1.0,
+        "sod_grounding": 1.0,
+        "pdiagram_coverage": 1.0
+      },
+      "needs_human_confirmation": false,
+      "review_status": "pending",
+      "review_meta": {}
+    },
+    {
+      "row_id": "T.4.1/psu_shared_bus_impedance_coupling",
+      "leaf_id": "T.4.1",
+      "scope_path": "",
+      "failure_mode": "多模块并联时电源总线共阻抗耦合导致偏置相互干扰",
+      "failure_mode_canonical": "psu_shared_bus_impedance_coupling",
+      "p_diagram_anchor": "system_interactions:多个功放模块并联时供电相互影响 × intended_outputs:稳定的栅极/漏极偏置电压（满足功放管额定工作点）",
+      "cause": "[系统/接口] 多个功放模块共用28V电源总线，脉冲发射时各模块电流尖峰通过总线阻抗（>0.1 Ω）相互耦合，在其他模块偏置端产生噪声",
+      "effect_customer": "多模块系统中发射不同步时，各模块输出功率不一致，影响系统级性能",
+      "effect_downstream": "偏置噪声通过射频链路转化为AM噪声，恶化接收信号质量",
+      "effect_system": "系统级电源完整性不满足多模块并联要求",
+      "current_controls_prevention": "[系统/接口] 每个模块输入端设计LC滤波器",
+      "current_controls_detection": "[系统/接口] 当前测试仅测试单模块，未覆盖多模块并联场景",
+      "recommended_actions": [
+        "增加系统级电源完整性测试（多模块同时发射，测量电源总线瞬态噪声）",
+        "电源设计增加铁氧体磁珠隔离，减少模块间耦合",
+        "系统架构评审中增加多模块并联场景的电源预算计算"
+      ],
+      "severity": 5,
+      "occurrence": 4,
+      "detection": 6,
+      "rpn": 120,
+      "rating_history": {
+        "role_view": [
+          {
+            "role": "系统/接口",
+            "s": 5,
+            "o": 4,
+            "d": 6
+          }
+        ],
+        "historical_view": {
+          "s": null,
+          "o": null,
+          "d": null,
+          "source": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      },
+      "multi_role_corroborated": false,
+      "source_traces": [
+        {
+          "type": "role_inference",
+          "role": "系统/接口"
+        },
+        {
+          "type": "historical",
+          "ref": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      ],
+      "evidence_grade": "historical-supported",
+      "confidence": 0.75,
+      "confidence_breakdown": {
+        "role_agreement": 0.167,
+        "evidence_strength": 1.0,
+        "sod_grounding": 1.0,
+        "pdiagram_coverage": 1.0
+      },
+      "needs_human_confirmation": false,
+      "review_status": "pending",
+      "review_meta": {}
+    },
+    {
+      "row_id": "T.3.1/temp_sensor_ground_offset_error",
+      "leaf_id": "T.3.1",
+      "scope_path": "",
+      "failure_mode": "温度传感器地电位差导致温度测量误差",
+      "failure_mode_canonical": "temp_sensor_ground_offset_error",
+      "p_diagram_anchor": "system_interactions:多路温度传感器之间的地电位差 × intended_outputs:过温时硬件关断功放管使能信号（<1 μs 响应）",
+      "cause": "[系统/接口] 功放管壳温传感器（NTC）采样电路与保护比较器参考地之间存在电位差（接地线阻抗>0.1 Ω），引起采样误差，等效温度偏差可达5°C",
+      "effect_customer": "过温保护误差增加，有效保护窗口缩小",
+      "effect_downstream": "功放管实际触发保护温度与设定值不一致",
+      "effect_system": "系统热保护可靠性下降",
+      "current_controls_prevention": "[系统/接口] PCB设计使用独立的温度传感器模拟地平面",
+      "current_controls_detection": "[系统/接口] 整机校准测试，注入已知温度验证保护点",
+      "recommended_actions": [
+        "使用差分温度传感器（如SPI/I²C接口的数字温度传感器）消除地电位差影响",
+        "PCB地平面设计评审中增加温度传感器信号完整性检查"
+      ],
+      "severity": 7,
+      "occurrence": 3,
+      "detection": 4,
+      "rpn": 84,
+      "rating_history": {
+        "role_view": [
+          {
+            "role": "系统/接口",
+            "s": 7,
+            "o": 3,
+            "d": 4
+          }
+        ],
+        "historical_view": {
+          "s": null,
+          "o": null,
+          "d": null,
+          "source": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      },
+      "multi_role_corroborated": false,
+      "source_traces": [
+        {
+          "type": "role_inference",
+          "role": "系统/接口"
+        },
+        {
+          "type": "historical",
+          "ref": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      ],
+      "evidence_grade": "historical-supported",
+      "confidence": 0.75,
+      "confidence_breakdown": {
+        "role_agreement": 0.167,
+        "evidence_strength": 1.0,
+        "sod_grounding": 1.0,
+        "pdiagram_coverage": 1.0
+      },
+      "needs_human_confirmation": false,
+      "review_status": "pending",
+      "review_meta": {}
+    }
+  ],
+  "coverage_gaps": [
+    {
+      "leaf_id": "T.1.1",
+      "role": "系统/接口",
+      "axis_combo": "system_interactions × intended_outputs",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.1.1",
+      "role": "设计/模块",
+      "axis_combo": "piece_to_piece × control_factors",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.1.1",
+      "role": "可靠性/试验",
+      "axis_combo": "wear_aging × environment",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.1.1",
+      "role": "制造/工艺",
+      "axis_combo": "piece_to_piece × control_factors",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.1.1",
+      "role": "安全/服务",
+      "axis_combo": "customer_usage × error_states",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.1.1",
+      "role": "软件/控制",
+      "axis_combo": "input_signals × control_factors",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.1.1",
+      "role": "软件/控制",
+      "axis_combo": "control_factors × error_states",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.1.2",
+      "role": "系统/接口",
+      "axis_combo": "system_interactions × intended_outputs",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.1.2",
+      "role": "设计/模块",
+      "axis_combo": "piece_to_piece × control_factors",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.1.2",
+      "role": "可靠性/试验",
+      "axis_combo": "wear_aging × environment",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.1.2",
+      "role": "制造/工艺",
+      "axis_combo": "piece_to_piece × control_factors",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.1.2",
+      "role": "安全/服务",
+      "axis_combo": "customer_usage × error_states",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.1.2",
+      "role": "软件/控制",
+      "axis_combo": "input_signals × control_factors",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.1.2",
+      "role": "软件/控制",
+      "axis_combo": "control_factors × error_states",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.1.3",
+      "role": "设计/模块",
+      "axis_combo": "piece_to_piece × control_factors",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.1.3",
+      "role": "可靠性/试验",
+      "axis_combo": "wear_aging × environment",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.1.3",
+      "role": "制造/工艺",
+      "axis_combo": "piece_to_piece × control_factors",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.1.3",
+      "role": "安全/服务",
+      "axis_combo": "customer_usage × error_states",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.1.3",
+      "role": "软件/控制",
+      "axis_combo": "input_signals × control_factors",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.1.3",
+      "role": "软件/控制",
+      "axis_combo": "control_factors × error_states",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.2.1",
+      "role": "系统/接口",
+      "axis_combo": "system_interactions × intended_outputs",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.2.1",
+      "role": "设计/模块",
+      "axis_combo": "piece_to_piece × control_factors",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.2.1",
+      "role": "可靠性/试验",
+      "axis_combo": "wear_aging × environment",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.2.1",
+      "role": "制造/工艺",
+      "axis_combo": "piece_to_piece × control_factors",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.2.1",
+      "role": "软件/控制",
+      "axis_combo": "input_signals × control_factors",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.2.1",
+      "role": "软件/控制",
+      "axis_combo": "control_factors × error_states",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.2.2",
+      "role": "系统/接口",
+      "axis_combo": "system_interactions × intended_outputs",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.2.2",
+      "role": "设计/模块",
+      "axis_combo": "piece_to_piece × control_factors",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.2.2",
+      "role": "可靠性/试验",
+      "axis_combo": "wear_aging × environment",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.2.2",
+      "role": "制造/工艺",
+      "axis_combo": "piece_to_piece × control_factors",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.2.2",
+      "role": "安全/服务",
+      "axis_combo": "customer_usage × error_states",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.2.2",
+      "role": "软件/控制",
+      "axis_combo": "input_signals × control_factors",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.2.2",
+      "role": "软件/控制",
+      "axis_combo": "control_factors × error_states",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.3.1",
+      "role": "设计/模块",
+      "axis_combo": "piece_to_piece × control_factors",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.3.1",
+      "role": "可靠性/试验",
+      "axis_combo": "wear_aging × environment",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.3.1",
+      "role": "制造/工艺",
+      "axis_combo": "piece_to_piece × control_factors",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.3.1",
+      "role": "软件/控制",
+      "axis_combo": "input_signals × control_factors",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.3.1",
+      "role": "软件/控制",
+      "axis_combo": "control_factors × error_states",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.3.2",
+      "role": "系统/接口",
+      "axis_combo": "system_interactions × intended_outputs",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.3.2",
+      "role": "设计/模块",
+      "axis_combo": "piece_to_piece × control_factors",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.3.2",
+      "role": "可靠性/试验",
+      "axis_combo": "wear_aging × environment",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.3.2",
+      "role": "制造/工艺",
+      "axis_combo": "piece_to_piece × control_factors",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.3.2",
+      "role": "软件/控制",
+      "axis_combo": "input_signals × control_factors",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.3.2",
+      "role": "软件/控制",
+      "axis_combo": "control_factors × error_states",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.4.1",
+      "role": "设计/模块",
+      "axis_combo": "piece_to_piece × control_factors",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.4.1",
+      "role": "可靠性/试验",
+      "axis_combo": "wear_aging × environment",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.4.1",
+      "role": "制造/工艺",
+      "axis_combo": "piece_to_piece × control_factors",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.4.1",
+      "role": "安全/服务",
+      "axis_combo": "customer_usage × error_states",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.4.1",
+      "role": "软件/控制",
+      "axis_combo": "input_signals × control_factors",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.4.1",
+      "role": "软件/控制",
+      "axis_combo": "control_factors × error_states",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.4.2",
+      "role": "系统/接口",
+      "axis_combo": "system_interactions × intended_outputs",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.4.2",
+      "role": "设计/模块",
+      "axis_combo": "piece_to_piece × control_factors",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.4.2",
+      "role": "可靠性/试验",
+      "axis_combo": "wear_aging × environment",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.4.2",
+      "role": "制造/工艺",
+      "axis_combo": "piece_to_piece × control_factors",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.4.2",
+      "role": "软件/控制",
+      "axis_combo": "input_signals × control_factors",
+      "severity_estimate": "potential"
+    },
+    {
+      "leaf_id": "T.4.2",
+      "role": "软件/控制",
+      "axis_combo": "control_factors × error_states",
+      "severity_estimate": "potential"
+    }
+  ],
+  "top_risks": [
+    {
+      "row_id": "T.1.2/pa_transistor_vswr_damage",
+      "leaf_id": "T.1.2",
+      "scope_path": "",
+      "failure_mode": "负载失配导致功放管反射功率过大损毁",
+      "failure_mode_canonical": "pa_transistor_vswr_damage",
+      "p_diagram_anchor": "system_interactions:探头阻抗失配（负载 VSWR > 3:1） × error_states:输出功率下降 >3 dB（功放管失效或偏置丢失）",
+      "cause": "[设计/模块] 探头VSWR>3:1时，反射能量回流到功放管输出端，管子瞬时承受超额定电压（Vds_peak > BVdss），产生雪崩击穿 ; [安全/服务] 用户在射频发射使能状态下拔插探头，连接器断开瞬间阻抗从50Ω跳变为开路（VSWR→∞），反射能量瞬间导致功放管损毁；保护电路响应时间不足以在管子损坏前关断 ; [系统/接口] 探头更换后VSWR>3:1，功放管输出端反射能量超过BVdss，瞬间击穿漏-源结",
+      "effect_customer": "设备停机，功放管损毁；若防护电路未及时响应，损失更大",
+      "effect_downstream": "功放管漏-源击穿，匹配网络元件可能同时受损",
+      "effect_system": "需更换功放管并重新调试整机",
+      "current_controls_prevention": "[设计/模块] 反射功率保护电路（驻波保护），定向耦合器实时采样反射端 ; [安全/服务] 用户手册警告：更换探头前必须先关闭RF发射使能 ; [系统/接口] 反射保护电路；操作规程要求先关机再换探头",
+      "current_controls_detection": "[设计/模块] 保护电路触发后控制器记录事件日志 ; [安全/服务] 保护电路触发后记录日志；但损坏通常在保护触发前已发生 ; [系统/接口] 保护触发后控制器日志记录；但损坏在保护前已发生（响应时间是否足够是关键）",
+      "recommended_actions": [
+        "优化反射保护响应时间至<100 ns（目前设计需验证）",
+        "在功放管输出端增加环形器（Circulator），将反射能量导入50Ω负载",
+        "用户操作规程中强调更换探头前必须先关闭发射使能",
+        "增加探头连接器机械互锁：探头连接器半拔时触发硬件联锁，强制关断RF使能（独立保护层）",
+        "连接器选型改为具有先断后合设计的射频连接器（如N型带弹簧触点接地）",
+        "用户界面增加探头状态指示灯，RF发射时显示警告色",
+        "固件增加探头连接状态监测，检测到阻抗异常时自动停止发射并告警",
+        "接口设计增加软件互锁：探头连接器状态传感器检测到探头拔插时，自动禁止发射使能",
+        "引入环形器（Circulator）在系统级隔离反射能量，不依赖保护电路响应时间",
+        "系统级FMEA中标注：VSWR>3:1的反射保护是单点保护，需增加冗余手段"
+      ],
+      "severity": 10,
+      "occurrence": 5,
+      "detection": 7,
+      "rpn": 350,
+      "rating_history": {
+        "role_view": [
+          {
+            "role": "设计/模块",
+            "s": 10,
+            "o": 4,
+            "d": 5
+          },
+          {
+            "role": "安全/服务",
+            "s": 10,
+            "o": 5,
+            "d": 7
+          },
+          {
+            "role": "系统/接口",
+            "s": 10,
+            "o": 4,
+            "d": 5
+          }
+        ],
+        "historical_view": {
+          "s": null,
+          "o": null,
+          "d": null,
+          "source": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      },
+      "multi_role_corroborated": true,
+      "source_traces": [
+        {
+          "type": "role_inference",
+          "role": "设计/模块"
+        },
+        {
+          "type": "role_inference",
+          "role": "安全/服务"
+        },
+        {
+          "type": "role_inference",
+          "role": "系统/接口"
+        },
+        {
+          "type": "historical",
+          "ref": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      ],
+      "evidence_grade": "evidence-backed",
+      "confidence": 0.85,
+      "confidence_breakdown": {
+        "role_agreement": 0.5,
+        "evidence_strength": 1.0,
+        "sod_grounding": 1.0,
+        "pdiagram_coverage": 1.0
+      },
+      "needs_human_confirmation": false
+    },
+    {
+      "row_id": "T.2.2/tim_dry_out_thermal_degradation",
+      "leaf_id": "T.2.2",
+      "scope_path": "",
+      "failure_mode": "导热硅脂干化热阻升高导致功放管长期高温加速退化",
+      "failure_mode_canonical": "tim_dry_out_thermal_degradation",
+      "p_diagram_anchor": "wear_aging:TIM 干化分层（长期高温循环，>2 年） × error_states:持续高温下功放管加速退化（寿命缩短）",
+      "cause": "[可靠性/试验] 硅脂在高温循环（每次实验热循环20-80°C）下，挥发性组分逐渐散失，经2年后导热系数从3.5 W/mK下降至2.0 W/mK，热阻升高约60%",
+      "effect_customer": "功放管结温逐渐升高，加速Vth漂移和老化，2-3年后功率衰减加速",
+      "effect_downstream": "散热子系统有效热阻偏离设计值，过温保护触发频率增加",
+      "effect_system": "整机热可靠性随时间退化",
+      "current_controls_prevention": "[可靠性/试验] TIM材料选型要求挥发性<0.1% per year",
+      "current_controls_detection": "[可靠性/试验] 当前无定期TIM状态检查规程；热成像仪可检测但未纳入维护计划",
+      "recommended_actions": [
+        "将TIM更换纳入2年期预防维护计划",
+        "评估使用相变TIM（Phase Change Material）替代硅脂，改善可靠性",
+        "建立加速老化试验（热循环2000次）验证TIM寿命与热阻退化曲线"
+      ],
+      "severity": 7,
+      "occurrence": 6,
+      "detection": 8,
+      "rpn": 336,
+      "rating_history": {
+        "role_view": [
+          {
+            "role": "可靠性/试验",
+            "s": 7,
+            "o": 6,
+            "d": 8
+          }
+        ],
+        "historical_view": {
+          "s": null,
+          "o": null,
+          "d": null,
+          "source": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      },
+      "multi_role_corroborated": false,
+      "source_traces": [
+        {
+          "type": "role_inference",
+          "role": "可靠性/试验"
+        },
+        {
+          "type": "historical",
+          "ref": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      ],
+      "evidence_grade": "historical-supported",
+      "confidence": 0.75,
+      "confidence_breakdown": {
+        "role_agreement": 0.167,
+        "evidence_strength": 1.0,
+        "sod_grounding": 1.0,
+        "pdiagram_coverage": 1.0
+      },
+      "needs_human_confirmation": false
+    },
+    {
+      "row_id": "T.3.1/otp_ntc_threshold_offset",
+      "leaf_id": "T.3.1",
+      "scope_path": "",
+      "failure_mode": "NTC长期老化漂移导致保护阈值偏移",
+      "failure_mode_canonical": "otp_ntc_threshold_offset",
+      "p_diagram_anchor": "wear_aging:NTC 长期漂移（阻值老化，±5% per 5年） × error_states:过温保护失效（阈值偏移或电路失效），功放管热损毁",
+      "cause": "[设计/模块] NTC热敏电阻批次阻值偏差±2°C等效，加上分压电阻容差（±1%），保护触发温度实际值比设定值高或低5°C以上 ; [可靠性/试验] NTC热敏电阻长期工作在高温环境下（70-85°C附近），元器件老化导致阻值漂移±5%/5年，等效保护触发温度偏移±5°C以上",
+      "effect_customer": "阈值正漂：功放管实际过温才触发保护，增加热损伤风险；阈值负漂：误触发增加",
+      "effect_downstream": "保护链可靠性下降，无法保证在设计寿命内持续有效",
+      "effect_system": "整机热安全设计寿命末期不符合规格",
+      "current_controls_prevention": "[设计/模块] NTC选型精度等级（±1%阻值，±1°C等效）；分压电阻选用±0.1%精密电阻 ; [可靠性/试验] NTC选型时要求长期稳定性≤1%/5年",
+      "current_controls_detection": "[设计/模块] 整机出厂时注入已知温度校准NTC输出并验证保护触发点 ; [可靠性/试验] 无定期保护电路校准规程，仅出厂测试一次",
+      "recommended_actions": [
+        "保护阈值设计余量加大（如实际85°C保护，设定80°C触发）",
+        "增加双传感器冗余（两路NTC一致性交叉比对）",
+        "出厂测试规程增加温度注入法精确校验保护触发温度",
+        "增加高温寿命试验（NTC在85°C老化2000小时），测量阻值漂移量",
+        "维护规程增加5年期保护功能验证（温度注入法）",
+        "过温保护电路增加自诊断功能（定期校验NTC阻值是否在范围内）"
+      ],
+      "severity": 9,
+      "occurrence": 4,
+      "detection": 8,
+      "rpn": 288,
+      "rating_history": {
+        "role_view": [
+          {
+            "role": "设计/模块",
+            "s": 9,
+            "o": 3,
+            "d": 4
+          },
+          {
+            "role": "可靠性/试验",
+            "s": 9,
+            "o": 4,
+            "d": 8
+          }
+        ],
+        "historical_view": {
+          "s": null,
+          "o": null,
+          "d": null,
+          "source": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      },
+      "multi_role_corroborated": true,
+      "source_traces": [
+        {
+          "type": "role_inference",
+          "role": "设计/模块"
+        },
+        {
+          "type": "role_inference",
+          "role": "可靠性/试验"
+        },
+        {
+          "type": "historical",
+          "ref": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      ],
+      "evidence_grade": "evidence-backed",
+      "confidence": 0.8,
+      "confidence_breakdown": {
+        "role_agreement": 0.333,
+        "evidence_strength": 1.0,
+        "sod_grounding": 1.0,
+        "pdiagram_coverage": 1.0
+      },
+      "needs_human_confirmation": false
+    },
+    {
+      "row_id": "T.3.2/vswr_protection_retry_thermal_accumulation",
+      "leaf_id": "T.3.2",
+      "scope_path": "",
+      "failure_mode": "保护触发后快速反复重试导致热量累积损毁功放管",
+      "failure_mode_canonical": "vswr_protection_retry_thermal_accumulation",
+      "p_diagram_anchor": "customer_usage:频繁重试（保护触发后短时间内复位，热量未散） × error_states:反射保护失效，负载失配时功放管损毁",
+      "cause": "[安全/服务] 用户在高VSWR状态下反复触发保护→快速复位→重新发射，每次短暂发射向功放管注入热量，冷却不足，热量累积，经多次循环后结温超限",
+      "effect_customer": "保护电路正常工作但功放管仍损毁，用户认为设备设计有问题",
+      "effect_downstream": "保护电路本身无缺陷，但系统级防护不完整",
+      "effect_system": "缺少快速连续故障防护逻辑（重试次数限制）",
+      "current_controls_prevention": "[安全/服务] 保护电路触发后手动复位才能继续发射",
+      "current_controls_detection": "[安全/服务] 控制器记录保护触发次数，但无频率限制",
+      "recommended_actions": [
+        "固件增加保护触发频率限制：同一故障10分钟内触发3次以上，进入锁定模式，需管理员解锁",
+        "增加保护触发后强制冷却等待时间（如触发后禁止发射60秒）",
+        "用户界面显示剩余冷却时间，并显示故障代码引导用户解决根因"
+      ],
+      "severity": 9,
+      "occurrence": 4,
+      "detection": 8,
+      "rpn": 288,
+      "rating_history": {
+        "role_view": [
+          {
+            "role": "安全/服务",
+            "s": 9,
+            "o": 4,
+            "d": 8
+          }
+        ],
+        "historical_view": {
+          "s": null,
+          "o": null,
+          "d": null,
+          "source": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      },
+      "multi_role_corroborated": false,
+      "source_traces": [
+        {
+          "type": "role_inference",
+          "role": "安全/服务"
+        },
+        {
+          "type": "historical",
+          "ref": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      ],
+      "evidence_grade": "historical-supported",
+      "confidence": 0.75,
+      "confidence_breakdown": {
+        "role_agreement": 0.167,
+        "evidence_strength": 1.0,
+        "sod_grounding": 1.0,
+        "pdiagram_coverage": 1.0
+      },
+      "needs_human_confirmation": false
+    },
+    {
+      "row_id": "T.3.1/otp_bypass_during_service",
+      "leaf_id": "T.3.1",
+      "scope_path": "",
+      "failure_mode": "维修人员短接过温保护导致功放管热损毁",
+      "failure_mode_canonical": "otp_bypass_during_service",
+      "p_diagram_anchor": "customer_usage:客户手动短接保护输出绕过保护（维修场景） × error_states:过温保护失效（阈值偏移或电路失效），功放管热损毁",
+      "cause": "[安全/服务] 维修工程师在现场调试时为排除保护误触发故障，临时短接过温保护电路输出；调试完成后忘记恢复，导致功放管在无热保护状态下工作",
+      "effect_customer": "功放管热损毁，设备停机；维修后整机安全降级",
+      "effect_downstream": "现场维修引入新的安全风险，责任认定困难",
+      "effect_system": "过温保护被绕过后无独立备份保护层",
+      "current_controls_prevention": "[安全/服务] 维修手册规定禁止短接保护；但无硬件防护",
+      "current_controls_detection": "[安全/服务] 无自动检测保护电路是否被旁路的机制",
+      "recommended_actions": [
+        "过温保护电路增加自诊断功能：上电时检测保护电路完整性（如注入测试信号），若检测到异常则禁止整机启动",
+        "在保护电路关键节点增加硬件标识（一次性导线/保险）防止旁路",
+        "维修手册增加'保护电路完整性检查'作为维修后强制验收步骤"
+      ],
+      "severity": 10,
+      "occurrence": 3,
+      "detection": 9,
+      "rpn": 270,
+      "rating_history": {
+        "role_view": [
+          {
+            "role": "安全/服务",
+            "s": 10,
+            "o": 3,
+            "d": 9
+          }
+        ],
+        "historical_view": {
+          "s": null,
+          "o": null,
+          "d": null,
+          "source": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      },
+      "multi_role_corroborated": false,
+      "source_traces": [
+        {
+          "type": "role_inference",
+          "role": "安全/服务"
+        },
+        {
+          "type": "historical",
+          "ref": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      ],
+      "evidence_grade": "historical-supported",
+      "confidence": 0.75,
+      "confidence_breakdown": {
+        "role_agreement": 0.167,
+        "evidence_strength": 1.0,
+        "sod_grounding": 1.0,
+        "pdiagram_coverage": 1.0
+      },
+      "needs_human_confirmation": false
+    },
+    {
+      "row_id": "T.1.2/pa_transistor_thermal_runaway",
+      "leaf_id": "T.1.2",
+      "scope_path": "",
+      "failure_mode": "功放管静态电流过大导致热失控",
+      "failure_mode_canonical": "pa_transistor_thermal_runaway",
+      "p_diagram_anchor": "piece_to_piece:功放管 Idss/Vp 批次散差（±15%） × error_states:功放管热失控损毁",
+      "cause": "[设计/模块] Idss批次偏高（+15%极端），加上偏置电阻容差未向下补偿，静态漏电流超额定，结温快速上升，正温度系数的Idss进一步增大，形成热失控闭环 ; [可靠性/试验] 机柜散热受限（进风口堵塞或风扇降速），环境温度升高10°C以上，与高占空比实验叠加，功放管结温超过Tjmax，热失控正反馈触发",
+      "effect_customer": "设备无法使用，需返厂维修；NMR扫描中断可能导致患者重新检查",
+      "effect_downstream": "功放管永久损毁，波及匹配网络（焊盘）和PCB走线",
+      "effect_system": "整机停机，发射链路需更换功放管及重新调试",
+      "current_controls_prevention": "[设计/模块] 偏置电路设计留有10%余量；功放管出厂100%Idss筛选（±10%范围） ; [可靠性/试验] 过温保护电路设定85°C关断；用户手册要求保持机柜通风",
+      "current_controls_detection": "[设计/模块] 出厂功率测试+壳温监测（若壳温>75°C时人工检查） ; [可靠性/试验] 壳温监控传感器；出厂85°C高温测试（非满功率运行）",
+      "recommended_actions": [
+        "增加偏置电流温度补偿（负温度系数元件）",
+        "功放管选型时要求器件厂家提供热阻θjc数据并计算最坏情况结温",
+        "软启动上电逻辑中增加Idss过流检测（>120%额定自动切断）",
+        "增加可靠性测试：满功率+最高环境温度+最高占空比三重应力组合测试",
+        "增加风扇转速监控，风扇转速<50%时自动降低功放占空比上限",
+        "FMEA标注：热失控需要独立保护层（不能仅依赖软件过温保护）"
+      ],
+      "severity": 10,
+      "occurrence": 4,
+      "detection": 6,
+      "rpn": 240,
+      "rating_history": {
+        "role_view": [
+          {
+            "role": "设计/模块",
+            "s": 10,
+            "o": 3,
+            "d": 6
+          },
+          {
+            "role": "可靠性/试验",
+            "s": 10,
+            "o": 4,
+            "d": 6
+          }
+        ],
+        "historical_view": {
+          "s": null,
+          "o": null,
+          "d": null,
+          "source": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      },
+      "multi_role_corroborated": true,
+      "source_traces": [
+        {
+          "type": "role_inference",
+          "role": "设计/模块"
+        },
+        {
+          "type": "role_inference",
+          "role": "可靠性/试验"
+        },
+        {
+          "type": "historical",
+          "ref": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      ],
+      "evidence_grade": "evidence-backed",
+      "confidence": 0.8,
+      "confidence_breakdown": {
+        "role_agreement": 0.333,
+        "evidence_strength": 1.0,
+        "sod_grounding": 1.0,
+        "pdiagram_coverage": 1.0
+      },
+      "needs_human_confirmation": false
+    },
+    {
+      "row_id": "T.1.2/pa_transistor_vth_drift_aging",
+      "leaf_id": "T.1.2",
+      "scope_path": "",
+      "failure_mode": "功放管阈值电压正漂移导致输出功率逐年衰减",
+      "failure_mode_canonical": "pa_transistor_vth_drift_aging",
+      "p_diagram_anchor": "wear_aging:功放管长期偏置漂移（Vth 正漂移，寿命 >3 年） × error_states:输出功率下降 >3 dB（功放管失效或偏置丢失）",
+      "cause": "[可靠性/试验] LDMOS功放管长期在高温高电流下工作，热载流子注入和界面态积累导致Vth正漂移，静态工作点向截止区移动，增益下降约1 dB/年",
+      "effect_customer": "NMR发射功率逐年衰减，1-2年后图像信噪比不满足临床要求",
+      "effect_downstream": "整机增益余量被逐步消耗，某时刻突然跌出规格",
+      "effect_system": "设备可靠性随时间退化，不满足5年设计寿命要求",
+      "current_controls_prevention": "[可靠性/试验] 功放管选型时要求厂家提供老化漂移数据；偏置电路留有10%调节余量",
+      "current_controls_detection": "[可靠性/试验] 现有ATE测试仅在交货时测试，无定期性能退化监控机制",
+      "recommended_actions": [
+        "建立功放管老化寿命试验（HTOL，150°C，1000小时），验证Vth漂移量",
+        "整机设计中增加Vgs自动校准逻辑（根据功率反馈自动微调偏置）",
+        "用户手册增加年度性能标定要求，及早发现退化"
+      ],
+      "severity": 7,
+      "occurrence": 5,
+      "detection": 7,
+      "rpn": 245,
+      "rating_history": {
+        "role_view": [
+          {
+            "role": "可靠性/试验",
+            "s": 7,
+            "o": 5,
+            "d": 7
+          }
+        ],
+        "historical_view": {
+          "s": null,
+          "o": null,
+          "d": null,
+          "source": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      },
+      "multi_role_corroborated": false,
+      "source_traces": [
+        {
+          "type": "role_inference",
+          "role": "可靠性/试验"
+        },
+        {
+          "type": "historical",
+          "ref": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      ],
+      "evidence_grade": "historical-supported",
+      "confidence": 0.75,
+      "confidence_breakdown": {
+        "role_agreement": 0.167,
+        "evidence_strength": 1.0,
+        "sod_grounding": 1.0,
+        "pdiagram_coverage": 1.0
+      },
+      "needs_human_confirmation": false
+    },
+    {
+      "row_id": "T.4.1/psu_filter_cap_esr_aging",
+      "leaf_id": "T.4.1",
+      "scope_path": "",
+      "failure_mode": "滤波电容ESR老化导致电源纹波增大",
+      "failure_mode_canonical": "psu_filter_cap_esr_aging",
+      "p_diagram_anchor": "wear_aging:LDO/稳压电容 ESR 老化（输出纹波增大） × error_states:偏置电压丢失导致功放管输出功率为零",
+      "cause": "[可靠性/试验] 铝电解电容在高温工作环境下，电解液逐渐蒸发，ESR升高，输出纹波从20 mV增大到100 mV以上，超过偏置电路允许的纹波容限",
+      "effect_customer": "射频输出AM噪底升高，NMR图像信噪比下降",
+      "effect_downstream": "偏置电路参考电压不稳定，功放管工作点抖动",
+      "effect_system": "电源质量不满足RF偏置电路要求",
+      "current_controls_prevention": "[可靠性/试验] 电容选型额定105°C，使用寿命2000小时以上",
+      "current_controls_detection": "[可靠性/试验] 出厂测试测量纹波（但不覆盖老化后状态）",
+      "recommended_actions": [
+        "更换固态电解电容（低ESR，无电解液蒸发机理）",
+        "增加纹波实时监控ADC，纹波超阈值时告警",
+        "维护规程增加3年期电容健康检查（ESR测量）"
+      ],
+      "severity": 6,
+      "occurrence": 5,
+      "detection": 7,
+      "rpn": 210,
+      "rating_history": {
+        "role_view": [
+          {
+            "role": "可靠性/试验",
+            "s": 6,
+            "o": 5,
+            "d": 7
+          }
+        ],
+        "historical_view": {
+          "s": null,
+          "o": null,
+          "d": null,
+          "source": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      },
+      "multi_role_corroborated": false,
+      "source_traces": [
+        {
+          "type": "role_inference",
+          "role": "可靠性/试验"
+        },
+        {
+          "type": "historical",
+          "ref": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      ],
+      "evidence_grade": "historical-supported",
+      "confidence": 0.75,
+      "confidence_breakdown": {
+        "role_agreement": 0.167,
+        "evidence_strength": 1.0,
+        "sod_grounding": 1.0,
+        "pdiagram_coverage": 1.0
+      },
+      "needs_human_confirmation": false
+    },
+    {
+      "row_id": "T.1.2/pa_transistor_solder_void_thermal",
+      "leaf_id": "T.1.2",
+      "scope_path": "",
+      "failure_mode": "功放管焊接虚焊导致热阻偏高引起热失控",
+      "failure_mode_canonical": "pa_transistor_solder_void_thermal",
+      "p_diagram_anchor": "piece_to_piece:功放管 Idss/Vp 批次散差（±15%） × error_states:功放管热失控损毁",
+      "cause": "[制造/工艺] 功放管大功率封装（如法兰型TO-254）焊接时，焊料中空洞（void）面积超过总焊接面积20%，等效热阻增加，工作时局部热点温度高于设计值",
+      "effect_customer": "功放管过热损毁，设备停机；首次使用后数小时内发生",
+      "effect_downstream": "焊接空洞在早期失效（infant mortality）阶段集中暴露",
+      "effect_system": "早期失效率偏高，损害品牌可靠性",
+      "current_controls_prevention": "[制造/工艺] 焊接工艺规程要求空洞率<15%；回流焊温度曲线管控",
+      "current_controls_detection": "[制造/工艺] X-ray检测功放管焊接空洞（抽检比例5%）",
+      "recommended_actions": [
+        "将功放管X-ray检测改为100%检测（大功率封装焊接是高风险项目）",
+        "引入真空回流焊工艺，将空洞率降至<5%",
+        "出厂老炼测试（Burn-in，100%额定功率，2小时）筛除早期失效"
+      ],
+      "severity": 10,
+      "occurrence": 4,
+      "detection": 5,
+      "rpn": 200,
+      "rating_history": {
+        "role_view": [
+          {
+            "role": "制造/工艺",
+            "s": 10,
+            "o": 4,
+            "d": 5
+          }
+        ],
+        "historical_view": {
+          "s": null,
+          "o": null,
+          "d": null,
+          "source": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      },
+      "multi_role_corroborated": false,
+      "source_traces": [
+        {
+          "type": "role_inference",
+          "role": "制造/工艺"
+        },
+        {
+          "type": "historical",
+          "ref": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      ],
+      "evidence_grade": "historical-supported",
+      "confidence": 0.75,
+      "confidence_breakdown": {
+        "role_agreement": 0.167,
+        "evidence_strength": 1.0,
+        "sod_grounding": 1.0,
+        "pdiagram_coverage": 1.0
+      },
+      "needs_human_confirmation": false
+    },
+    {
+      "row_id": "T.2.2/heatsink_mounting_torque_inconsistent",
+      "leaf_id": "T.2.2",
+      "scope_path": "",
+      "failure_mode": "散热器安装螺钉力矩不一致导致TIM接触压力不足",
+      "failure_mode_canonical": "heatsink_mounting_torque_inconsistent",
+      "p_diagram_anchor": "piece_to_piece:螺钉紧固力矩一致性（装配批次差） × error_states:功放管结温超限触发过温保护",
+      "cause": "[制造/工艺] 装配工序中散热器安装螺钉未使用力矩扳手，或力矩扳手未定期校准，导致4颗螺钉力矩差异>30%，TIM受压不均，实际接触热阻高于设计值",
+      "effect_customer": "功放管壳温高于预期，触发过温保护停机",
+      "effect_downstream": "散热系统热阻偏离设计，整机热裕量下降",
+      "effect_system": "批次间热性能不一致",
+      "current_controls_prevention": "[制造/工艺] 装配SOP规定螺钉拧紧顺序；但未强制要求力矩扳手",
+      "current_controls_detection": "[制造/工艺] 整机热测试（抽检，非100%）",
+      "recommended_actions": [
+        "SOP中强制要求使用数字力矩扳手，目标力矩±5%",
+        "将散热器安装增加防错设计（弹簧螺钉预设力矩）",
+        "100%出厂热测试（5分钟额定功率运行，测量壳温）"
+      ],
+      "severity": 7,
+      "occurrence": 5,
+      "detection": 5,
+      "rpn": 175,
+      "rating_history": {
+        "role_view": [
+          {
+            "role": "制造/工艺",
+            "s": 7,
+            "o": 5,
+            "d": 5
+          }
+        ],
+        "historical_view": {
+          "s": null,
+          "o": null,
+          "d": null,
+          "source": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      },
+      "multi_role_corroborated": false,
+      "source_traces": [
+        {
+          "type": "role_inference",
+          "role": "制造/工艺"
+        },
+        {
+          "type": "historical",
+          "ref": "CAN400产品DFMEA.xlsx/射频功放/row 4"
+        }
+      ],
+      "evidence_grade": "historical-supported",
+      "confidence": 0.75,
+      "confidence_breakdown": {
+        "role_agreement": 0.167,
+        "evidence_strength": 1.0,
+        "sod_grounding": 1.0,
+        "pdiagram_coverage": 1.0
+      },
+      "needs_human_confirmation": false
+    }
+  ],
+  "confirmation_queue": []
+}

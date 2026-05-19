@@ -1,0 +1,41 @@
+{
+  "fmea_normalized_path": "validation/mock_10/m2_generated/01_rf_power_amp_normalized.json",
+  "actions": [
+    {
+      "row_id": "T.1.2/pa_transistor_vswr_damage",
+      "action": "confirm",
+      "reviewer": "qa-01",
+      "reviewed_at": "2026-05-19T10:00:00+08:00"
+    },
+    {
+      "row_id": "T.1.2/pa_transistor_thermal_runaway",
+      "action": "edit",
+      "reviewer": "qa-01",
+      "reviewed_at": "2026-05-19T10:05:00+08:00",
+      "patch": {
+        "occurrence": 4
+      }
+    },
+    {
+      "row_id": "T.4.2/gate_bias_voltage_drift",
+      "action": "reject",
+      "reviewer": "qa-01",
+      "reviewed_at": "2026-05-19T10:10:00+08:00",
+      "reason": "本机型不适用"
+    },
+    {
+      "row_id": "T.2.1/heatsink_coating_degradation",
+      "action": "defer",
+      "reviewer": "qa-01",
+      "reviewed_at": "2026-05-19T10:15:00+08:00",
+      "revisit_after": "2026-06-01"
+    },
+    {
+      "row_id": "T.1.1/driver_gain_insufficient",
+      "action": "promote_to_case",
+      "reviewer": "qa-01",
+      "reviewed_at": "2026-05-19T10:20:00+08:00",
+      "case_tags": ["射频功放"]
+    }
+  ]
+}

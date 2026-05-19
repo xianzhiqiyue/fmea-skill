@@ -1,0 +1,69 @@
+[
+  {
+    "case_id": "CASE-2026-Q2-0001",
+    "module": "射频功放",
+    "leaf_id": "T.1.1",
+    "leaf_name": "",
+    "failure_mode": "驱动级增益偏低，末级功放管激励不足",
+    "failure_mode_canonical": "driver_gain_insufficient",
+    "cause": "[设计/模块] 驱动级晶体管Gm批次偏低（下限-15%），加上偏置电阻容差叠加，静态工作点偏移至线性区边界",
+    "effect": "NMR发射脉冲峰值功率不足，信噪比下降，图像质量劣化 | 发射链路增益预算超出余量，整机无法通过功率验收",
+    "current_controls_prevention": "[设计/模块] 驱动级设计留有+3 dB增益余量；选型时筛选Gm在额定±10%以内的器件",
+    "current_controls_detection": "[设计/模块] 出厂ATE测试驱动级单独增益（覆盖-40/+85°C两点）",
+    "recommended_actions": [
+      "增加驱动级增益温度补偿电路（负温度系数偏置）",
+      "ATE测试增加脉冲模式下增益一致性测试（而非仅CW）",
+      "驱动级晶体管Gm分选入库（±5%级别）"
+    ],
+    "severity": 6,
+    "occurrence": 4,
+    "detection": 3,
+    "tags": [
+      "射频功放"
+    ],
+    "provenance": {
+      "source_fmea": "validation/mock_10/m2_generated/01_rf_power_amp_normalized.json",
+      "confirmed_at": "2026-05-19T10:20:00+08:00",
+      "reviewer": "qa-01",
+      "promotion_action": "promote_to_case",
+      "evidence_grade_at_confirm": "historical-supported",
+      "confidence_at_confirm": 0.75
+    }
+  },
+  {
+    "case_id": "CASE-2026-Q2-0002",
+    "module": "射频功放",
+    "leaf_id": "T.1.2",
+    "leaf_name": "",
+    "failure_mode": "负载失配导致功放管反射功率过大损毁",
+    "failure_mode_canonical": "pa_transistor_vswr_damage",
+    "cause": "[设计/模块] 探头VSWR>3:1时，反射能量回流到功放管输出端，管子瞬时承受超额定电压（Vds_peak > BVdss），产生雪崩击穿 ; [安全/服务] 用户在射频发射使能状态下拔插探头，连接器断开瞬间阻抗从50Ω跳变为开路（VSWR→∞），反射能量瞬间导致功放管损毁；保护电路响应时间不足以在管子损坏前关断 ; [系统/接口] 探头更换后VSWR>3:1，功放管输出端反射能量超过BVdss，瞬间击穿漏-源结",
+    "effect": "设备停机，功放管损毁；若防护电路未及时响应，损失更大 | 需更换功放管并重新调试整机",
+    "current_controls_prevention": "[设计/模块] 反射功率保护电路（驻波保护），定向耦合器实时采样反射端 ; [安全/服务] 用户手册警告：更换探头前必须先关闭RF发射使能 ; [系统/接口] 反射保护电路；操作规程要求先关机再换探头",
+    "current_controls_detection": "[设计/模块] 保护电路触发后控制器记录事件日志 ; [安全/服务] 保护电路触发后记录日志；但损坏通常在保护触发前已发生 ; [系统/接口] 保护触发后控制器日志记录；但损坏在保护前已发生（响应时间是否足够是关键）",
+    "recommended_actions": [
+      "优化反射保护响应时间至<100 ns（目前设计需验证）",
+      "在功放管输出端增加环形器（Circulator），将反射能量导入50Ω负载",
+      "用户操作规程中强调更换探头前必须先关闭发射使能",
+      "增加探头连接器机械互锁：探头连接器半拔时触发硬件联锁，强制关断RF使能（独立保护层）",
+      "连接器选型改为具有先断后合设计的射频连接器（如N型带弹簧触点接地）",
+      "用户界面增加探头状态指示灯，RF发射时显示警告色",
+      "固件增加探头连接状态监测，检测到阻抗异常时自动停止发射并告警",
+      "接口设计增加软件互锁：探头连接器状态传感器检测到探头拔插时，自动禁止发射使能",
+      "引入环形器（Circulator）在系统级隔离反射能量，不依赖保护电路响应时间",
+      "系统级FMEA中标注：VSWR>3:1的反射保护是单点保护，需增加冗余手段"
+    ],
+    "severity": 10,
+    "occurrence": 5,
+    "detection": 7,
+    "tags": [],
+    "provenance": {
+      "source_fmea": "validation/mock_10/m2_generated/01_rf_power_amp_normalized.json",
+      "confirmed_at": "2026-05-19T10:00:00+08:00",
+      "reviewer": "qa-01",
+      "promotion_action": "confirm",
+      "evidence_grade_at_confirm": "evidence-backed",
+      "confidence_at_confirm": 0.85
+    }
+  }
+]
