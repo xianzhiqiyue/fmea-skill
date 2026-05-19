@@ -1,0 +1,23 @@
+{
+  "case_id": "CASE-2026-Q2-0001",
+  "module": "变温系统",
+  "leaf_id": "T.1.5",
+  "leaf_name": "控制板卡",
+  "failure_mode": "触点粘连",
+  "failure_mode_canonical": "stuck_relay_contact",
+  "cause": "感性负载反向电动势",
+  "effect": "压缩机不可控 | 温度失控",
+  "current_controls_prevention": "选型余量",
+  "current_controls_detection": "状态机检测",
+  "recommended_actions": ["增加 RC 缓冲"],
+  "severity": 9, "occurrence": 7, "detection": 1,
+  "tags": [],
+  "provenance": {
+    "source_fmea": "validation/mock_10/scenarios/01_rf_power_amp/fmea_normalized.json",
+    "confirmed_at": "2026-05-19T10:00:00+08:00",
+    "reviewer": "u1",
+    "promotion_action": "confirm",
+    "evidence_grade_at_confirm": "evidence-backed",
+    "confidence_at_confirm": 0.78
+  }
+}
