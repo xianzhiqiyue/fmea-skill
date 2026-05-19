@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "candidates",
+  "type": "array",
+  "items": {
+    "oneOf": [
+      {
+        "type": "object",
+        "required": ["leaf_id", "leaf_name", "p_diagram_anchor", "failure_mode", "failure_mode_canonical", "cause", "effect", "current_controls", "recommended_actions", "ai_severity", "ai_occurrence", "ai_detection", "role", "self_confidence"],
+        "properties": {
+          "leaf_id": {"type": "string"},
+          "leaf_name": {"type": "string"},
+          "p_diagram_anchor": {
+            "type": "object",
+            "required": ["noise", "unintended_or_error"],
+            "properties": {
+              "noise": {"type": "string"},
+              "unintended_or_error": {"type": "string"}
+            }
+          },
+          "failure_mode": {"type": "string"},
+          "failure_mode_canonical": {"type": "string", "pattern": "^[a-z][a-z0-9_]+$"},
+          "cause": {"type": "string"},
+          "effect": {
+            "type": "object",
+            "required": ["customer", "downstream", "system"],
+            "properties": {
+              "customer": {"type": "string"},
+              "downstream": {"type": "string"},
+              "system": {"type": "string"}
+            }
+          },
+          "current_controls": {
+            "type": "object",
+            "required": ["prevention", "detection"],
+            "properties": {
+              "prevention": {"type": "string"},
+              "detection": {"type": "string"}
+            }
+          },
+          "recommended_actions": {"type": "array", "items": {"type": "string"}},
+          "ai_severity": {"type": "integer", "minimum": 1, "maximum": 10},
+          "ai_severity_rationale": {"type": "string"},
+          "ai_occurrence": {"type": "integer", "minimum": 1, "maximum": 10},
+          "ai_occurrence_rationale": {"type": "string"},
+          "ai_detection": {"type": "integer", "minimum": 1, "maximum": 10},
+          "ai_detection_rationale": {"type": "string"},
+          "role": {"type": "string"},
+          "self_confidence": {"type": "number", "minimum": 0, "maximum": 1},
+          "assumptions": {"type": "array", "items": {"type": "string"}}
+        }
+      },
+      {
+        "type": "object",
+        "required": ["leaf_id", "p_diagram_anchor", "not_applicable_reason"],
+        "properties": {
+          "leaf_id": {"type": "string"},
+          "p_diagram_anchor": {"type": "object"},
+          "not_applicable_reason": {"type": "string", "minLength": 5}
+        }
+      }
+    ]
+  }
+}

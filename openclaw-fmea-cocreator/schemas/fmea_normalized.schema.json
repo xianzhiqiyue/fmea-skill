@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "fmea_normalized",
+  "type": "object",
+  "required": ["module_root", "fmea_type", "rows", "coverage_gaps", "top_risks", "confirmation_queue"],
+  "properties": {
+    "module_root": {"type": "string"},
+    "fmea_type": {"enum": ["AFMEA", "SFMEA", "DFMEA"]},
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["row_id", "leaf_id", "scope_path", "failure_mode", "failure_mode_canonical", "p_diagram_anchor", "cause", "effect_customer", "effect_system", "current_controls_prevention", "current_controls_detection", "recommended_actions", "severity", "occurrence", "detection", "rpn", "evidence_grade", "confidence", "confidence_breakdown", "rating_history", "needs_human_confirmation", "source_traces"],
+        "properties": {
+          "row_id": {"type": "string"},
+          "leaf_id": {"type": "string"},
+          "scope_path": {"type": "string"},
+          "failure_mode": {"type": "string"},
+          "failure_mode_canonical": {"type": "string"},
+          "p_diagram_anchor": {"type": "string"},
+          "cause": {"type": "string"},
+          "effect_customer": {"type": "string"},
+          "effect_downstream": {"type": "string"},
+          "effect_system": {"type": "string"},
+          "current_controls_prevention": {"type": "string"},
+          "current_controls_detection": {"type": "string"},
+          "recommended_actions": {"type": "array", "items": {"type": "string"}},
+          "severity": {"type": "integer", "minimum": 1, "maximum": 10},
+          "occurrence": {"type": "integer", "minimum": 1, "maximum": 10},
+          "detection": {"type": "integer", "minimum": 1, "maximum": 10},
+          "rpn": {"type": "integer"},
+          "evidence_grade": {"enum": ["evidence-backed", "historical-supported", "multi-role-inferred", "ai-inferred", "contradicted"]},
+          "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+          "confidence_breakdown": {
+            "type": "object",
+            "required": ["role_agreement", "evidence_strength", "sod_grounding", "pdiagram_coverage"],
+            "properties": {
+              "role_agreement": {"type": "number"},
+              "evidence_strength": {"type": "number"},
+              "sod_grounding": {"type": "number"},
+              "pdiagram_coverage": {"type": "number"}
+            }
+          },
+          "rating_history": {"type": "object"},
+          "multi_role_corroborated": {"type": "boolean"},
+          "needs_human_confirmation": {"type": "boolean"},
+          "source_traces": {"type": "array"}
+        }
+      }
+    },
+    "coverage_gaps": {"type": "array"},
+    "top_risks": {"type": "array"},
+    "confirmation_queue": {"type": "array"}
+  }
+}

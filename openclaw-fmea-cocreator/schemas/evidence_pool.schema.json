@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "evidence_pool",
+  "type": "object",
+  "required": ["leaf_id", "matches"],
+  "properties": {
+    "leaf_id": {"type": "string"},
+    "matches": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["source_workbook", "source_sheet", "source_row", "failure_mode_text", "match_score"],
+        "properties": {
+          "source_workbook": {"type": "string"},
+          "source_sheet": {"type": "string"},
+          "source_row": {"type": "string"},
+          "failure_mode_text": {"type": "string"},
+          "cause_text": {"type": "string"},
+          "effect_text": {"type": "string"},
+          "severity": {"type": ["integer", "null"]},
+          "occurrence": {"type": ["integer", "null"]},
+          "detection": {"type": ["integer", "null"]},
+          "match_score": {"type": "number"},
+          "matched_keywords": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    }
+  }
+}

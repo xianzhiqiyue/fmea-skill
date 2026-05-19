@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "structure",
+  "type": "object",
+  "required": ["fmea_type", "module_root", "hierarchy", "p_diagrams"],
+  "properties": {
+    "fmea_type": {"enum": ["AFMEA", "SFMEA", "DFMEA"]},
+    "module_root": {"type": "string", "minLength": 1},
+    "hierarchy": {"$ref": "#/$defs/node"},
+    "p_diagrams": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/p_diagram"}
+    }
+  },
+  "$defs": {
+    "node": {
+      "type": "object",
+      "required": ["id", "name", "level"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^T(\\.[0-9]+)*$"},
+        "name": {"type": "string", "minLength": 1},
+        "level": {"enum": ["system", "subsystem", "component"]},
+        "children": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/node"}
+        }
+      }
+    },
+    "p_diagram": {
+      "type": "object",
+      "required": ["scope_id", "input_signals", "control_factors", "noise_factors", "intended_outputs", "unintended_outputs", "error_states"],
+      "properties": {
+        "scope_id": {"type": "string", "pattern": "^T(\\.[0-9]+)*$"},
+        "input_signals": {"type": "array", "items": {"type": "string"}},
+        "control_factors": {"type": "array", "items": {"type": "string"}},
+        "noise_factors": {
+          "type": "object",
+          "required": ["piece_to_piece", "environment", "system_interactions", "customer_usage", "wear_aging"],
+          "properties": {
+            "piece_to_piece": {"type": "array", "items": {"type": "string"}},
+            "environment": {"type": "array", "items": {"type": "string"}},
+            "system_interactions": {"type": "array", "items": {"type": "string"}},
+            "customer_usage": {"type": "array", "items": {"type": "string"}},
+            "wear_aging": {"type": "array", "items": {"type": "string"}}
+          }
+        },
+        "intended_outputs": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "unintended_outputs": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "error_states": {"type": "array", "minItems": 1, "items": {"type": "string"}}
+      }
+    }
+  }
+}
