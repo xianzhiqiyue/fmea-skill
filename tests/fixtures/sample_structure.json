@@ -1,0 +1,37 @@
+{
+  "fmea_type": "DFMEA",
+  "module_root": "测试模块",
+  "hierarchy": {
+    "id": "T",
+    "name": "测试模块",
+    "level": "system",
+    "children": [
+      {
+        "id": "T.1",
+        "name": "子系统 A",
+        "level": "subsystem",
+        "children": [
+          {"id": "T.1.1", "name": "继电器", "level": "component"},
+          {"id": "T.1.2", "name": "压力传感器", "level": "component"}
+        ]
+      }
+    ]
+  },
+  "p_diagrams": [
+    {
+      "scope_id": "T.1",
+      "input_signals": ["上位机指令"],
+      "control_factors": ["输出时序"],
+      "noise_factors": {
+        "piece_to_piece": ["选型余量不足"],
+        "environment": ["振动"],
+        "system_interactions": [],
+        "customer_usage": ["频繁开停"],
+        "wear_aging": ["阀片疲劳"]
+      },
+      "intended_outputs": ["稳定输出"],
+      "unintended_outputs": ["噪声"],
+      "error_states": ["继电器粘连", "传感器卡死"]
+    }
+  ]
+}

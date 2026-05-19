@@ -1,0 +1,16 @@
+{
+  "module_root": "测试模块",
+  "fmea_type": "DFMEA",
+  "rows_count": 1,
+  "expected_first_row": {
+    "row_id": "T.1.1/stuck_relay_contact",
+    "leaf_id": "T.1.1",
+    "failure_mode_canonical": "stuck_relay_contact",
+    "severity": 9,
+    "occurrence": 7,
+    "detection": 5,
+    "rpn": 315,
+    "evidence_grade": "evidence-backed",
+    "multi_role_corroborated": true
+  }
+}

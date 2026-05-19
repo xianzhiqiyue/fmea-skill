@@ -1,0 +1,18 @@
+[
+  {
+    "leaf_id": "T.1.1",
+    "leaf_name": "继电器",
+    "p_diagram_anchor": {"noise": "wear_aging:阀片疲劳", "unintended_or_error": "error_states:继电器粘连"},
+    "failure_mode": "触点粘连(疲劳)",
+    "failure_mode_canonical": "stuck_relay_contact",
+    "cause": "继电器寿命后期触点磨损",
+    "effect": {"customer": "无法停机", "downstream": "压缩机损坏", "system": "保护机制失效"},
+    "current_controls": {"prevention": "10000 次寿命试验", "detection": "无在线检测"},
+    "recommended_actions": ["增加加速老化试验"],
+    "ai_severity": 9, "ai_severity_rationale": "安全相关",
+    "ai_occurrence": 7, "ai_occurrence_rationale": "寿命后期高发",
+    "ai_detection": 5, "ai_detection_rationale": "试验后只能离线发现",
+    "role": "可靠性/试验",
+    "self_confidence": 0.8
+  }
+]

@@ -1,0 +1,23 @@
+[
+  {
+    "leaf_id": "T.1.1",
+    "leaf_name": "继电器",
+    "p_diagram_anchor": {"noise": "piece_to_piece:选型余量不足", "unintended_or_error": "error_states:继电器粘连"},
+    "failure_mode": "触点粘连",
+    "failure_mode_canonical": "stuck_relay_contact",
+    "cause": "感性负载反向电动势拉弧",
+    "effect": {"customer": "无法停机", "downstream": "压缩机损坏", "system": "安全停机失效"},
+    "current_controls": {"prevention": "继电器选型余量 1.5x", "detection": "继电器状态监测"},
+    "recommended_actions": ["增加交流接触器"],
+    "ai_severity": 9, "ai_severity_rationale": "安全相关",
+    "ai_occurrence": 5, "ai_occurrence_rationale": "经验估算",
+    "ai_detection": 3, "ai_detection_rationale": "状态监测较可靠",
+    "role": "设计/模块",
+    "self_confidence": 0.7
+  },
+  {
+    "leaf_id": "T.1.2",
+    "p_diagram_anchor": {"noise": "wear_aging:阀片疲劳", "unintended_or_error": "error_states:传感器卡死"},
+    "not_applicable_reason": "本叶节点为压力传感器,与阀片疲劳噪声因子无关"
+  }
+]

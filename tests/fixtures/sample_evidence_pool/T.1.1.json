@@ -1,0 +1,18 @@
+{
+  "leaf_id": "T.1.1",
+  "matches": [
+    {
+      "source_workbook": "CAN400产品DFMEA.xlsx",
+      "source_sheet": "变温系统",
+      "source_row": "31",
+      "failure_mode_text": "触点粘连(Stuck ON)",
+      "cause_text": "感性负载反向电动势拉弧",
+      "effect_text": "继电器熔焊",
+      "severity": 9,
+      "occurrence": 7,
+      "detection": 1,
+      "match_score": 24.0,
+      "matched_keywords": ["继电器", "粘连"]
+    }
+  ]
+}
