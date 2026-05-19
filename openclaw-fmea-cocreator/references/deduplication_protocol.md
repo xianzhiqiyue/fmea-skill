@@ -89,3 +89,5 @@ B: failure_mode = "{B.failure_mode}", canonical = "{B.canonical}"
 | 同一 leaf 下 2 行 canonical 相同 | scan 主键 |
 | 同一 leaf 下 2 行 canonical 不同但 LLM 仲裁为 merge | scan 仲裁记录 |
 | 整个 FMEA 行数恰好等于历史库行数 | 比较 `len(rows)` 与历史 source_row 集合大小,接近则报警 |
+
+> 由 `merge_and_score.py` 在阶段 4.6 与 `tests/test_mock_10_regression.py` 自动检测;不再依赖 Claude 在生成时手动核对。

@@ -1,6 +1,6 @@
 ---
 name: openclaw-fmea-cocreator
-version: 0.3.0-m1
+version: 0.3.0-m2
 description: Co-create AFMEA, SFMEA, or DFMEA for OpenClaw from module inputs, existing tables, or historical quality materials, with traceable drafts and follow-up actions.
 category: research
 tags:
@@ -84,13 +84,23 @@ python3 openclaw-fmea-cocreator/scripts/retrieve_cases.py \
 5. 计算 4 分量 `confidence`
 6. 覆盖率检查,输出 `coverage_gaps.json`
 
-M1 由 Claude 按 reference 手动执行;M2 起由 `merge_and_score.py` 脚本承担,Claude 只做最后审阅。
+由 `merge_and_score.py` 脚本承担,Claude 只做最后审阅。
 
 ### 阶段 5: 工作簿渲染
 
-M1 暂用现有 `draft_fmea_from_cases.py` 的 Excel 部分(列结构未扩),把 evidence_grade / confidence 写入 `AI打分推导依据` 列。
+```bash
+python3 openclaw-fmea-cocreator/scripts/build_workbook.py \
+  --normalized fmea_normalized.json \
+  --structure structure.json \
+  --output 输出.xlsx
+```
 
-M2 起替换为 `build_workbook.py` + 扩列后的 `template.xlsx`。
+输出工作簿包含 5 个 sheet:
+- `封面` (含证据等级分布、置信度分布、覆盖摘要)
+- `FMEA主表` (31 列,含 P-Diagram 锚点、证据等级、置信度等新列)
+- `评分准则参考`
+- `覆盖盲区与待确认队列`
+- `结构与P-Diagram`
 
 ### 阶段 6: 评审写回 (M3)
 
@@ -153,9 +163,16 @@ If the task starts from an existing FMEA workbook instead of raw text, also use 
 Current script support:
 
 ```bash
-python3 scripts/draft_fmea_from_cases.py --module "模块名" --input-file /path/to/input.txt --excel-out /path/to/output.xlsx
-python3 scripts/draft_fmea_from_cases.py --module "模块名" --input-file /path/to/input.txt --coverage-mode lifecycle --min-rows 28 --excel-out /path/to/output.xlsx
-python3 scripts/draft_fmea_from_cases.py --module "模块名" --input-file /path/to/input.txt --coverage-mode subsystem --excel-out /path/to/output.xlsx
+python3 openclaw-fmea-cocreator/scripts/merge_and_score.py \
+  --structure structure.json \
+  --candidates-dir <dir> \
+  --evidence-pool-dir <dir>/evidence_pool \
+  --output fmea_normalized.json
+
+python3 openclaw-fmea-cocreator/scripts/build_workbook.py \
+  --normalized fmea_normalized.json \
+  --structure structure.json \
+  --output 输出.xlsx
 ```
 
 OpenClaw bridge support:

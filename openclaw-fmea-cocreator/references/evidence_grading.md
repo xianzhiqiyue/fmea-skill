@@ -105,14 +105,12 @@ top_risk_score = confidence * rpn
 
 不用纯 rpn 排序,避免"高 RPN 但 confidence < 0.3 的纸老虎"压倒"高 confidence 的真问题"。
 
-## 在工作簿中的视觉表达 (M2 落地)
+## 在工作簿中的视觉表达 (已实现)
 
-| 列 | 视觉规范 |
-|---|---|
-| `evidence_grade` | 5 色条件格式 |
-| `confidence` | 数据条 0-1 灰阶 |
-| `confidence_breakdown` | 4 分量明细文本 |
-| 整行底色 | `needs_human_confirmation=true` → 浅红 |
+由 `scripts/build_workbook.py` 自动渲染:
+- `evidence_grade` 列 (Y): 5 色条件格式
+- `confidence` 列 (Z): 数据条 0-1
+- 整行底色 `needs_human_confirmation=true` → 浅红 (条件格式公式)
 
 ## 权重可调
 
