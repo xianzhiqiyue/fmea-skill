@@ -1,0 +1,44 @@
+{
+  "module_root": "测试模块",
+  "fmea_type": "DFMEA",
+  "rows": [
+    {
+      "row_id": "T.1.1/stuck_relay_contact",
+      "leaf_id": "T.1.1",
+      "scope_path": "T → T.1 → T.1.1",
+      "failure_mode": "触点粘连",
+      "failure_mode_canonical": "stuck_relay_contact",
+      "p_diagram_anchor": "wear_aging:阀片疲劳 × error_states:继电器粘连",
+      "cause": "[设计/模块] 选型余量不足",
+      "effect_customer": "无法停机",
+      "effect_downstream": "压缩机损坏",
+      "effect_system": "保护机制失效",
+      "current_controls_prevention": "[设计/模块] 选型余量 1.5x",
+      "current_controls_detection": "[设计/模块] 状态监测",
+      "recommended_actions": ["增加交流接触器"],
+      "severity": 9, "occurrence": 7, "detection": 5, "rpn": 315,
+      "evidence_grade": "evidence-backed",
+      "confidence": 0.78,
+      "confidence_breakdown": {
+        "role_agreement": 0.4, "evidence_strength": 1.0,
+        "sod_grounding": 1.0, "pdiagram_coverage": 1.0
+      },
+      "rating_history": {
+        "role_view": [{"role": "设计/模块", "s": 9, "o": 5, "d": 3}, {"role": "可靠性/试验", "s": 9, "o": 7, "d": 5}],
+        "historical_view": {"s": 9, "o": 7, "d": 1, "source": "CAN400/变温/row 31"}
+      },
+      "multi_role_corroborated": true,
+      "needs_human_confirmation": false,
+      "source_traces": [
+        {"type": "role_inference", "role": "设计/模块"},
+        {"type": "role_inference", "role": "可靠性/试验"},
+        {"type": "historical", "ref": "CAN400/变温/row 31"}
+      ]
+    }
+  ],
+  "coverage_gaps": [
+    {"leaf_id": "T.1.2", "role": "设计/模块", "axis_combo": "piece_to_piece × control_factors", "severity_estimate": "potential"}
+  ],
+  "top_risks": [],
+  "confirmation_queue": []
+}
