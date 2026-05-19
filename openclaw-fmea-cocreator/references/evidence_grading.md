@@ -15,11 +15,13 @@
 | ≥ 1 历史匹配 + 仅 1 角色覆盖 | `historical-supported` |
 | 0 历史匹配 + ≥ 2 角色覆盖 | `multi-role-inferred` |
 | 0 历史匹配 + 仅 1 角色覆盖 | `ai-inferred` |
-| 历史 S/O/D 与合并后 S/O/D **任一维度差 ≥ 3** | `contradicted` (覆盖以上 4 个) |
+| 历史 S 或 O 与合并后 S 或 O **任一维度差 ≥ 3** | `contradicted` (覆盖以上 4 个) |
 
 **判定顺序**: 先判 contradicted,再判其他 4 个 (因为冲突需要被特别处理)。
 
 **冲突时如何取值**: S/O/D **优先 LLM 推理结果**(取最大值),历史值落入 `rating_history.historical_view` 保留。
+
+**为什么只看 S 与 O 而不看 D**: Severity 与 Occurrence 是失效模式的本质属性,差 ≥ 3 通常意味着两边对失效机理或发生频率的判断不一致,需要人工裁决。Detection 反映的是控制能力,会随企业检测手段升级而显著漂移(老历史 D=1 不代表新设计也能 D=1),把 D 纳入冲突判定会把"能力进步"误判为"语义矛盾"。Detection 差异保留在 `rating_history.historical_view`,由人工在评审阶段对照。
 
 ## 置信度公式
 
