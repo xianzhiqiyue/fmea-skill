@@ -144,20 +144,28 @@ def load_case_library(root: Path | None, query_terms: list[str], module: str | N
             for entry in entries:
                 text_parts = [
                     entry.get("leaf_name", ""), entry.get("failure_mode", ""),
-                    entry.get("cause", ""), entry.get("effect", "")
+                    entry.get("cause", ""), entry.get("effect", ""),
+                    entry.get("current_controls_prevention", ""),
+                    entry.get("current_controls_detection", ""),
+                    " ".join(entry.get("recommended_actions", [])),
                 ]
                 text = " ".join(filter(None, text_parts))
                 raw = score_text(text, query_terms, module)
                 if raw <= 0:
                     continue
-                weighted = raw * CASE_LIBRARY_WEIGHT
+                # Case-library entries are filed under the queried module, so apply the
+                # same sheet-affinity bonus a direct-module historical row would receive,
+                # plus a provenance bonus equivalent to dfmea_sample_data so that the
+                # 1.5× weight reliably lifts confirmed cases above historical evidence.
+                raw_with_affinity = raw + 6 + 5
+                weighted = raw_with_affinity * CASE_LIBRARY_WEIGHT
                 preview = f"{entry.get('failure_mode', '')} | {entry.get('cause', '')} | {entry.get('effect', '')}"
                 matches.append(Match(
                     score=weighted, workbook=quarter_file.parent.name,
                     sheet=quarter_file.stem, theme="case_library",
                     excel_row=entry.get("case_id", ""), preview=preview,
                     source=str(quarter_file), source_kind="case_library",
-                    raw_score=float(raw), weight=CASE_LIBRARY_WEIGHT
+                    raw_score=float(raw_with_affinity), weight=CASE_LIBRARY_WEIGHT
                 ))
     return matches
 
@@ -254,7 +262,7 @@ def main() -> None:
         help="Include planning, strategy, and prompt sheets in addition to sample DFMEA and case templates.",
     )
     parser.add_argument("--json-out", help="Write evidence pool JSON to this path (schema for merge_and_score.py).")
-    parser.add_argument("--leaf-id", help="Required when --json-out is used; tags the output with this leaf id.")
+    parser.add_argument("--leaf-id", default="", help="Tags the output with this leaf id when --json-out is used.")
     parser.add_argument("--case-library-root", default=None, help="Path to case_library root dir (enables 1.5x-weighted hits from confirmed cases).")
     args = parser.parse_args()
 
@@ -265,8 +273,6 @@ def main() -> None:
         matches = [match for match in matches if match.theme in allowed_themes]
 
     if args.json_out:
-        if not args.leaf_id:
-            parser.error("--leaf-id is required when --json-out is used")
         write_json_output(matches, args.leaf_id, Path(args.json_out), args.top_k)
         return
 
