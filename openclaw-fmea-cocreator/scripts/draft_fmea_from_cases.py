@@ -1393,29 +1393,40 @@ def infer_owner(row: DraftRow) -> str:
 def build_template_row_values(index: int, module: str, row: DraftRow) -> list[Any]:
     prevention_controls, detection_controls = split_current_controls(row.current_controls)
     parameter_indicators = extract_parameter_indicators(row.function, row.effect, row.cause, row.recommended_actions)
+    source_traces = "; ".join(row.source_cases) if row.source_cases else ""
     return [
-        index,
-        row.scope,
-        row.analysis_object or module,
-        row.function,
-        parameter_indicators,
-        row.effect,
-        row.severity,
-        row.failure_mode,
-        row.cause,
-        prevention_controls,
-        row.occurrence,
-        detection_controls,
-        row.detection,
-        row.rpn,
-        build_rating_basis_cell(row),
-        row.recommended_actions,
-        row.owner or infer_owner(row),
-        row.target_date or "待定",
-        row.post_action_severity,
-        row.post_action_occurrence,
-        row.post_action_detection,
-        row.post_action_rpn,
+        index,                              # col 2: 序号
+        row.scope,                          # col 3: Scope path
+        row.analysis_object or module,      # col 4: Leaf 节点
+        row.function,                       # col 5: Analysis object
+        parameter_indicators,               # col 6: Function or requirement
+        row.effect,                         # col 7: P-Diagram 锚点
+        row.severity,                       # col 8: Failure mode
+        row.failure_mode,                   # col 9: Failure mode canonical
+        row.cause,                          # col 10: Failure effect
+        prevention_controls,                # col 11: S
+        row.occurrence,                     # col 12: Cause or mechanism
+        detection_controls,                 # col 13: O
+        row.detection,                      # col 14: Current controls (prevention)
+        row.rpn,                            # col 15: Current controls (detection) — overridden with formula
+        build_rating_basis_cell(row),       # col 16: D
+        row.recommended_actions,            # col 17: RPN
+        row.owner or infer_owner(row),      # col 18: Recommended actions
+        row.target_date or "待定",           # col 19: Owner
+        row.post_action_severity,           # col 20: Target date
+        row.post_action_occurrence,         # col 21: 改进后 S
+        row.post_action_detection,          # col 22: 改进后 O
+        row.post_action_rpn,                # col 23: 改进后 D
+        None,                               # col 24: 改进后 RPN — overridden with formula T*U*V
+        # M2 new-column defaults: legacy import / AI-draft has no evidence grading info
+        "ai-inferred",                      # col 25: Evidence grade
+        None,                               # col 26: Confidence
+        "",                                 # col 27: Confidence breakdown
+        "N",                                # col 28: Multi-role corroborated
+        "",                                 # col 29: Rating history
+        "Y",                                # col 30: Needs human confirmation
+        source_traces,                      # col 31: Source traces
+        "",                                 # col 32: AI 打分推导依据
     ]
 
 
@@ -1431,28 +1442,38 @@ def template_fmea_rows(
         if not rows:
             output_rows.append(
                 [
-                    index,
-                    scope.name,
-                    module,
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "未召回到足够案例，建议补充输入或手工定义 scope。",
-                    "补充模块功能、失效模式、S/O/D 评分依据和现行控制。",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
+                    index,                  # col 2: 序号
+                    scope.name,             # col 3: Scope path
+                    module,                 # col 4: Leaf 节点
+                    "",                     # col 5: Analysis object
+                    "",                     # col 6: Function or requirement
+                    "",                     # col 7: P-Diagram 锚点
+                    "",                     # col 8: Failure mode
+                    "",                     # col 9: Failure mode canonical
+                    "",                     # col 10: Failure effect
+                    "",                     # col 11: S
+                    "",                     # col 12: Cause or mechanism
+                    "",                     # col 13: O
+                    "",                     # col 14: Current controls (prevention)
+                    "",                     # col 15: Current controls (detection)
+                    "未召回到足够案例，建议补充输入或手工定义 scope。",  # col 16: D
+                    "补充模块功能、失效模式、S/O/D 评分依据和现行控制。",  # col 17: RPN
+                    "",                     # col 18: Recommended actions
+                    "",                     # col 19: Owner
+                    "",                     # col 20: Target date
+                    "",                     # col 21: 改进后 S
+                    "",                     # col 22: 改进后 O
+                    "",                     # col 23: 改进后 D
+                    None,                   # col 24: 改进后 RPN — overridden with formula T*U*V
+                    # M2 new-column defaults
+                    "ai-inferred",          # col 25: Evidence grade
+                    None,                   # col 26: Confidence
+                    "",                     # col 27: Confidence breakdown
+                    "N",                    # col 28: Multi-role corroborated
+                    "",                     # col 29: Rating history
+                    "Y",                    # col 30: Needs human confirmation
+                    "",                     # col 31: Source traces
+                    "",                     # col 32: AI 打分推导依据
                 ]
             )
             index += 1
@@ -1507,7 +1528,7 @@ def render_template_fmea_sheet(workbook: Any, module: str, scopes: list[ScopeDef
     template_even_row = 4 if ws.max_row >= 4 else template_odd_row
     data_start_row = 3
     min_col = 2
-    max_col = 23
+    max_col = 32
     odd_style = capture_row_style(ws, template_odd_row, min_col=min_col, max_col=max_col)
     even_style = capture_row_style(ws, template_even_row, min_col=min_col, max_col=max_col)
 
@@ -1521,10 +1542,10 @@ def render_template_fmea_sheet(workbook: Any, module: str, scopes: list[ScopeDef
         for column_offset, value in enumerate(values, start=min_col):
             ws.cell(row=target_row, column=column_offset, value=value)
         ws.cell(row=target_row, column=15, value=f"=H{target_row}*L{target_row}*N{target_row}")
-        ws.cell(row=target_row, column=23, value=f"=T{target_row}*U{target_row}*V{target_row}")
+        ws.cell(row=target_row, column=24, value=f"=T{target_row}*U{target_row}*V{target_row}")
 
     if ws.max_row >= 2:
-        ws.auto_filter.ref = f"B2:W{ws.max_row}"
+        ws.auto_filter.ref = f"B2:AF{ws.max_row}"
 
 
 def render_excel_workbook(
