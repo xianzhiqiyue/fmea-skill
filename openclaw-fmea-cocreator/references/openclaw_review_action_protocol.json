@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "openclaw_review_action_protocol",
+  "description": "Contract describing the 5 review actions OpenClaw frontend can emit per FMEA row.",
+  "actions": {
+    "confirm": {
+      "purpose": "Reviewer accepts the AI draft row as-is.",
+      "required_fields": ["row_id", "action", "reviewer", "reviewed_at"],
+      "optional_fields": ["comment"]
+    },
+    "edit": {
+      "purpose": "Reviewer modifies one or more fields. The patch carries new values.",
+      "required_fields": ["row_id", "action", "reviewer", "reviewed_at", "patch"],
+      "patch_allowed_fields": [
+        "severity", "occurrence", "detection",
+        "current_controls_prevention", "current_controls_detection",
+        "recommended_actions", "owner", "target_date",
+        "effect_customer", "effect_system", "cause"
+      ]
+    },
+    "reject": {
+      "purpose": "Reviewer marks row as not applicable to current scope.",
+      "required_fields": ["row_id", "action", "reviewer", "reviewed_at", "reason"]
+    },
+    "defer": {
+      "purpose": "Reviewer cannot conclude now, asks to revisit.",
+      "required_fields": ["row_id", "action", "reviewer", "reviewed_at"],
+      "optional_fields": ["revisit_after", "comment"]
+    },
+    "promote_to_case": {
+      "purpose": "Reviewer confirms row AND explicitly requests writing it into case_library as a new historical case.",
+      "required_fields": ["row_id", "action", "reviewer", "reviewed_at"],
+      "optional_fields": ["case_tags", "case_severity_override", "comment"],
+      "note": "Implies confirm semantics. Routes the row to case_library writeback regardless of evidence_grade."
+    }
+  },
+  "ordering": "If multiple actions target the same row_id, last-write-wins by reviewed_at timestamp.",
+  "idempotency": "Re-applying the same action file MUST produce the same result. Scripts must read the latest action per row_id rather than appending."
+}

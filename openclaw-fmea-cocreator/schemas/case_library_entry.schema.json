@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "case_library_entry",
+  "type": "object",
+  "required": ["case_id", "module", "leaf_name", "failure_mode", "failure_mode_canonical", "cause", "effect", "severity", "occurrence", "detection", "provenance"],
+  "properties": {
+    "case_id": {"type": "string", "pattern": "^CASE-[0-9]{4}-Q[1-4]-[0-9]{4}$"},
+    "module": {"type": "string"},
+    "leaf_id": {"type": "string"},
+    "leaf_name": {"type": "string"},
+    "failure_mode": {"type": "string"},
+    "failure_mode_canonical": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+    "cause": {"type": "string"},
+    "effect": {"type": "string"},
+    "current_controls_prevention": {"type": "string"},
+    "current_controls_detection": {"type": "string"},
+    "recommended_actions": {"type": "array", "items": {"type": "string"}},
+    "severity": {"type": "integer", "minimum": 1, "maximum": 10},
+    "occurrence": {"type": "integer", "minimum": 1, "maximum": 10},
+    "detection": {"type": "integer", "minimum": 1, "maximum": 10},
+    "tags": {"type": "array", "items": {"type": "string"}},
+    "provenance": {
+      "type": "object",
+      "required": ["source_fmea", "confirmed_at", "reviewer", "promotion_action", "evidence_grade_at_confirm"],
+      "properties": {
+        "source_fmea": {"type": "string"},
+        "confirmed_at": {"type": "string", "format": "date-time"},
+        "reviewer": {"type": "string"},
+        "promotion_action": {"enum": ["confirm", "promote_to_case"]},
+        "evidence_grade_at_confirm": {
+          "enum": ["evidence-backed", "historical-supported", "multi-role-inferred", "ai-inferred", "contradicted"]
+        },
+        "confidence_at_confirm": {"type": "number"}
+      }
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "openclaw_review_cards",
+  "type": "object",
+  "required": ["generated_at", "fmea_normalized_path", "cards"],
+  "properties": {
+    "generated_at": {"type": "string", "format": "date-time"},
+    "fmea_normalized_path": {"type": "string"},
+    "cards": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["card_id", "row_id", "queue", "title", "evidence_grade", "confidence", "fields", "available_actions"],
+        "properties": {
+          "card_id": {"type": "string"},
+          "row_id": {"type": "string"},
+          "queue": {"enum": ["confirmation_queue", "top_risks"]},
+          "title": {"type": "string"},
+          "evidence_grade": {
+            "enum": ["evidence-backed", "historical-supported", "multi-role-inferred", "ai-inferred", "contradicted"]
+          },
+          "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+          "rpn": {"type": "integer", "minimum": 1, "maximum": 1000},
+          "fields": {
+            "type": "object",
+            "required": ["scope_path", "leaf_name", "failure_mode", "cause", "effect", "current_controls", "recommended_actions", "severity", "occurrence", "detection"],
+            "properties": {
+              "scope_path": {"type": "string"},
+              "leaf_name": {"type": "string"},
+              "failure_mode": {"type": "string"},
+              "cause": {"type": "string"},
+              "effect": {"type": "string"},
+              "current_controls": {"type": "string"},
+              "recommended_actions": {"type": "array", "items": {"type": "string"}},
+              "severity": {"type": "integer"},
+              "occurrence": {"type": "integer"},
+              "detection": {"type": "integer"}
+            }
+          },
+          "available_actions": {
+            "type": "array",
+            "items": {"enum": ["confirm", "edit", "reject", "defer", "promote_to_case"]},
+            "minItems": 1
+          },
+          "needs_human_confirmation": {"type": "boolean"},
+          "source_traces": {"type": "array", "items": {"type": "object"}}
+        }
+      }
+    }
+  }
+}

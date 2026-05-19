@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "review_actions",
+  "type": "object",
+  "required": ["fmea_normalized_path", "actions"],
+  "properties": {
+    "fmea_normalized_path": {"type": "string"},
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["row_id", "action", "reviewer", "reviewed_at"],
+        "properties": {
+          "row_id": {"type": "string"},
+          "action": {"enum": ["confirm", "edit", "reject", "defer", "promote_to_case"]},
+          "reviewer": {"type": "string"},
+          "reviewed_at": {"type": "string", "format": "date-time"},
+          "comment": {"type": "string"},
+          "reason": {"type": "string"},
+          "revisit_after": {"type": "string", "format": "date"},
+          "case_tags": {"type": "array", "items": {"type": "string"}},
+          "case_severity_override": {"type": "integer", "minimum": 1, "maximum": 10},
+          "patch": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "severity": {"type": "integer", "minimum": 1, "maximum": 10},
+              "occurrence": {"type": "integer", "minimum": 1, "maximum": 10},
+              "detection": {"type": "integer", "minimum": 1, "maximum": 10},
+              "current_controls_prevention": {"type": "string"},
+              "current_controls_detection": {"type": "string"},
+              "recommended_actions": {"type": "array", "items": {"type": "string"}},
+              "owner": {"type": "string"},
+              "target_date": {"type": "string"},
+              "effect_customer": {"type": "string"},
+              "effect_system": {"type": "string"},
+              "cause": {"type": "string"}
+            }
+          }
+        },
+        "allOf": [
+          {
+            "if": {"properties": {"action": {"const": "edit"}}},
+            "then": {"required": ["patch"]}
+          },
+          {
+            "if": {"properties": {"action": {"const": "reject"}}},
+            "then": {"required": ["reason"]}
+          }
+        ]
+      }
+    }
+  }
+}
