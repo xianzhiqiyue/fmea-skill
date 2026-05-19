@@ -1,6 +1,6 @@
 ---
 name: openclaw-fmea-cocreator
-version: 0.2.2
+version: 0.3.0-m1
 description: Co-create AFMEA, SFMEA, or DFMEA for OpenClaw from module inputs, existing tables, or historical quality materials, with traceable drafts and follow-up actions.
 category: research
 tags:
@@ -34,132 +34,67 @@ This skill helps Codex:
 
 ## Core workflow
 
-### 1. Determine the job to be done
+新工作流由 6 个强制阶段构成,Claude 必须按顺序执行,不可跳步。
 
-Start by identifying which of these the user needs:
+### 阶段 1: 结构化抽取 (P-Diagram + 模块层级树)
 
-- new FMEA draft from raw module description
-- review or completion of an existing FMEA
-- high-risk item rework or action-plan output
-- conversion of a confirmed FMEA row into a reusable case
+在生成任何 FMEA 行之前,先按 [references/p_diagram_template.md](references/p_diagram_template.md) 抽出 `structure.json`:
 
-If the user does not specify the FMEA type, infer it from scope:
+- `hierarchy` 模块层级树
+- `p_diagrams[]` 每个子系统一份 P-Diagram
 
-- lifecycle, transport, storage, maintenance, operation: likely `AFMEA`
-- system to subsystem decomposition and interfaces: likely `SFMEA`
-- subsystem to part, BOM, material, component risk: likely `DFMEA`
+输出必须通过 schema 自检(详见 reference)。如果用户输入不足,列出缺失字段并要求补充,不要伪造。
 
-If needed, read [references/prompt_templates.md](references/prompt_templates.md).
+### 阶段 2: 多专家失效模式生成 (6 个角色)
 
-### 2. Gather inputs before drafting
+按 [references/specialist_role_prompts.md](references/specialist_role_prompts.md) 依次扮演 6 个专家角色:
 
-Use the minimum checklist in [references/input_checklist.md](references/input_checklist.md).
+1. 系统/接口工程师
+2. 设计/模块工程师
+3. 可靠性/试验工程师
+4. 制造/工艺工程师
+5. 安全/服务工程师
+6. 软件/控制工程师 (条件触发)
 
-Required minimum for a useful draft:
+每个角色独立,只看 `structure.json`,不看其他角色已产出。每个角色对 hierarchy 每个叶节点扫遍"必扫描轴对",输出 `candidates_{role}.json`。
 
-- analysis object or module name
-- key function or requirement
-- use or task scenario
-- at least one of: environment, interface, historical issue, BOM, design constraint
+**强制约束**: 不能静默跳过任何 (叶节点 × 必扫描轴对) 组合。不适用即给 `not_applicable_reason`。
 
-Before drafting, decide whether the input is actually one analysis scope or multiple distinct scopes.
+### 阶段 3: 历史证据池
 
-If the material contains clearly different architectures, subsystems, or operating principles, split the draft into separate sections or separate FMEA tables first.
-
-When using `scripts/draft_fmea_from_cases.py`, the script will try to suggest scopes automatically if `--scope` is not provided.
-
-Do not block on perfect input. Draft with assumptions when needed, but label them clearly.
-
-### 3. Normalize names and locate similar cases
-
-Before drafting, normalize module names using [references/module_aliases.md](references/module_aliases.md).
-
-When historical support would help, retrieve cases from the exported materials:
+对 hierarchy 每个叶节点跑一次 `retrieve_cases.py`:
 
 ```bash
-python3 scripts/retrieve_cases.py --query "压缩机 液击 冷媒 泄漏" --module "变温系统"
+python3 openclaw-fmea-cocreator/scripts/retrieve_cases.py \
+  --query "<leaf_name + 上下文关键词>" \
+  --module "<module_root>" \
+  --json-out evidence_pool/<leaf_id>.json
 ```
 
-Use the retrieved rows as references, not as facts to copy blindly. Keep source traceability.
+输出 `evidence_pool/<leaf_id>.json` 固定 schema,M2 起由 `merge_and_score.py` 直接消费。
 
-When the user already has a natural-language module description and wants a fast first draft, bootstrap it with:
+### 阶段 4: 合并、去重、评级、置信度
 
-```bash
-python3 scripts/draft_fmea_from_cases.py --module "变温系统" --input-file /path/to/input.txt
-```
+按 [references/deduplication_protocol.md](references/deduplication_protocol.md) 与 [references/evidence_grading.md](references/evidence_grading.md):
 
-If the automatic scope suggestion is not ideal, rerun with explicit `--scope "范围名::关键词..."` overrides.
+1. 跨 scope 机械去重 (主键 = `leaf_id` × `failure_mode_canonical`)
+2. scope 内语义去重 (LLM 仲裁,触发条件: 同 leaf 下 candidate ≥ 2)
+3. 合并候选行 (S/O/D 取最大值,rationale 全留)
+4. 与历史证据对齐,判定 5 状态 `evidence_grade`
+5. 计算 4 分量 `confidence`
+6. 覆盖率检查,输出 `coverage_gaps.json`
 
-If needed, read [references/case_sources.md](references/case_sources.md).
+M1 由 Claude 按 reference 手动执行;M2 起由 `merge_and_score.py` 脚本承担,Claude 只做最后审阅。
 
-### 3.1 Use a multi-specialist agent cluster for rich drafts
+### 阶段 5: 工作簿渲染
 
-When the user asks for a detailed workbook, use the workbook shape demonstrated by the reference sample as the canonical output format.
-The bundled `template.xlsx` is the standard output template and must stay content-clean: preserve workbook structure, styles, formulas, and headers, but do not preserve sample document content as template content.
-Do not stop at a narrow subsystem recall when the requested analysis scope requires broader lifecycle-style coverage.
+M1 暂用现有 `draft_fmea_from_cases.py` 的 Excel 部分(列结构未扩),把 evidence_grade / confidence 写入 `AI打分推导依据` 列。
 
-For any non-trivial FMEA, guide the agent to think and work as a cross-functional FMEA team, not as one generic analyst.
-When the runtime supports native subagents and the scope is broad enough to benefit, split the work across bounded specialist agents.
-Choose only the roles that match the user's product/module; do not invent irrelevant roles.
+M2 起替换为 `build_workbook.py` + 扩列后的 `template.xlsx`。
 
-Default specialist viewpoints:
+### 阶段 6: 评审写回 (M3)
 
-| Specialist viewpoint | Primary lens | Typical rows it should contribute |
-| --- | --- | --- |
-| System / architecture engineer | system boundary, interfaces, energy/material/information transfer | SFMEA boundary failures, integration failures, interface mismatches |
-| Design / module engineer | function, requirement, tolerance, component design | DFMEA design failure modes, design causes, prevention controls |
-| Reliability / test engineer | validation coverage, lifetime, stress, detection limits | O/D rationale, test escapes, accelerated-life and verification gaps |
-| Manufacturing / quality engineer | assembly, process variation, inspection, supplier quality | process-induced design risks, current controls, measurable prevention |
-| Safety / compliance engineer | hazards, regulatory constraints, misuse, protection layers | high-S rows, safety interlocks, warning and mitigation adequacy |
-| Field service / maintenance engineer | installation, calibration, serviceability, wear, spare parts | service and maintenance failure modes, diagnostic and action rows |
-| Customer / application engineer | real use scenarios, misuse, task interruption, acceptance criteria | customer-impact wording, operation risks, usability controls |
-| Supply chain / logistics engineer | packaging, transport, storage, incoming quality | logistics/storage damage, supplier and incoming-control rows |
-| Software / controls engineer | state machine, alarms, interlocks, data/configuration, cyber-physical control | software/control failure modes and detection/rollback controls |
-
-Each specialist agent should return rows in the same normalized schema and must include:
-
-- one failure mode per row
-- concrete cause/effect/control/action text
-- S/O/D/RPN rationale
-- owner and target-date placeholder
-- traceability to historical cases or explicit `broader analogy` marking
-- assumptions and low-confidence ratings
-
-The leader agent consolidates the specialist outputs into `FMEA主表`.
-During consolidation, deduplicate overlapping rows, keep the clearest cause/effect separation, preserve dissenting score rationale in `AI打分推导依据`, and route conflicts into `Rows needing confirmation`.
-Keep all AI-expanded lifecycle rows in `needs expert confirmation` unless enterprise evidence confirms the scores.
-
-### 4. Draft the FMEA in a normalized schema
-
-Always prefer the normalized output structure in [references/output_schema.md](references/output_schema.md).
-
-Important formatting rules:
-
-- one failure mode per row
-- keep cause, effect, and control separate
-- do not split one logical row across multiple spreadsheet rows unless the user explicitly asks for that format
-- include `RPN = S * O * D`
-- if the user needs a deliverable artifact, default to Excel workbook; use Markdown for conversational preview and JSON for structured handoff
-- if a row is derived from a related-module analogy, mark it as `family analogy reference` instead of presenting it as the primary source
-
-### 5. Apply scoring guardrails
-
-Use [references/scoring_guardrails.md](references/scoring_guardrails.md).
-
-Especially important:
-
-- `S` can often be estimated from customer or downstream impact
-- `O` and `D` are highly organization-specific and should usually be marked as `AI draft, needs confirmation` unless grounded in provided process capability or historical data
-- when confidence is low, say so plainly
-
-### 6. End with co-creation, not just generation
-
-After producing a draft, always help the user move to the next step:
-
-- highlight top RPN items
-- list rows that most need expert confirmation
-- propose action items with owner and target date placeholders when useful
-- suggest which confirmed rows should be added back into the case library
+M1/M2 不实现。M3 落地 `confirmed_to_case_library.py` 实现案例库飞轮。
 
 ## OpenClaw delivery contract
 
@@ -186,6 +121,14 @@ Minimum delivery rules:
 - call out boundary rows whose scope ownership is ambiguous
 - preserve historical traceability in the `AI打分推导依据` cell whenever a historical row influenced the draft
 - keep Markdown or JSON only as preview or system interface companions when useful
+
+### M1 新增交付规则
+
+- 每行必须有 `evidence_grade ∈ {evidence-backed, historical-supported, multi-role-inferred, ai-inferred, contradicted}`,见 [references/evidence_grading.md](references/evidence_grading.md)
+- 每行必须有 `confidence ∈ [0,1]`,以及 4 分量明细
+- 每行必须有 `p_diagram_anchor` 字符串,指明该行来自 P-Diagram 哪个组合
+- `top_risks` 按 `confidence × rpn` 排序,不再按纯 rpn
+- `confirmation_queue` 自动包含 `evidence_grade ∈ {contradicted, ai-inferred}` 或 `confidence < 0.5` 的行
 
 ## Output expectations
 
@@ -227,6 +170,10 @@ python3 scripts/import_existing_fmea_excel.py --input-excel /path/to/existing.xl
 
 ## When to read which reference
 
+- `references/p_diagram_template.md`: 每次生成 FMEA 前都要读,定义结构化抽取范式
+- `references/specialist_role_prompts.md`: 阶段 2 多专家轮次的 prompt 卡
+- `references/deduplication_protocol.md`: 跨 scope 与 scope 内去重协议
+- `references/evidence_grading.md`: 证据等级与置信度公式
 - `references/workflow.md`: when you need the full co-creation workflow
 - `references/input_checklist.md`: when input is incomplete or scattered
 - `references/output_schema.md`: when generating or normalizing tables
