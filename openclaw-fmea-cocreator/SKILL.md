@@ -153,11 +153,8 @@ If the user only asks for one of these, keep the response scoped.
 
 If the user asks for an OpenClaw-ready result, follow the full delivery contract above and the field rules in [references/output_schema.md](references/output_schema.md).
 
-If the task is about OpenClaw form design, workflow integration, field binding, or workbook-to-system mapping, read [references/openclaw_interface_mapping.md](references/openclaw_interface_mapping.md).
-If a machine-readable form definition or example payload is needed, also use `references/openclaw_form_definition.json` and `references/openclaw_submission_examples.json`.
-If the task is about backend assembly, payload execution, or artifact path resolution, also read [references/openclaw_submission_assembly.md](references/openclaw_submission_assembly.md).
-If the task is about in-product review cards for `确认队列` or `Top风险`, also use `references/openclaw_review_cards_schema.json` and `scripts/build_openclaw_review_cards.py`.
-If the task is about writing human review decisions back into the workbook, also use `references/openclaw_review_action_protocol.json`, `references/openclaw_review_action_examples.json`, and `scripts/apply_openclaw_review_actions.py`.
+If the task is about in-product review cards for `确认队列` or `Top风险`, see `references/openclaw_review_cards_schema.json` and `scripts/build_openclaw_review_cards.py` (M3).
+If the task is about writing human review decisions back into the FMEA, see `references/openclaw_review_action_protocol.json`, `references/openclaw_review_action_examples.json`, and `scripts/apply_openclaw_review_actions.py` (M3).
 If the task starts from an existing FMEA workbook instead of raw text, also use `scripts/import_existing_fmea_excel.py`.
 
 Current script support:
@@ -178,8 +175,6 @@ python3 openclaw-fmea-cocreator/scripts/build_workbook.py \
 OpenClaw bridge support:
 
 ```bash
-python3 scripts/run_openclaw_submission.py --payload-file /path/to/payload.json
-python3 scripts/run_openclaw_submission.py --example-name auto_scope_dfmea_rf_power_amp --dry-run --print-input
 python3 scripts/build_openclaw_review_cards.py --input-json /path/to/draft.json --output-json /path/to/cards.json
 python3 scripts/apply_openclaw_review_actions.py --input-json /path/to/draft.json --actions-json /path/to/review_actions.json
 python3 scripts/import_existing_fmea_excel.py --input-excel /path/to/existing.xlsx --excel-out /path/to/normalized.xlsx --json-out /path/to/normalized.json
@@ -192,19 +187,12 @@ python3 scripts/import_existing_fmea_excel.py --input-excel /path/to/existing.xl
 - `references/deduplication_protocol.md`: 跨 scope 与 scope 内去重协议
 - `references/evidence_grading.md`: 证据等级与置信度公式
 - `references/workflow.md`: when you need the full co-creation workflow
-- `references/input_checklist.md`: when input is incomplete or scattered
 - `references/output_schema.md`: when generating or normalizing tables
-- `references/openclaw_interface_mapping.md`: when mapping OpenClaw fields to script inputs, workbook sheets, or structured payloads
-- `references/openclaw_form_definition.json`: when building the actual OpenClaw form config
-- `references/openclaw_submission_examples.json`: when preparing request payloads or testing submission shape
-- `references/openclaw_submission_assembly.md`: when wiring backend payload assembly or executing the bridge script
-- `references/openclaw_review_cards_schema.json`: when rendering `确认队列` and `Top风险` as OpenClaw cards
-- `references/openclaw_review_action_protocol.json`: when frontend review actions need a writeback contract
-- `references/openclaw_review_action_examples.json`: when testing or mocking review writeback payloads
+- `references/openclaw_review_cards_schema.json` (M3): when rendering `确认队列` and `Top风险` as OpenClaw cards
+- `references/openclaw_review_action_protocol.json` (M3): when frontend review actions need a writeback contract
+- `references/openclaw_review_action_examples.json` (M3): when testing or mocking review writeback payloads
 - `references/prompt_templates.md`: when constructing prompts or choosing AFMEA/SFMEA/DFMEA framing
 - `references/scoring_guardrails.md`: whenever assigning or reviewing S/O/D
-- `references/module_aliases.md`: when module naming is inconsistent
-- `references/case_sources.md`: when searching historical examples
 
 ## Guardrails
 
