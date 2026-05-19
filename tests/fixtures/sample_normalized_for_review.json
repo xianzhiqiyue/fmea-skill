@@ -1,0 +1,54 @@
+{
+  "rows": [
+    {
+      "row_id": "T.1.5/stuck_relay_contact",
+      "leaf_id": "T.1.5", "leaf_name": "控制板卡",
+      "scope_path": "T → T.1 → T.1.5",
+      "failure_mode": "触点粘连",
+      "failure_mode_canonical": "stuck_relay_contact",
+      "cause": "感性负载反向电动势",
+      "effect_customer": "压缩机不可控",
+      "effect_system": "温度失控",
+      "current_controls_prevention": "选型余量",
+      "current_controls_detection": "状态机检测",
+      "recommended_actions": ["增加 RC 缓冲"],
+      "severity": 9, "occurrence": 7, "detection": 1, "rpn": 63,
+      "evidence_grade": "evidence-backed",
+      "confidence": 0.78,
+      "needs_human_confirmation": false,
+      "source_traces": []
+    },
+    {
+      "row_id": "T.1.4/evaporator_frosting",
+      "leaf_id": "T.1.4", "leaf_name": "蒸发器",
+      "scope_path": "T → T.1 → T.1.4",
+      "failure_mode": "结霜导致换热衰减",
+      "failure_mode_canonical": "evaporator_frosting",
+      "cause": "湿度高 + 长时间运行",
+      "effect_customer": "降温慢", "effect_system": "热管理失稳",
+      "current_controls_prevention": "周期除霜", "current_controls_detection": "温差监测",
+      "recommended_actions": ["增加除霜频率"],
+      "severity": 6, "occurrence": 7, "detection": 4, "rpn": 168,
+      "evidence_grade": "ai-inferred", "confidence": 0.42,
+      "needs_human_confirmation": true,
+      "source_traces": []
+    },
+    {
+      "row_id": "T.1.3/capillary_clog_dust",
+      "leaf_id": "T.1.3", "leaf_name": "毛细管",
+      "scope_path": "T → T.1 → T.1.3",
+      "failure_mode": "毛细管堵塞",
+      "failure_mode_canonical": "capillary_clog_dust",
+      "cause": "颗粒物","effect_customer":"流量异常","effect_system":"压力高",
+      "current_controls_prevention": "上游过滤", "current_controls_detection": "压力开关",
+      "recommended_actions": [],
+      "severity": 5, "occurrence": 4, "detection": 5, "rpn": 100,
+      "evidence_grade": "ai-inferred", "confidence": 0.40,
+      "needs_human_confirmation": true,
+      "source_traces": []
+    }
+  ],
+  "top_risks": ["T.1.4/evaporator_frosting", "T.1.5/stuck_relay_contact"],
+  "confirmation_queue": ["T.1.4/evaporator_frosting", "T.1.3/capillary_clog_dust"],
+  "coverage_gaps": []
+}
