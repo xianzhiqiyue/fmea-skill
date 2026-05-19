@@ -1,6 +1,6 @@
 ---
 name: openclaw-fmea-cocreator
-version: 0.3.0-m2
+version: 0.3.0
 description: Co-create AFMEA, SFMEA, or DFMEA for OpenClaw from module inputs, existing tables, or historical quality materials, with traceable drafts and follow-up actions.
 category: research
 tags:
@@ -68,6 +68,7 @@ This skill helps Codex:
 python3 openclaw-fmea-cocreator/scripts/retrieve_cases.py \
   --query "<leaf_name + 上下文关键词>" \
   --module "<module_root>" \
+  --case-library-root case_library/ \
   --json-out evidence_pool/<leaf_id>.json
 ```
 
@@ -102,9 +103,37 @@ python3 openclaw-fmea-cocreator/scripts/build_workbook.py \
 - `覆盖盲区与待确认队列`
 - `结构与P-Diagram`
 
-### 阶段 6: 评审写回 (M3)
+### 阶段 6: 评审写回与案例库飞轮 (M3)
 
-M1/M2 不实现。M3 落地 `confirmed_to_case_library.py` 实现案例库飞轮。
+完成 `fmea_normalized.json` 与工作簿后,把人工评审与回流闭环:
+
+1. 用 `scripts/build_openclaw_review_cards.py` 从 `fmea_normalized.json` 生成 OpenClaw 评审卡
+   ```bash
+   python3 scripts/build_openclaw_review_cards.py \
+     --input-json /path/to/fmea_normalized.json \
+     --output-json /path/to/cards.json
+   ```
+2. 评审者通过 OpenClaw 产生 `review_actions.json` (5 种动作: confirm/edit/reject/defer/promote_to_case),协议见 [`references/openclaw_review_action_protocol.json`](references/openclaw_review_action_protocol.json)。
+3. 用 `scripts/apply_openclaw_review_actions.py` 把动作应用到 normalized JSON
+   ```bash
+   python3 scripts/apply_openclaw_review_actions.py \
+     --input-json /path/to/fmea_normalized.json \
+     --actions-json /path/to/review_actions.json \
+     --output-json /path/to/fmea_normalized.review_applied.json
+   ```
+4. 用 `scripts/confirmed_to_case_library.py` 把"已确认 + 高证据等级"或"`promote_to_case`"的行回流到 `case_library/<module>/<YYYY-Q*>.json`
+   ```bash
+   python3 scripts/confirmed_to_case_library.py \
+     --input-json /path/to/fmea_normalized.review_applied.json \
+     --case-library-root case_library/ \
+     --source-fmea-path /path/to/fmea_normalized.json
+   ```
+5. 下一次跑 `retrieve_cases.py` 时加 `--case-library-root case_library/`,本企业历史案例命中权重自动 × 1.5,优先级高于通用历史案例。
+
+**回流条件 (避免 echo chamber)**:
+- `review_status == "promoted"` (`promote_to_case` 动作) — 无条件回流
+- `review_status == "confirmed"` 且 `evidence_grade ∈ {evidence-backed, historical-supported}` — 回流
+- 其他情况 (`confirmed + ai-inferred` / `rejected` / `deferred`) — 不回流
 
 ## OpenClaw delivery contract
 

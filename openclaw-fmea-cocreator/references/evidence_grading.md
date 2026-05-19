@@ -118,3 +118,25 @@ top_risk_score = confidence * rpn
 
 - 多角色证据 (w1=0.30) 与历史证据 (w2=0.30) 等权,因为本企业历史库目前仅 CAN400 一份,需要 LLM 补足覆盖
 - `sod_grounding` (w3=0.25) 高于 `pdiagram_coverage` (w4=0.15) 因为评分质量影响 RPN,而 P-Diagram 覆盖影响"是否漏行"——后者已由 `coverage_gaps.json` 单独表达
+
+## 案例库 (`case_library/`) 来源加权
+
+`scripts/retrieve_cases.py` 在传入 `--case-library-root` 时,会同时检索 `excel_materials/workbooks/**/json/*.json` (通用历史) 与 `case_library/<module>/<YYYY-Q*>.json` (本企业已确认案例)。
+
+后者在同模块命中时按 1.5x 加权,理由:
+- 来源是本企业,贴合工艺与组织
+- 已经过人工评审确认
+- 时间近,与当前问题更相关
+
+合并后按 `score` 排序统一返回,候选行的 `source_kind ∈ {historical, case_library}` 会进入 `evidence_pool/<leaf_id>.json`,后续 `merge_and_score.py` 在 `evidence_strength` 分量中可识别 `case_library` 来源,作为更强证据。
+
+## 回流条件 (`scripts/confirmed_to_case_library.py`)
+
+| `review_status` | `evidence_grade` | 是否回流 |
+|---|---|---|
+| `promoted` | 任意 | 是 (`promotion_action: promote_to_case`) |
+| `confirmed` | `evidence-backed` 或 `historical-supported` | 是 (`promotion_action: confirm`) |
+| `confirmed` | `multi-role-inferred` / `ai-inferred` / `contradicted` | 否 |
+| `rejected` / `deferred` / `pending` | 任意 | 否 |
+
+不回流 `ai-inferred` + confirmed 是为了避免回声室:LLM 推断 → 评审过快确认 → 回流 → 又被 LLM 当历史依据。要回流必须 `promote_to_case` 显式声明。
