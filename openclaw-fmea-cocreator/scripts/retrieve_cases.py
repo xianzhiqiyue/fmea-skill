@@ -136,7 +136,10 @@ def collect_matches(query: str, module: str | None) -> list[Match]:
             text = row_text(row)
             if not text:
                 continue
-            score = score_text(text, terms, module)
+            keyword_score = score_text(text, terms, module)
+            if keyword_score <= 0:
+                continue  # require at least one keyword hit before adding bonuses
+            score = keyword_score
             if theme == "dfmea_sample_data":
                 score += 5
             elif theme == "knowledge_base_template":
@@ -171,6 +174,28 @@ def print_markdown(matches: list[Match], top_k: int) -> None:
         )
 
 
+def write_json_output(matches: list[Match], leaf_id: str, output_path: Path, top_k: int) -> None:
+    """Write evidence pool JSON consumed by merge_and_score.py (M2)."""
+    items = []
+    for match in matches[:top_k]:
+        items.append({
+            "source_workbook": match.workbook,
+            "source_sheet": match.sheet,
+            "source_row": match.excel_row,
+            "failure_mode_text": match.preview,
+            "cause_text": "",
+            "effect_text": "",
+            "severity": None,
+            "occurrence": None,
+            "detection": None,
+            "match_score": match.score,
+            "matched_keywords": [],
+        })
+    payload = {"leaf_id": leaf_id, "matches": items}
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Retrieve similar FMEA cases from exported project materials.")
     parser.add_argument("--query", required=True, help="Keywords describing the mechanism, failure, or context.")
@@ -181,12 +206,21 @@ def main() -> None:
         action="store_true",
         help="Include planning, strategy, and prompt sheets in addition to sample DFMEA and case templates.",
     )
+    parser.add_argument("--json-out", help="Write evidence pool JSON to this path (schema for merge_and_score.py).")
+    parser.add_argument("--leaf-id", help="Required when --json-out is used; tags the output with this leaf id.")
     args = parser.parse_args()
 
     matches = collect_matches(args.query, args.module)
     if not args.include_supporting:
         allowed_themes = {"dfmea_sample_data", "knowledge_base_template"}
         matches = [match for match in matches if match.theme in allowed_themes]
+
+    if args.json_out:
+        if not args.leaf_id:
+            parser.error("--leaf-id is required when --json-out is used")
+        write_json_output(matches, args.leaf_id, Path(args.json_out), args.top_k)
+        return
+
     if not matches:
         print("No matches found.")
         return
