@@ -13,6 +13,8 @@ PACKAGED_DATA_ROOT = SKILL_DIR / "excel_materials" / "workbooks"
 REPO_DATA_ROOT = SKILL_DIR.parent / "excel_materials" / "workbooks"
 DATA_ROOT = PACKAGED_DATA_ROOT if PACKAGED_DATA_ROOT.exists() else REPO_DATA_ROOT
 
+CASE_LIBRARY_WEIGHT = 1.5
+
 ALIASES = {
     "变温系统": ["低温系统", "压缩机制冷单元", "液氮低温制冷系统"],
     "进样筒": ["样品筒", "手动进样组件"],
@@ -38,13 +40,16 @@ RELATED_MODULES = {
 
 @dataclass
 class Match:
-    score: int
+    score: float
     workbook: str
     sheet: str
     theme: str
     excel_row: str
     preview: str
     source: str
+    source_kind: str = "historical"
+    raw_score: float = 0.0
+    weight: float = 1.0
 
 
 def tokenize(text: str) -> list[str]:
@@ -123,7 +128,41 @@ def build_preview(row: dict[str, str]) -> str:
     return " | ".join(parts[:4])
 
 
-def collect_matches(query: str, module: str | None) -> list[Match]:
+def load_case_library(root: Path | None, query_terms: list[str], module: str | None) -> list[Match]:
+    if root is None or not root.exists() or module is None:
+        return []
+    canonical = canonicalize_module_name(module)
+    candidates = {canonical} if canonical else set()
+    if canonical:
+        candidates.update(ALIASES.get(canonical, []))
+    matches: list[Match] = []
+    for module_dir in root.iterdir():
+        if not module_dir.is_dir() or module_dir.name not in candidates:
+            continue
+        for quarter_file in sorted(module_dir.glob("*.json")):
+            entries = json.loads(quarter_file.read_text(encoding="utf-8"))
+            for entry in entries:
+                text_parts = [
+                    entry.get("leaf_name", ""), entry.get("failure_mode", ""),
+                    entry.get("cause", ""), entry.get("effect", "")
+                ]
+                text = " ".join(filter(None, text_parts))
+                raw = score_text(text, query_terms, module)
+                if raw <= 0:
+                    continue
+                weighted = raw * CASE_LIBRARY_WEIGHT
+                preview = f"{entry.get('failure_mode', '')} | {entry.get('cause', '')} | {entry.get('effect', '')}"
+                matches.append(Match(
+                    score=weighted, workbook=quarter_file.parent.name,
+                    sheet=quarter_file.stem, theme="case_library",
+                    excel_row=entry.get("case_id", ""), preview=preview,
+                    source=str(quarter_file), source_kind="case_library",
+                    raw_score=float(raw), weight=CASE_LIBRARY_WEIGHT
+                ))
+    return matches
+
+
+def collect_matches(query: str, module: str | None, case_library_root: Path | None = None) -> list[Match]:
     terms = expand_terms(query, module)
     matches: list[Match] = []
 
@@ -151,15 +190,19 @@ def collect_matches(query: str, module: str | None) -> list[Match]:
                 continue
             matches.append(
                 Match(
-                    score=score,
+                    score=float(score),
                     workbook=workbook,
                     sheet=sheet,
                     theme=theme,
                     excel_row=row.get("__excel_row__", ""),
                     preview=build_preview(row),
                     source=str(json_file.relative_to(SKILL_DIR.parent)),
+                    source_kind="historical",
+                    raw_score=float(score),
+                    weight=1.0,
                 )
             )
+    matches.extend(load_case_library(case_library_root, terms, module))
     matches.sort(key=lambda item: (-item.score, item.workbook, item.sheet, item.excel_row))
     return matches
 
@@ -190,6 +233,10 @@ def write_json_output(matches: list[Match], leaf_id: str, output_path: Path, top
             "detection": None,
             "match_score": match.score,
             "matched_keywords": [],
+            "source_kind": match.source_kind,
+            "raw_score": match.raw_score,
+            "weight": match.weight,
+            "score": match.score,
         })
     payload = {"leaf_id": leaf_id, "matches": items}
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -208,11 +255,13 @@ def main() -> None:
     )
     parser.add_argument("--json-out", help="Write evidence pool JSON to this path (schema for merge_and_score.py).")
     parser.add_argument("--leaf-id", help="Required when --json-out is used; tags the output with this leaf id.")
+    parser.add_argument("--case-library-root", default=None, help="Path to case_library root dir (enables 1.5x-weighted hits from confirmed cases).")
     args = parser.parse_args()
 
-    matches = collect_matches(args.query, args.module)
+    case_lib_root = Path(args.case_library_root) if args.case_library_root else None
+    matches = collect_matches(args.query, args.module, case_library_root=case_lib_root)
     if not args.include_supporting:
-        allowed_themes = {"dfmea_sample_data", "knowledge_base_template"}
+        allowed_themes = {"dfmea_sample_data", "knowledge_base_template", "case_library"}
         matches = [match for match in matches if match.theme in allowed_themes]
 
     if args.json_out:
