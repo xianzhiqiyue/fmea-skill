@@ -1,0 +1,150 @@
+{
+  "examples": [
+    {
+      "name": "auto_scope_dfmea_rf_power_amp",
+      "description": "自动拆分 scope 的 DFMEA 草稿请求示例。",
+      "payload": {
+        "intent": "new_fmea_draft",
+        "project_name": "CAN400 NMR 系统",
+        "module_name": "射频功放",
+        "fmea_type": "DFMEA",
+        "function_description": "用于 NMR 系统的射频功率放大器模块，需要在指定频段内提供稳定线性功率输出，并在异常工况下快速保护自身、探头以及后级射频链路。",
+        "use_scenario": "模块在长脉宽、高占空比和多通道切换场景下运行，需要兼顾输出线性、热稳定性、驻波保护和故障复位。",
+        "scope_mode": "auto",
+        "scope_notes": "优先让系统按保护链路、放大切换链路、热管理链路自动拆分。",
+        "environment": "存在高功率脉冲、热冲击、驻波反射、风冷散热和长时老化工况。",
+        "interfaces": "包括射频输入输出、保护联锁、热管理传感器、继电器切换和控制接口。",
+        "design_constraints": "保护动作不能仅依赖慢速软件轮询；关键保护应具备硬件级联锁能力。",
+        "historical_issues": "关注保护滞后、VSWR 误检、热斑失控、热切换拉弧和自动复位误触发。",
+        "current_controls": "已有整体温度监测、驻波阈值检测、人工复位和部分软件轮询检测机制。",
+        "bom_or_key_parts": "功率管、继电器、比较器、温度传感器、风扇、定向耦合器。",
+        "customer_impact": "失效会导致实验中断、探头或末级器件损坏、谱图异常或长时实验报废。",
+        "attachments_summary": "已整理射频功放 DFMEA 样例、NMR-FMEA 计划实施资料和过往失效案例摘要。",
+        "requested_output_name": "射频功放_auto_scope_draft.xlsx",
+        "include_markdown_preview": true,
+        "include_json_payload": true,
+        "include_review_cards": true
+      }
+    },
+    {
+      "name": "manual_scope_dfmea_variable_temperature",
+      "description": "手工指定 scope 的 DFMEA 草稿请求示例。",
+      "payload": {
+        "intent": "new_fmea_draft",
+        "project_name": "CAN400 低温平台",
+        "module_name": "变温系统",
+        "fmea_type": "DFMEA",
+        "function_description": "变温系统需要支持压缩机制冷与液氮蒸发两类温控路径，在目标温区内提供稳定、可控的低温环境。",
+        "use_scenario": "系统用于样品低温实验，涉及压缩机运行、冷媒回路、液氮蒸发、换热盘管、加热棒和真空绝热结构。",
+        "scope_mode": "manual",
+        "scope_notes": "要求强制拆成压缩机制冷子系统和液氮蒸发子系统两张主表。",
+        "scopes": [
+          {
+            "name": "压缩机制冷子系统",
+            "keywords": "压缩机 冷媒 气液分离器 蒸发器 毛细管 高压 继电器 启动 时序",
+            "notes": "关注液击、冰堵、通信和压力保护。"
+          },
+          {
+            "name": "液氮蒸发子系统",
+            "keywords": "液氮罐 真空 波纹管 PTFE 盘管 冰堵 加热棒 PT100 航插",
+            "notes": "关注低温密封、换热盘管、真空绝热与蒸发安全。"
+          }
+        ],
+        "environment": "同时存在高低温切换、真空绝热、冷缩、液氮蒸发和电加热工况。",
+        "interfaces": "包含冷媒回路、液氮回路、真空腔、加热控制和温度采集接口。",
+        "design_constraints": "需要兼顾制冷效率、启动停机安全、真空可靠性和低温密封可靠性。",
+        "historical_issues": "历史上出现过液击、冰堵、PTFE 冷缩泄漏、盘管冻结和高压保护失效问题。",
+        "current_controls": "已有压力保护、通讯控制、抽真空流程、检漏和部分低温验证手段。",
+        "bom_or_key_parts": "压缩机、气液分离器、冷媒阀、422 通讯板卡、液氮罐、波纹管、PTFE 接头、加热棒、PT100。",
+        "customer_impact": "失效会导致制冷失效、实验中断、返工、设备损坏或液氮消耗异常。",
+        "attachments_summary": "已整理项目计划原始长文本、变温系统 DFMEA 样例和质量赋能资料摘要。",
+        "requested_output_name": "变温系统_manual_scope_draft.xlsx",
+        "include_markdown_preview": true,
+        "include_json_payload": true,
+        "include_review_cards": true
+      }
+    },
+    {
+      "name": "review_existing_fmea_rf_power_amp_import",
+      "description": "导入已有射频功放 FMEA Excel 后继续审查的示例。",
+      "payload": {
+        "intent": "review_existing_fmea",
+        "project_name": "CAN400 NMR 系统",
+        "module_name": "射频功放",
+        "fmea_type": "DFMEA",
+        "scope_mode": "auto",
+        "scope_notes": "已有工作簿先导入，再基于确认队列和 Top 风险继续评审。",
+        "existing_fmea_text": "当前已有一版 Excel 工作簿，需要导入后继续做确认队列审查和回写。",
+        "existing_fmea_excel_path": "validation/openclaw_runs/射频功放_auto_scope_draft.xlsx",
+        "attachments_summary": "已有工作簿来自首版 OpenClaw 草稿输出，包含确认队列、Top 风险和建议动作。",
+        "requested_output_name": "射频功放_existing_fmea_import.xlsx",
+        "include_markdown_preview": true,
+        "include_json_payload": true,
+        "include_review_cards": true
+      }
+    },
+    {
+      "name": "auto_scope_afmea_sem_lifecycle",
+      "description": "按应用生命周期自动展开 AFMEA 草稿请求示例。",
+      "payload": {
+        "intent": "new_fmea_draft",
+        "project_name": "扫描电镜产品线",
+        "module_name": "SEM整机客户应用",
+        "fmea_type": "AFMEA",
+        "function_description": "产品需要在存储、运输、安装、客户日常操作、环境变化和维护保养中保持可交付、可安装、可运行和可诊断状态。",
+        "use_scenario": "木箱包装海运到客户现场，经历仓储、长途运输、开箱安装、现场验收、客户操作、定期维护和异常诊断。",
+        "scope_mode": "auto",
+        "environment": "温度0℃-40℃，湿度10%-90%，存在海运振动、潮湿、搬运冲击、客户现场电源和温湿度差异。",
+        "interfaces": "客户现场电源、接地、环境控制、安装空间、操作人员和维护服务流程。",
+        "current_controls": "已有包装检查、安装SOP、客户培训、验收测试和基础维护计划。",
+        "customer_impact": "失效会导致开箱损伤、安装延期、验收失败、实验中断、客户投诉或维护成本上升。",
+        "requested_output_name": "SEM整机_AFMEA_lifecycle_draft.xlsx",
+        "include_markdown_preview": true,
+        "include_json_payload": true,
+        "include_review_cards": true
+      }
+    },
+    {
+      "name": "auto_scope_sfmea_nmr_system",
+      "description": "按系统边界和接口自动展开 SFMEA 草稿请求示例。",
+      "payload": {
+        "intent": "new_fmea_draft",
+        "project_name": "CAN400 NMR 系统",
+        "module_name": "NMR整机系统",
+        "fmea_type": "SFMEA",
+        "function_description": "系统由磁体、射频链路、温控、匀场、自动进样、电子学机柜和上位机控制组成，需要稳定完成样品激励、信号接收、环境控制和数据采集。",
+        "use_scenario": "整机在实验任务中需要多个子系统协同运行，接口包括射频、控制通信、电源接地、温控流体、样品输送和安全联锁。",
+        "scope_mode": "auto",
+        "interfaces": "射频输入输出、422/CAN通信、电源接地、温控管路、气路、样品搬运接口、安全联锁和报警日志。",
+        "design_constraints": "系统级保护不能依赖单点软件判断；接口变更需保持兼容性和可诊断性。",
+        "current_controls": "已有系统联调、接口测试、保护报警、验收测试和部分日志追踪。",
+        "customer_impact": "系统级失效会导致实验中断、谱图异常、验收失败、设备损坏或服务成本上升。",
+        "requested_output_name": "NMR整机_SFMEA_system_draft.xlsx",
+        "include_markdown_preview": true,
+        "include_json_payload": true,
+        "include_review_cards": true
+      }
+    },
+    {
+      "name": "auto_scope_pfmea_module_assembly",
+      "description": "按过程步骤和控制计划自动展开 PFMEA 草稿请求示例。",
+      "payload": {
+        "intent": "new_fmea_draft",
+        "project_name": "CAN400 NMR 系统",
+        "module_name": "射频功放装配测试过程",
+        "fmea_type": "PFMEA",
+        "function_description": "装配测试过程需要保证来料、PCBA装配、线束连接、散热器安装、扭矩拧紧、功能测试、老炼和包装放行稳定受控。",
+        "use_scenario": "生产过程包含来料检验、备料上线、工装定位、扭矩装配、线束连接、ICT/FCT测试、老炼、出货检验和包装入库。",
+        "scope_mode": "auto",
+        "environment": "生产现场存在静电、人员操作差异、设备点检、治具磨损、参数窗口和批次追溯要求。",
+        "interfaces": "供应商来料、工装夹具、测试治具、MES/记录表、标签追溯、后工序整机联调。",
+        "current_controls": "已有来料检验、SOP、工装点检、扭矩记录、功能测试、出货检验和异常品隔离。",
+        "customer_impact": "过程逃逸会导致后工序返工、整机联调失败、现场早期失效或客户投诉。",
+        "requested_output_name": "射频功放_PFMEA_process_draft.xlsx",
+        "include_markdown_preview": true,
+        "include_json_payload": true,
+        "include_review_cards": true
+      }
+    }
+  ]
+}

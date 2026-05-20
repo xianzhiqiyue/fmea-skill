@@ -2,7 +2,7 @@
 
 每次 FMEA 生成的第一步,Claude 必须先把输入文本结构化为 **模块层级树 + P-Diagram** 的 `structure.json`,作为后续多角色失效模式生成的强制 checklist。
 
-本文件定义抽取范式、JSON schema、AFMEA/SFMEA/DFMEA 的差异点,以及失败回滚规则。
+本文件定义抽取范式、JSON schema、AFMEA/SFMEA/DFMEA/PFMEA 的差异点,以及失败回滚规则。
 
 ## 强制顺序
 
@@ -56,7 +56,7 @@
 
 | 字段 | 必填 | 说明 |
 |---|---|---|
-| `fmea_type` | 是 | 三选一: `AFMEA` / `SFMEA` / `DFMEA` |
+| `fmea_type` | 是 | 四选一: `AFMEA` / `SFMEA` / `DFMEA` / `PFMEA` |
 | `hierarchy.id` | 是 | 树结构稳定主键,从 `T` 开始,子节点 `T.1` `T.1.1` `T.1.1.1` |
 | `hierarchy.level` | 是 | `system` / `subsystem` / `component`;叶节点 `level` 必须是 `component` |
 | `p_diagrams[].scope_id` | 是 | 必须存在于 `hierarchy` 中且 `level != component` |
@@ -65,13 +65,14 @@
 | `unintended_outputs` | 是 | 至少 1 条 |
 | `error_states` | 是 | 至少 1 条 |
 
-## AFMEA / SFMEA / DFMEA 的差异点
+## AFMEA / SFMEA / DFMEA / PFMEA 的差异点
 
 | 类型 | hierarchy 重点 | P-Diagram 重点 |
 |---|---|---|
 | **AFMEA** (Application/Lifecycle) | 按生命周期阶段分子节点: 制造 / 运输 / 安装 / 调试 / 使用 / 维护 / 退役 | `customer_usage` 与 `environment` 是主轴;`piece_to_piece` 简略 |
 | **SFMEA** (System) | 按子系统与接口分: 子系统A / 子系统B / 接口 A↔B | `system_interactions` 与 `input_signals` 是主轴;`piece_to_piece` 简略 |
 | **DFMEA** (Design) | 按零部件、材料、BOM 分 | `piece_to_piece` 与 `wear_aging` 是主轴;全部 5 项 noise 都要详 |
+| **PFMEA** (Process) | 按过程步骤/工位/检验点分: 来料 / 装配 / 参数控制 / 测试 / 包装放行 | `piece_to_piece`、`control_factors`、`system_interactions` 关注人机料法环测与后工序流出 |
 
 ## 必扫描组合定义
 

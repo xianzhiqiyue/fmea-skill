@@ -8,7 +8,7 @@ from datetime import date
 from pathlib import Path
 
 from openpyxl import load_workbook
-from openpyxl.styles import Alignment, Font, PatternFill
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.formatting.rule import CellIsRule, ColorScaleRule, DataBarRule, FormulaRule
 from openpyxl.utils import get_column_letter
 
@@ -22,6 +22,19 @@ EVIDENCE_COLOR = {
     "ai-inferred": "FFD966",
     "contradicted": "F4B084",
 }
+
+HEADER_FILL = PatternFill("solid", fgColor="333333")
+HEADER_FONT = Font(color="FFFFFF", bold=True)
+SERIAL_FILL = PatternFill("solid", fgColor="D9E1F2")
+CENTER_ALIGN = Alignment(horizontal="center", vertical="center", wrap_text=True)
+TEXT_ALIGN = Alignment(horizontal="left", vertical="top", wrap_text=True)
+THIN_BORDER = Border(
+    left=Side(style="thin", color="D9D9D9"),
+    right=Side(style="thin", color="D9D9D9"),
+    top=Side(style="thin", color="D9D9D9"),
+    bottom=Side(style="thin", color="D9D9D9"),
+)
+NUMERIC_COLUMNS = {11, 13, 16, 17, 21, 22, 23, 24, 26}
 
 
 def _walk_leaves(node):
@@ -96,6 +109,29 @@ def _render_main(ws, rows: list) -> None:
             f"Z3:Z{last_row}",
             DataBarRule(start_type="num", start_value=0, end_type="num", end_value=1, color="638EC6", showValue=True),
         )
+    _apply_fmea_table_format(ws, last_row)
+
+
+def _apply_fmea_table_format(ws, last_row: int) -> None:
+    for col_idx in range(2, 33):
+        cell = ws.cell(row=2, column=col_idx)
+        cell.fill = HEADER_FILL
+        cell.font = HEADER_FONT
+        cell.alignment = CENTER_ALIGN
+        cell.border = THIN_BORDER
+
+    for row_idx in range(3, max(last_row, 3) + 1):
+        for col_idx in range(2, 33):
+            cell = ws.cell(row=row_idx, column=col_idx)
+            cell.border = THIN_BORDER
+            if col_idx == 2:
+                cell.fill = SERIAL_FILL
+                cell.font = Font(bold=True)
+                cell.alignment = CENTER_ALIGN
+            elif col_idx in NUMERIC_COLUMNS:
+                cell.alignment = CENTER_ALIGN
+            else:
+                cell.alignment = TEXT_ALIGN
 
 
 def _render_gaps(ws, normalized: dict) -> None:

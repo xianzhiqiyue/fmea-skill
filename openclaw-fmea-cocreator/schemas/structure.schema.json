@@ -4,7 +4,7 @@
   "type": "object",
   "required": ["fmea_type", "module_root", "hierarchy", "p_diagrams"],
   "properties": {
-    "fmea_type": {"enum": ["AFMEA", "SFMEA", "DFMEA"]},
+    "fmea_type": {"enum": ["AFMEA", "SFMEA", "DFMEA", "PFMEA"]},
     "module_root": {"type": "string", "minLength": 1},
     "hierarchy": {"$ref": "#/$defs/node"},
     "p_diagrams": {

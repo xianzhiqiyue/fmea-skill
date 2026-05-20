@@ -26,6 +26,39 @@ PROJECT_ROOT = SKILL_DIR.parent
 PACKAGED_TEMPLATE_PATH = SKILL_DIR / "template.xlsx"
 REPO_TEMPLATE_PATH = PROJECT_ROOT / "template.xlsx"
 DEFAULT_TEMPLATE_PATH = PACKAGED_TEMPLATE_PATH if PACKAGED_TEMPLATE_PATH.exists() else REPO_TEMPLATE_PATH
+VALID_FMEA_TYPES = {"AFMEA", "SFMEA", "DFMEA", "PFMEA"}
+TEMPLATE_PATHS_BY_TYPE = {
+    "AFMEA": SKILL_DIR / "afmea_template.xlsx",
+    "SFMEA": SKILL_DIR / "sfmea_template.xlsx",
+    "DFMEA": PACKAGED_TEMPLATE_PATH,
+    "PFMEA": SKILL_DIR / "pfmea_template.xlsx",
+}
+FMEA_TYPE_METADATA = {
+    "AFMEA": {
+        "subtitle": "Application FMEA for {module_en} - Product Lifecycle Approach",
+        "indicator_fallback": "{module}应用生命周期、环境、运输、安装、操作和维护场景",
+        "standard_note": "AIAG-VDA FMEA Handbook（第1版）七步法；生命周期/场景/控制点展开",
+        "default_min_rows": 28,
+    },
+    "SFMEA": {
+        "subtitle": "System FMEA for {module_en} - System Boundary and Interface Approach",
+        "indicator_fallback": "{module}系统边界、子系统接口、功能链、能量/物料/信息流",
+        "standard_note": "AIAG-VDA FMEA Handbook（第1版）七步法；系统边界/接口/功能链展开",
+        "default_min_rows": 25,
+    },
+    "DFMEA": {
+        "subtitle": "Design FMEA for {module_en} - Part-level System Approach",
+        "indicator_fallback": "{module}关键功能、接口、零件、材料、器件与设计约束",
+        "standard_note": "AIAG-VDA FMEA Handbook（第1版）七步法；系统级边界/接口/零件级展开强约束",
+        "default_min_rows": 36,
+    },
+    "PFMEA": {
+        "subtitle": "Process FMEA for {module_en} - Process Step and Control Plan Approach",
+        "indicator_fallback": "{module}工艺流程、过程参数、设备工装、检验控制与后工序影响",
+        "standard_note": "AIAG-VDA FMEA Handbook（第1版）七步法；过程步骤/工艺参数/控制计划展开",
+        "default_min_rows": 30,
+    },
+}
 ALLOWED_THEMES = {"dfmea_sample_data", "knowledge_base_template"}
 
 FIELD_ALIASES = {
@@ -342,6 +375,159 @@ LIFECYCLE_COVERAGE_PROFILES: list[dict[str, Any]] = [
     },
 ]
 
+AFMEA_COVERAGE_PROFILES: list[dict[str, Any]] = [
+    {
+        "name": "存储保管",
+        "keywords": ["存储", "仓储", "湿热", "冷凝", "静电", "防尘", "防潮", "长期放置", "保管", "开箱"],
+        "target_rows": 4,
+        "function_context": "存储保管阶段保持可交付和可安装状态：{function}",
+        "effect_context": "存储环境或保管控制失效会在开箱、安装或首次使用时暴露为隐性损伤、性能漂移或客户投诉。关联后果：{effect}",
+        "cause_context": "温湿度、冷凝、静电、粉尘、包装防护、保管周期或开箱检查控制不足。关联机理：{cause}",
+        "control_context": "仓储环境规范、包装状态检查、温湿度记录、开箱检查、先进先出和保管周期控制。现行控制：{controls}",
+        "action_context": "补充仓储环境监控、开箱验收清单、防潮/防静电要求、保管期限和异常复测规则。建议延伸：{actions}",
+    },
+    *[profile for profile in LIFECYCLE_COVERAGE_PROFILES if profile["name"] != "产品类别设计"],
+]
+
+SFMEA_COVERAGE_PROFILES: list[dict[str, Any]] = [
+    {
+        "name": "系统边界与需求分解",
+        "keywords": ["系统", "边界", "需求", "指标", "功能", "架构", "工况", "验收"],
+        "target_rows": 5,
+        "function_context": "系统边界内正确实现并分解需求：{function}",
+        "effect_context": "系统需求或边界失效会造成整机功能缺失、验收失败、性能不稳定或责任归属不清。关联后果：{effect}",
+        "cause_context": "需求分解、系统边界、使用工况、接口责任或验收准则定义不足。关联机理：{cause}",
+        "control_context": "系统需求评审、边界图、功能链评审、系统验证计划和验收准则。现行控制：{controls}",
+        "action_context": "补齐系统边界矩阵、需求追踪、系统验证覆盖和接口责任表。建议延伸：{actions}",
+    },
+    {
+        "name": "子系统接口与集成",
+        "keywords": ["子系统", "接口", "连接", "匹配", "集成", "联调", "信号", "机械", "气路", "电源"],
+        "target_rows": 5,
+        "function_context": "子系统接口在集成状态下正确传递功能：{function}",
+        "effect_context": "接口或集成失效会造成系统级功能中断、间歇异常、联调失败或性能降级。关联后果：{effect}",
+        "cause_context": "接口协议、机械/电气/流体匹配、边界条件、联调顺序或兼容性定义不足。关联机理：{cause}",
+        "control_context": "接口控制文件、集成评审、联调计划、接口测试和系统验收。现行控制：{controls}",
+        "action_context": "建立接口矩阵、异常状态联调、边界样机验证和接口变更闭环。建议延伸：{actions}",
+    },
+    {
+        "name": "能量物料信息流",
+        "keywords": ["能量", "物料", "信息", "信号", "流量", "热", "电源", "通信", "数据", "控制"],
+        "target_rows": 5,
+        "function_context": "系统功能链中的能量、物料和信息流保持连续可控：{function}",
+        "effect_context": "传递链失效会造成系统输出错误、保护误动作、效率下降或任务中断。关联后果：{effect}",
+        "cause_context": "传递路径、容量裕量、状态反馈、同步关系、通信或控制链路定义不足。关联机理：{cause}",
+        "control_context": "功能链图、状态监测、通信/功率/流量测试、系统保护和日志。现行控制：{controls}",
+        "action_context": "补充传递链裕量验证、状态诊断、链路失效注入和系统级降级策略。建议延伸：{actions}",
+    },
+    {
+        "name": "系统状态与控制逻辑",
+        "keywords": ["状态", "控制", "逻辑", "报警", "联锁", "保护", "模式", "配置", "时序"],
+        "target_rows": 5,
+        "function_context": "系统状态机、保护逻辑和配置管理正确支撑：{function}",
+        "effect_context": "系统控制逻辑失效会造成误报警、未保护、错误模式切换、配置错用或安全边界失守。关联后果：{effect}",
+        "cause_context": "状态定义、异常转移、保护阈值、配置一致性、时序或诊断策略不足。关联机理：{cause}",
+        "control_context": "状态机评审、软件/系统联调、保护阈值验证、异常工况测试和日志审查。现行控制：{controls}",
+        "action_context": "增加状态覆盖矩阵、异常注入、配置校验、联锁验证和日志追溯。建议延伸：{actions}",
+    },
+    {
+        "name": "系统环境与外部依赖",
+        "keywords": ["环境", "现场", "温度", "湿度", "EMC", "电源", "地线", "客户", "外部"],
+        "target_rows": 5,
+        "function_context": "系统在外部环境和依赖条件下保持边界功能：{function}",
+        "effect_context": "外部依赖或现场边界失效会造成系统性能漂移、误停机、客户验收失败或服务成本上升。关联后果：{effect}",
+        "cause_context": "现场电源/接地/温湿度/EMC/空间/操作条件超出系统假设或监测不足。关联机理：{cause}",
+        "control_context": "现场条件清单、环境适应性验证、安装验收、系统自检和客户环境预检。现行控制：{controls}",
+        "action_context": "补充现场边界要求、安装前检查、环境超限联锁、客户现场数据记录和验收准则。建议延伸：{actions}",
+    },
+]
+
+DFMEA_PART_DETAIL_PROFILES: list[dict[str, Any]] = [
+    {
+        "name": "DFMEA零件级-功能架构与接口",
+        "keywords": ["接口", "连接", "边界", "信号", "能量", "材料", "信息", "公差", "安装", "匹配"],
+        "target_rows": 6,
+        "function_context": "零件/接口级实现并传递：{function}",
+        "effect_context": "零件级接口或功能链失效会向上游/下游扩散，造成系统性能、安全或可用性风险。关联后果：{effect}",
+        "cause_context": "接口定义、公差链、装配基准、接触阻抗、屏蔽/接地、材料兼容或边界条件不足。关联机理：{cause}",
+        "control_context": "接口控制文件、BOM/图纸评审、公差链分析、首件/来料/装配验证、系统联调。现行控制：{controls}",
+        "action_context": "补齐接口特性矩阵、关键特性 CTQ、装配防错、接口验证和失效注入测试。建议延伸：{actions}",
+    },
+    {
+        "name": "DFMEA零件级-电子器件/PCBA",
+        "keywords": ["PCBA", "电阻", "电容", "电感", "MOS", "继电器", "比较器", "ADC", "DAC", "MCU", "光耦", "电源"],
+        "target_rows": 6,
+        "function_context": "电子器件/PCBA级满足供电、采样、放大、保护、时序或通信要求：{function}",
+        "effect_context": "电子器件漂移、开短路、降额不足或焊接缺陷会导致误动作、性能漂移、保护失效或整机停机。关联后果：{effect}",
+        "cause_context": "器件降额、热设计、ESD/EOS、焊点疲劳、参数漂移、批次差异、布局串扰或电源完整性不足。关联机理：{cause}",
+        "control_context": "原理图/PCB评审、降额清单、DFM/DFT、ICT/FCT、老炼、EMC/ESD和温升验证。现行控制：{controls}",
+        "action_context": "补充器件降额、关键节点监测、边界样件验证、失效注入和批次追溯。建议延伸：{actions}",
+    },
+    {
+        "name": "DFMEA零件级-连接件/线束/紧固件/密封件",
+        "keywords": ["连接器", "线束", "航插", "端子", "同轴", "BNC", "DB", "螺钉", "紧固", "密封圈", "胶", "屏蔽"],
+        "target_rows": 5,
+        "function_context": "连接、紧固、屏蔽或密封零件在全寿命内保持：{function}",
+        "effect_context": "连接/紧固/密封件失效会造成间歇故障、泄漏、接触不良、EMC退化、松脱或维护返修。关联后果：{effect}",
+        "cause_context": "插拔寿命、锁止不足、扭矩窗口、线束应力释放、密封压缩量、胶黏剂老化或误装。关联机理：{cause}",
+        "control_context": "选型校核、端子拉力/导通、扭矩标识、防呆、密封测试、插拔寿命和来料检验。现行控制：{controls}",
+        "action_context": "增加防松/防错、线束固定、密封压缩验证、插拔寿命和现场可诊断性。建议延伸：{actions}",
+    },
+]
+
+PFMEA_COVERAGE_PROFILES: list[dict[str, Any]] = [
+    {
+        "name": "来料与上线准备",
+        "keywords": ["来料", "供应商", "上线", "备料", "批次", "检验", "物料", "追溯"],
+        "target_rows": 5,
+        "function_context": "来料和上线准备过程保证满足工艺输入要求：{function}",
+        "effect_context": "来料或备料过程失效会流入装配/测试，导致返工、后工序停滞或客户风险。关联后果：{effect}",
+        "cause_context": "供应商批次、来料检验、物料标识、存放、领料或追溯控制不足。关联机理：{cause}",
+        "control_context": "IQC、来料检验规范、批次追溯、物料状态标识和上线点检。现行控制：{controls}",
+        "action_context": "强化来料抽检、关键特性确认、批次隔离、上线防错和供应商纠正措施。建议延伸：{actions}",
+    },
+    {
+        "name": "装配工序",
+        "keywords": ["装配", "拧紧", "定位", "夹具", "工装", "作业", "安装", "扭矩", "顺序"],
+        "target_rows": 6,
+        "function_context": "装配工序按标准方法形成合格过程输出：{function}",
+        "effect_context": "装配过程失效会造成尺寸偏差、松动、错装、漏装、返工或后续功能异常。关联后果：{effect}",
+        "cause_context": "作业顺序、夹具定位、扭矩窗口、防错、人员培训或标准作业控制不足。关联机理：{cause}",
+        "control_context": "SOP、工装点检、首件确认、扭矩记录、过程巡检和防错确认。现行控制：{controls}",
+        "action_context": "增加工装防错、扭矩追溯、作业指导可视化、首件/末件确认和过程审核。建议延伸：{actions}",
+    },
+    {
+        "name": "过程参数与设备状态",
+        "keywords": ["参数", "设备", "温度", "压力", "时间", "速度", "校准", "点检", "维护"],
+        "target_rows": 6,
+        "function_context": "过程参数和设备状态稳定满足工艺窗口：{function}",
+        "effect_context": "过程窗口或设备状态失控会造成批量波动、隐性缺陷、返修或检验逃逸。关联后果：{effect}",
+        "cause_context": "设备点检、参数设定、校准周期、维护保养、工艺窗口或异常停线规则不足。关联机理：{cause}",
+        "control_context": "设备点检、参数锁定、校准记录、SPC、维护计划和异常处理流程。现行控制：{controls}",
+        "action_context": "建立参数上下限、SPC预警、设备保养、校准提醒和异常批次隔离。建议延伸：{actions}",
+    },
+    {
+        "name": "检验测试与放行",
+        "keywords": ["检验", "测试", "放行", "判定", "治具", "量具", "MSA", "抽检", "全检"],
+        "target_rows": 6,
+        "function_context": "检验测试过程准确发现并拦截不合格输出：{function}",
+        "effect_context": "检验或测试过程失效会造成缺陷流出、误判、重复返工或客户现场失效。关联后果：{effect}",
+        "cause_context": "测试覆盖、判定阈值、治具状态、量具能力、MSA、抽样方案或人员判定不足。关联机理：{cause}",
+        "control_context": "测试规范、治具点检、量具校准、MSA、抽检/全检规则和放行审批。现行控制：{controls}",
+        "action_context": "补充测试覆盖、治具自检、MSA复核、判定规则锁定和缺陷复盘闭环。建议延伸：{actions}",
+    },
+    {
+        "name": "包装入库与交付",
+        "keywords": ["包装", "入库", "交付", "标签", "运输", "防护", "出货", "装箱"],
+        "target_rows": 5,
+        "function_context": "包装入库和交付过程保持产品状态和追溯完整：{function}",
+        "effect_context": "包装或交付过程失效会造成运输损伤、错发、漏发、标识错误或客户开箱问题。关联后果：{effect}",
+        "cause_context": "包装防护、标签校验、装箱清单、出货检验、运输固定或交付记录不足。关联机理：{cause}",
+        "control_context": "包装规范、出货检验、标签扫描、装箱清单、运输防护和交付记录。现行控制：{controls}",
+        "action_context": "增加包装验证、扫码防错、装箱复核、运输状态标签和出货抽检闭环。建议延伸：{actions}",
+    },
+]
+
 
 @dataclass
 class ScopeDefinition:
@@ -409,6 +595,17 @@ class CoverageMatrixItem:
     evidence: str
     review_prompt: str
     reason_tags: list[str] = field(default_factory=list)
+
+
+@dataclass
+class QualityGateFinding:
+    gate: str
+    status: str
+    row_key: str
+    finding: str
+    required_fix_or_confirmation: str
+    reason_tags: list[str] = field(default_factory=list)
+    blocking: bool = False
 
 
 @dataclass
@@ -563,10 +760,43 @@ def suggest_scopes(module: str, input_text: str, extracted_terms: list[str]) -> 
     return suggestions
 
 
-def suggest_lifecycle_scopes(module: str, input_text: str, extracted_terms: list[str]) -> list[ScopeDefinition]:
+def normalize_fmea_type(fmea_type: str) -> str:
+    normalized = (fmea_type or "DFMEA").upper()
+    if normalized not in VALID_FMEA_TYPES:
+        raise ValueError(f"Unsupported FMEA type: {fmea_type}. Use one of {', '.join(sorted(VALID_FMEA_TYPES))}.")
+    return normalized
+
+
+def coverage_profiles_for(fmea_type: str, coverage_mode: str) -> list[dict[str, Any]]:
+    normalized_type = normalize_fmea_type(fmea_type)
+    if normalized_type == "AFMEA":
+        return AFMEA_COVERAGE_PROFILES
+    if normalized_type == "SFMEA":
+        return SFMEA_COVERAGE_PROFILES
+    if normalized_type == "PFMEA":
+        return PFMEA_COVERAGE_PROFILES
+    if coverage_mode == "part":
+        return DFMEA_PART_DETAIL_PROFILES
+    return LIFECYCLE_COVERAGE_PROFILES
+
+
+def template_path_for(fmea_type: str) -> Path:
+    normalized_type = normalize_fmea_type(fmea_type)
+    type_template = TEMPLATE_PATHS_BY_TYPE.get(normalized_type)
+    if type_template and type_template.exists():
+        return type_template
+    return DEFAULT_TEMPLATE_PATH
+
+
+def suggest_lifecycle_scopes(
+    module: str,
+    input_text: str,
+    extracted_terms: list[str],
+    profiles: list[dict[str, Any]] | None = None,
+) -> list[ScopeDefinition]:
     lowered = input_text.lower()
     scopes: list[ScopeDefinition] = []
-    for profile in LIFECYCLE_COVERAGE_PROFILES:
+    for profile in profiles or LIFECYCLE_COVERAGE_PROFILES:
         keywords = profile["keywords"]
         hit_keywords = [keyword for keyword in keywords if keyword.lower() in lowered]
         query_terms: list[str] = []
@@ -581,9 +811,9 @@ def suggest_lifecycle_scopes(module: str, input_text: str, extracted_terms: list
                 auto_suggested=True,
                 hit_count=len(hit_keywords),
                 reason=(
-                    f"lifecycle coverage profile; matched keywords: {' / '.join(hit_keywords[:8])}"
+                    f"type coverage profile; matched keywords: {' / '.join(hit_keywords[:8])}"
                     if hit_keywords
-                    else "lifecycle coverage profile; added to avoid narrow subsystem-only FMEA coverage"
+                    else "type coverage profile; added to avoid narrow subsystem-only FMEA coverage"
                 ),
             )
         )
@@ -939,6 +1169,201 @@ COVERAGE_DIMENSIONS: dict[str, list[dict[str, Any]]] = {
         {"dimension": "供应商/制造影响", "keywords": ["供应商", "制造", "装配", "焊接", "来料", "过程", "一致性"]},
         {"dimension": "现行预防/探测控制", "keywords": ["测试", "验证", "检验", "报警", "联锁", "保护", "监测"]},
     ],
+    "PFMEA": [
+        {"dimension": "来料与上线准备", "keywords": ["来料", "供应商", "上线", "备料", "批次", "追溯"]},
+        {"dimension": "装配工序", "keywords": ["装配", "拧紧", "定位", "夹具", "工装", "扭矩", "作业"]},
+        {"dimension": "过程参数与设备状态", "keywords": ["参数", "设备", "温度", "压力", "时间", "速度", "校准", "点检"]},
+        {"dimension": "检验测试与放行", "keywords": ["检验", "测试", "放行", "判定", "治具", "量具", "MSA"]},
+        {"dimension": "包装入库与交付", "keywords": ["包装", "入库", "交付", "标签", "运输", "防护", "出货"]},
+        {"dimension": "后工序与客户影响", "keywords": ["后工序", "客户", "流出", "返工", "联调", "投诉"]},
+    ],
+}
+
+VAGUE_ACTION_PATTERNS = [
+    "加强培训",
+    "加强检查",
+    "优化设计",
+    "提高质量",
+    "图纸审核",
+    "采购认证",
+    "定期检查",
+    "规范操作",
+    "加强管理",
+    "改进管理",
+    "持续改进",
+]
+
+ACTION_SPECIFIC_KEYWORDS = [
+    "防错",
+    "防呆",
+    "互锁",
+    "限位",
+    "夹具",
+    "工装",
+    "治具",
+    "定扭矩",
+    "扭矩",
+    "扫码",
+    "条码",
+    "二维码",
+    "传感器",
+    "报警",
+    "阈值",
+    "SPC",
+    "MSA",
+    "GR&R",
+    "点检",
+    "校准",
+    "追溯",
+    "冗余",
+    "失效注入",
+    "硬线",
+    "AND",
+    "参数锁定",
+    "控制计划",
+    "首件",
+    "末件",
+    "全检",
+    "抽检",
+    "不对称",
+    "防反",
+    "BOM",
+    "材料锁定",
+    "降额",
+    "测试覆盖",
+    "FCT",
+    "ICT",
+    "上下限",
+    "控制图",
+    "维护计划",
+    "隔离",
+    "放行",
+    "自动",
+    "记录",
+    "拍照",
+]
+
+PHYSICS_DOMAIN_KEYWORDS = [
+    "磨损",
+    "摩擦",
+    "间隙",
+    "刚度",
+    "变形",
+    "松动",
+    "干涉",
+    "扭矩",
+    "压力",
+    "泄漏",
+    "流量",
+    "密封",
+    "冷凝",
+    "污染",
+    "真空",
+    "开路",
+    "短路",
+    "漂移",
+    "噪声",
+    "接地",
+    "屏蔽",
+    "降额",
+    "时序",
+    "通信",
+    "状态",
+    "阈值",
+    "报警",
+    "联锁",
+    "配置",
+    "日志",
+    "看门狗",
+    "热",
+    "温度",
+    "老化",
+    "脆化",
+    "膨胀",
+    "腐蚀",
+    "兼容",
+    "疲劳",
+    "工位",
+    "工装",
+    "夹具",
+    "治具",
+    "参数",
+    "MSA",
+    "SPC",
+    "检验",
+    "放行",
+]
+
+GENERIC_CAUSE_PATTERNS = [
+    "设计不足",
+    "控制不足",
+    "管理不足",
+    "考虑不足",
+    "验证不足",
+    "缺少本维度历史案例",
+    "风险未充分识别",
+    "异常",
+    "问题",
+    "不足",
+]
+
+MANUAL_ONLY_DETECTION_KEYWORDS = ["人工", "目视", "检查", "评审", "审核", "巡检"]
+
+STRONG_DETECTION_KEYWORDS = [
+    "自动",
+    "互锁",
+    "传感器",
+    "报警",
+    "FCT",
+    "ICT",
+    "全检",
+    "扫码",
+    "SPC",
+    "MSA",
+    "治具自检",
+    "在线",
+    "记录",
+    "追溯",
+]
+
+IMPACT_KEYWORDS = [
+    "客户",
+    "后工序",
+    "安全",
+    "法规",
+    "停机",
+    "损坏",
+    "性能",
+    "精度",
+    "验收",
+    "投诉",
+    "返工",
+    "流出",
+    "交付",
+    "服务",
+]
+
+TYPE_BOUNDARY_REVIEW_TERMS: dict[str, dict[str, Any]] = {
+    "AFMEA": {
+        "wrong_terms": ["BOM", "材料", "材质", "公差", "降额", "PCBA", "焊点", "焊接", "图纸"],
+        "expected_terms": ["客户", "操作", "使用", "安装", "运输", "维护", "现场", "断电", "断气", "误操作", "生命周期"],
+        "message": "AFMEA 应以应用场景、操作流和突发事件为主,当前行疑似落到了设计/BOM/材料问题。",
+    },
+    "SFMEA": {
+        "wrong_terms": ["BOM", "材料", "材质", "公差", "工序", "操作员", "作业员", "师傅", "来料", "放行"],
+        "expected_terms": ["接口", "边界", "系统", "子系统", "通信", "时序", "能量", "物料", "信息", "状态", "联调"],
+        "message": "SFMEA 应聚焦系统边界、接口、功能链和状态逻辑,当前行疑似落到了零件或过程问题。",
+    },
+    "DFMEA": {
+        "wrong_terms": ["工序", "工位", "操作员", "作业员", "师傅", "首件", "末件", "放行", "包装入库", "过程巡检"],
+        "expected_terms": ["设计", "BOM", "材料", "材质", "公差", "降额", "热", "EMC", "PCBA", "连接器", "图纸", "裕量"],
+        "message": "DFMEA 应聚焦设计对象、材料、选型、裕量和物理极限,当前行疑似落到了制造过程控制。",
+    },
+    "PFMEA": {
+        "wrong_terms": ["设计裕量", "降额不足", "材料不耐", "材质不耐", "选型错误", "图纸公差", "热设计不足", "EMC裕量"],
+        "expected_terms": ["工序", "工位", "装配", "测试", "检验", "工装", "夹具", "治具", "设备", "扭矩", "参数", "放行"],
+        "message": "PFMEA 应聚焦工序、工装、设备、检验和放行控制,当前行疑似落到了设计机理本身。",
+    },
 }
 
 
@@ -1063,6 +1488,207 @@ def build_coverage_matrix(
         matrix.append(CoverageMatrixItem(dimension=dimension, status=status, evidence=evidence, review_prompt=prompt, reason_tags=tags))
 
     return matrix
+
+
+def has_numbered_structure(text: str) -> bool:
+    return bool(re.search(r"(^|\n)\s*\d+[.、]\s*", text))
+
+
+def add_quality_finding(
+    findings: list[QualityGateFinding],
+    gate: str,
+    status: str,
+    row_key_value: str,
+    finding: str,
+    required_fix_or_confirmation: str,
+    reason_tags: list[str],
+    blocking: bool = False,
+) -> None:
+    candidate = QualityGateFinding(
+        gate=gate,
+        status=status,
+        row_key=row_key_value,
+        finding=finding,
+        required_fix_or_confirmation=required_fix_or_confirmation,
+        reason_tags=reason_tags,
+        blocking=blocking,
+    )
+    fingerprint = (candidate.gate, candidate.row_key, candidate.finding)
+    if any((item.gate, item.row_key, item.finding) == fingerprint for item in findings):
+        return
+    findings.append(candidate)
+
+
+def build_quality_gate_findings(fmea_type: str, scope_rows: dict[str, list[DraftRow]]) -> list[QualityGateFinding]:
+    normalized_type = normalize_fmea_type(fmea_type)
+    rows = [row for group in scope_rows.values() for row in group]
+    findings: list[QualityGateFinding] = []
+    boundary_rule = TYPE_BOUNDARY_REVIEW_TERMS[normalized_type]
+
+    for row in rows:
+        key = row_key(row)
+        cause_text = normalize_space(row.cause)
+        action_text = normalize_space(row.recommended_actions)
+        effect_text = normalize_space(row.effect)
+        primary_text = normalize_space(" ".join([row.analysis_object, row.function, row.failure_mode, row.cause]))
+        full_text = normalize_space(row_search_text(row))
+
+        wrong_hit = keyword_hit(primary_text, boundary_rule["wrong_terms"])
+        expected_hit = keyword_hit(primary_text, boundary_rule["expected_terms"])
+        if wrong_hit and not expected_hit:
+            add_quality_finding(
+                findings,
+                "type_boundary",
+                "review",
+                key,
+                f"命中疑似串台关键词 `{wrong_hit}`。{boundary_rule['message']}",
+                "确认该行是否应改写到当前 FMEA 类型的分析对象；若属于另一类 FMEA,拆分或迁移。",
+                ["quality_gate", "fmea_type_boundary", normalized_type.lower()],
+                blocking=True,
+            )
+
+        cause_is_too_generic = (
+            not cause_text
+            or len(cause_text) < 8
+            or any(pattern in cause_text for pattern in GENERIC_CAUSE_PATTERNS)
+        )
+        has_physics_domain = bool(keyword_hit(primary_text, PHYSICS_DOMAIN_KEYWORDS))
+        if cause_is_too_generic or not has_physics_domain:
+            add_quality_finding(
+                findings,
+                "physics_self_consistency",
+                "review",
+                key,
+                "失效原因/机理偏泛,尚未体现清晰的物理、接口、控制或过程机制。",
+                "把原因改写为对象域内的具体机制,并确认 failure mode -> effect -> action 能闭环。",
+                ["quality_gate", "weak_physics"],
+                blocking=cause_is_too_generic,
+            )
+
+        if effect_text and not keyword_hit(effect_text, IMPACT_KEYWORDS):
+            add_quality_finding(
+                findings,
+                "physics_self_consistency",
+                "pass_with_note",
+                key,
+                "失效影响未明确客户、系统、安全、后工序、交付或服务后果。",
+                "补充影响对象和后果链,避免只有功能性描述。",
+                ["quality_gate", "weak_effect_chain"],
+                blocking=False,
+            )
+
+        detection_value = safe_int(row.detection)
+        controls_text = normalize_space(row.current_controls)
+        if detection_value is not None and detection_value <= 3:
+            manual_hit = keyword_hit(controls_text, MANUAL_ONLY_DETECTION_KEYWORDS)
+            strong_hit = keyword_hit(controls_text, STRONG_DETECTION_KEYWORDS)
+            if manual_hit and not strong_hit:
+                add_quality_finding(
+                    findings,
+                    "physics_self_consistency",
+                    "review",
+                    key,
+                    f"D={row.detection} 但现行控制主要是 `{manual_hit}` 类人工控制,检出能力可能被高估。",
+                    "确认是否存在自动测试、互锁、传感器、全检、治具自检或数据追溯；否则重估 D。",
+                    ["quality_gate", "detection_score_mismatch"],
+                    blocking=True,
+                )
+
+        vague_hit = keyword_hit(action_text, VAGUE_ACTION_PATTERNS)
+        has_specific_action = bool(keyword_hit(action_text, ACTION_SPECIFIC_KEYWORDS) or re.search(r"\d", action_text))
+        if not action_text:
+            add_quality_finding(
+                findings,
+                "actionability",
+                "fail",
+                key,
+                "建议措施为空,无法进入 OpenClaw 评审或责任闭环。",
+                "补充可执行措施,至少说明设计/工艺/测试/控制计划动作、责任角色和验收证据。",
+                ["quality_gate", "missing_action", "poka_yoke_missing"],
+                blocking=True,
+            )
+        elif vague_hit and not has_specific_action:
+            add_quality_finding(
+                findings,
+                "actionability",
+                "fail",
+                key,
+                f"建议措施包含 `{vague_hit}` 这类泛化动作,但没有可量化或可落地的控制。",
+                "改写为能进入 BOM、图纸、工装、SOP、控制计划、测试计划或 OpenClaw 行动卡的措施。",
+                ["quality_gate", "vague_action", "poka_yoke_missing"],
+                blocking=True,
+            )
+        elif not has_specific_action and len(action_text) < 24:
+            add_quality_finding(
+                findings,
+                "actionability",
+                "review",
+                key,
+                "建议措施过短,防错/探测/责任闭环不清晰。",
+                "补充具体防错、测试、控制计划、记录追溯或验收条件。",
+                ["quality_gate", "weak_actionability", "poka_yoke_missing"],
+                blocking=False,
+            )
+
+        for field_name, value in [
+            ("失效影响", row.effect),
+            ("失效原因", row.cause),
+            ("现行控制", row.current_controls),
+            ("建议措施", row.recommended_actions),
+        ]:
+            normalized_value = normalize_space(value)
+            if len(normalized_value) >= 90 and not has_numbered_structure(value):
+                add_quality_finding(
+                    findings,
+                    "formatting",
+                    "pass_with_note",
+                    key,
+                    f"{field_name} 内容较长但未使用 `1.`/`2.`/`3.` 分层编号。",
+                    "将长单元格拆成多级编号,保持原因、影响、控制和措施的逻辑对应。",
+                    ["quality_gate", "formatting_gate", "long_cell_structure"],
+                    blocking=False,
+                )
+
+        if normalized_type == "PFMEA" and not keyword_hit(full_text, ["工序", "工位", "装配", "测试", "检验", "工装", "夹具", "治具", "设备", "参数", "放行"]):
+            add_quality_finding(
+                findings,
+                "type_boundary",
+                "review",
+                key,
+                "PFMEA 行未明显落到工序、设备工装、过程参数、检验测试或放行控制。",
+                "确认该行是否应改写为过程失效,或迁移到 DFMEA/SFMEA。",
+                ["quality_gate", "fmea_type_boundary", "pfmea_process_focus"],
+                blocking=True,
+            )
+
+    return findings
+
+
+def build_quality_gate_confirmation_items(quality_gate_findings: list[QualityGateFinding]) -> list[ConfirmationItem]:
+    items: list[ConfirmationItem] = []
+    for finding in quality_gate_findings:
+        if not finding.blocking and finding.status != "fail":
+            continue
+        tags = [*finding.reason_tags, "non_expert_validation"]
+        items.append(
+            ConfirmationItem(
+                scope="质量门禁",
+                row_key=finding.row_key,
+                why_confirmation_is_needed=f"{finding.gate}: {finding.finding}",
+                suggested_reviewer_focus=finding.required_fix_or_confirmation,
+                reference_type="AI quality gate",
+                source_cases=[],
+                plain_language_question=f"这条 `{finding.row_key}` 是否应按质量门禁修正,或由对应专家确认后保留?",
+                why_it_matters="质量门禁问题可能改变 FMEA 类型归属、物理机理、D/O 评分或措施优先级。",
+                suggested_options=["按门禁修正", "专家确认后保留", "迁移到其他 FMEA 类型", "删除该行"],
+                default_assumption="先作为阻塞评审项保留",
+                impact_if_wrong="可能把串台、物理不自洽或不可执行措施带入正式 FMEA。",
+                reason_tags=tags,
+                priority="high" if finding.blocking else "medium",
+                blocking=finding.blocking,
+            )
+        )
+    return items
 
 
 def build_non_expert_question(reason_tags: list[str], label: str) -> tuple[str, list[str], str, str]:
@@ -1222,10 +1848,13 @@ def build_confirmation_queue(
     scope_rows: dict[str, list[DraftRow]],
     input_quality: InputQualityDiagnosis | None = None,
     coverage_matrix: list[CoverageMatrixItem] | None = None,
+    quality_gate_findings: list[QualityGateFinding] | None = None,
 ) -> list[ConfirmationItem]:
     items: list[ConfirmationItem] = []
     if input_quality and coverage_matrix is not None:
         items.extend(build_gap_confirmation_items(input_quality, coverage_matrix))
+    if quality_gate_findings:
+        items.extend(build_quality_gate_confirmation_items(quality_gate_findings))
     for rows in scope_rows.values():
         for row in rows:
             if row.confirmation_status != "needs expert confirmation":
@@ -1454,8 +2083,8 @@ def aggregate_rows(scope: ScopeDefinition, scopes: list[ScopeDefinition], matche
     return draft_rows
 
 
-def lifecycle_profile_by_name(scope_name: str) -> dict[str, Any]:
-    for profile in LIFECYCLE_COVERAGE_PROFILES:
+def lifecycle_profile_by_name(scope_name: str, profiles: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    for profile in profiles or LIFECYCLE_COVERAGE_PROFILES:
         if profile["name"] == scope_name:
             return profile
     return {
@@ -1599,14 +2228,16 @@ def build_lifecycle_coverage_rows(
     extracted_terms: list[str],
     scopes: list[ScopeDefinition],
     min_rows: int,
+    profiles: list[dict[str, Any]] | None = None,
 ) -> dict[str, list[DraftRow]]:
     scope_rows: dict[str, list[DraftRow]] = {}
     base_query_terms = [module, *extracted_terms[:12], *tokenize(input_text)[:24]]
-    rows_remaining = max(min_rows, sum(lifecycle_profile_by_name(scope.name).get("target_rows", 0) for scope in scopes))
+    active_profiles = profiles or LIFECYCLE_COVERAGE_PROFILES
+    rows_remaining = max(min_rows, sum(lifecycle_profile_by_name(scope.name, active_profiles).get("target_rows", 0) for scope in scopes))
     scopes_remaining = len(scopes)
 
     for scope in scopes:
-        profile = lifecycle_profile_by_name(scope.name)
+        profile = lifecycle_profile_by_name(scope.name, active_profiles)
         default_target = int(profile.get("target_rows", 4))
         target_rows = max(default_target, rows_remaining // max(scopes_remaining, 1))
         rows_remaining -= target_rows
@@ -1885,14 +2516,15 @@ def render_template_cover(
     if len(scopes) > 8:
         sheet_count_text += f" / 等 {len(scopes)} 个范围"
     indicators = extract_parameter_indicators(input_text, limit=4)
+    metadata = FMEA_TYPE_METADATA[normalize_fmea_type(fmea_type)]
     if not indicators:
-        indicators = f"{module or '当前模块'}关键功能、接口、环境、维护与客户使用场景"
+        indicators = metadata["indicator_fallback"].format(module=module or "当前对象")
 
     set_if_sheet_cell(workbook, "封面", "B2", f"{module or '未命名模块'} {fmea_type}分析报告")
-    set_if_sheet_cell(workbook, "封面", "B3", f"Application FMEA for {module or 'Current Module'} - Product Lifecycle Approach")
+    set_if_sheet_cell(workbook, "封面", "B3", metadata["subtitle"].format(module=module or "Current Module", module_en=module or "Current Module"))
     set_if_sheet_cell(workbook, "封面", "C6", module or "未指定")
     set_if_sheet_cell(workbook, "封面", "C7", indicators)
-    set_if_sheet_cell(workbook, "封面", "C8", "AIAG-VDA FMEA Handbook（第1版）七步法")
+    set_if_sheet_cell(workbook, "封面", "C8", metadata["standard_note"])
     set_if_sheet_cell(workbook, "封面", "C9", sheet_count_text or "未拆分")
     set_if_sheet_cell(workbook, "封面", "C10", "历史FMEA案例库 / 相邻模块类比 / 当前输入约束")
     set_if_sheet_cell(workbook, "封面", "C11", date.today().isoformat())
@@ -1932,6 +2564,44 @@ def render_template_fmea_sheet(workbook: Any, module: str, scopes: list[ScopeDef
 
     if ws.max_row >= 2:
         ws.auto_filter.ref = f"B2:AF{ws.max_row}"
+    apply_quality_gate_excel_format(ws, ws.max_row)
+
+
+def apply_quality_gate_excel_format(ws: Any, last_row: int) -> None:
+    from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+
+    header_fill = PatternFill("solid", fgColor="333333")
+    header_font = Font(color="FFFFFF", bold=True)
+    serial_fill = PatternFill("solid", fgColor="D9E1F2")
+    center_align = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    text_align = Alignment(horizontal="left", vertical="top", wrap_text=True)
+    thin_border = Border(
+        left=Side(style="thin", color="D9D9D9"),
+        right=Side(style="thin", color="D9D9D9"),
+        top=Side(style="thin", color="D9D9D9"),
+        bottom=Side(style="thin", color="D9D9D9"),
+    )
+    numeric_columns = {8, 12, 14, 15, 20, 21, 22, 24, 26}
+
+    for col_idx in range(2, 33):
+        cell = ws.cell(row=2, column=col_idx)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = center_align
+        cell.border = thin_border
+
+    for row_idx in range(3, max(last_row, 3) + 1):
+        for col_idx in range(2, 33):
+            cell = ws.cell(row=row_idx, column=col_idx)
+            cell.border = thin_border
+            if col_idx == 2:
+                cell.fill = serial_fill
+                cell.font = Font(bold=True)
+                cell.alignment = center_align
+            elif col_idx in numeric_columns:
+                cell.alignment = center_align
+            else:
+                cell.alignment = text_align
 
 
 def render_excel_workbook(
@@ -1942,15 +2612,16 @@ def render_excel_workbook(
     scope_rows: dict[str, list[DraftRow]],
     excel_path: Path,
 ) -> None:
-    if not DEFAULT_TEMPLATE_PATH.exists():
-        raise FileNotFoundError(f"未找到 Excel 输出模板：{DEFAULT_TEMPLATE_PATH}")
+    template_path = template_path_for(fmea_type)
+    if not template_path.exists():
+        raise FileNotFoundError(f"未找到 Excel 输出模板：{template_path}")
 
     try:
         from openpyxl import load_workbook
     except ModuleNotFoundError as exc:
         raise ModuleNotFoundError("Excel output requires the optional dependency `openpyxl`.") from exc
 
-    workbook = load_workbook(DEFAULT_TEMPLATE_PATH)
+    workbook = load_workbook(template_path)
     render_template_cover(workbook, module, fmea_type, input_text, scopes, scope_rows)
     render_template_fmea_sheet(workbook, module, scopes, scope_rows)
 
@@ -1967,7 +2638,8 @@ def render_markdown(
 ) -> str:
     input_quality = diagnose_input_quality(module, fmea_type, input_text, scopes)
     coverage_matrix = build_coverage_matrix(fmea_type, scopes, scope_rows, input_quality)
-    confirmation_queue = build_confirmation_queue(scope_rows, input_quality, coverage_matrix)
+    quality_gate_findings = build_quality_gate_findings(fmea_type, scope_rows)
+    confirmation_queue = build_confirmation_queue(scope_rows, input_quality, coverage_matrix, quality_gate_findings)
     top_risks = build_top_risks(scope_rows)
     suggested_actions = build_suggested_actions(scope_rows)
     source_trace = build_source_trace(scope_rows)
@@ -2008,6 +2680,26 @@ def render_markdown(
         lines.append(
             f"| {format_md_cell(item.dimension)} | {format_md_cell(item.status)} | {format_md_cell(item.evidence)} | {format_md_cell(item.review_prompt)} |"
         )
+    lines.extend(
+        [
+            "",
+            "## Quality Gate Findings",
+            "",
+            "| Gate | Status | Row key | Finding | Required fix or confirmation | Blocking | Reason tags |",
+            "| --- | --- | --- | --- | --- | --- | --- |",
+        ]
+    )
+    if not quality_gate_findings:
+        lines.append("|  | pass |  | 未发现额外质量门禁问题,仍需专家评审。 |  | False |  |")
+    else:
+        for item in quality_gate_findings[:24]:
+            lines.append(
+                f"| {format_md_cell(item.gate)} | {format_md_cell(item.status)} | {format_md_cell(item.row_key)} | {format_md_cell(item.finding)} | {format_md_cell(item.required_fix_or_confirmation)} | {format_md_cell(str(item.blocking))} | {format_md_cell(' / '.join(item.reason_tags))} |"
+            )
+        if len(quality_gate_findings) > 24:
+            lines.append(
+                f"|  | review |  | 还有 {len(quality_gate_findings) - 24} 条质量门禁发现未在 Markdown 预览中展开。 | 查看 JSON companion 的 `quality_gate_findings`。 | False | quality_gate |"
+            )
     lines.extend(
         [
             "",
@@ -2136,7 +2828,8 @@ def build_json_payload(
 ) -> dict[str, Any]:
     input_quality = diagnose_input_quality(module, fmea_type, input_text, scopes)
     coverage_matrix = build_coverage_matrix(fmea_type, scopes, scope_rows, input_quality)
-    confirmation_queue = build_confirmation_queue(scope_rows, input_quality, coverage_matrix)
+    quality_gate_findings = build_quality_gate_findings(fmea_type, scope_rows)
+    confirmation_queue = build_confirmation_queue(scope_rows, input_quality, coverage_matrix, quality_gate_findings)
     top_risks = build_top_risks(scope_rows)
     suggested_actions = build_suggested_actions(scope_rows)
     source_trace = build_source_trace(scope_rows)
@@ -2146,6 +2839,7 @@ def build_json_payload(
         "input_text": input_text,
         "input_quality_diagnosis": asdict(input_quality),
         "coverage_matrix": [asdict(item) for item in coverage_matrix],
+        "quality_gate_findings": [asdict(item) for item in quality_gate_findings],
         "scopes": [asdict(scope) for scope in scopes],
         "rows": [asdict(row) for rows in scope_rows.values() for row in rows],
         "confirmation_queue": [asdict(item) for item in confirmation_queue],
@@ -2158,7 +2852,7 @@ def build_json_payload(
 def main() -> None:
     parser = argparse.ArgumentParser(description="Draft a first FMEA table from natural-language input and historical cases.")
     parser.add_argument("--module", required=True, help="Module name or analysis object.")
-    parser.add_argument("--fmea-type", default="DFMEA", help="FMEA type, default is DFMEA.")
+    parser.add_argument("--fmea-type", default="DFMEA", choices=sorted(VALID_FMEA_TYPES), help="FMEA type, default is DFMEA.")
     parser.add_argument("--input-file", help="Path to a UTF-8 text file containing the natural-language input.")
     parser.add_argument("--input-text", help="Natural-language input text.")
     parser.add_argument(
@@ -2170,28 +2864,31 @@ def main() -> None:
     parser.add_argument("--top-k", type=int, default=30, help="Number of source matches to keep per scope.")
     parser.add_argument(
         "--coverage-mode",
-        choices=["lifecycle", "subsystem"],
+        choices=["lifecycle", "subsystem", "part"],
         default="lifecycle",
-        help="Use template-style lifecycle coverage by default; choose subsystem to keep the older narrow subsystem grouping.",
+        help="Use type-specific rich coverage by default; choose subsystem for narrow grouping or part for DFMEA part-level coverage.",
     )
     parser.add_argument(
         "--min-rows",
         type=int,
-        default=28,
-        help="Minimum FMEA rows to draft in lifecycle coverage mode.",
+        default=None,
+        help="Minimum FMEA rows to draft in rich coverage mode; defaults are type-specific.",
     )
     parser.add_argument("--excel-out", help="Optional path to save the generated Excel workbook.")
     parser.add_argument("--markdown-out", help="Optional path to save the generated Markdown draft.")
     parser.add_argument("--json-out", help="Optional path to save the generated JSON draft.")
     args = parser.parse_args()
 
+    fmea_type = normalize_fmea_type(args.fmea_type)
+    coverage_profiles = coverage_profiles_for(fmea_type, args.coverage_mode)
+    min_rows = args.min_rows if args.min_rows is not None else int(FMEA_TYPE_METADATA[fmea_type]["default_min_rows"])
     input_text = load_input_text(args)
     extracted_terms = extract_query_terms(input_text, args.module)
 
     scopes = [parse_scope(raw_scope) for raw_scope in args.scope]
-    use_lifecycle_coverage = args.coverage_mode == "lifecycle" and not scopes
+    use_lifecycle_coverage = args.coverage_mode in {"lifecycle", "part"} and not scopes
     if use_lifecycle_coverage:
-        scopes = suggest_lifecycle_scopes(args.module, input_text, extracted_terms)
+        scopes = suggest_lifecycle_scopes(args.module, input_text, extracted_terms, coverage_profiles)
     elif not scopes:
         scopes = suggest_scopes(args.module, input_text, extracted_terms)
         if not scopes:
@@ -2210,7 +2907,7 @@ def main() -> None:
             scope.extracted_terms = [term for term in extracted_terms if term in scope.query_terms or term in input_text]
 
     if use_lifecycle_coverage:
-        scope_rows = build_lifecycle_coverage_rows(args.module, input_text, extracted_terms, scopes, args.min_rows)
+        scope_rows = build_lifecycle_coverage_rows(args.module, input_text, extracted_terms, scopes, min_rows, coverage_profiles)
     else:
         scope_rows: dict[str, list[DraftRow]] = {}
         for scope in scopes:
@@ -2219,12 +2916,12 @@ def main() -> None:
             matches = [match for match in matches if match.theme in ALLOWED_THEMES][: args.top_k]
             scope_rows[scope.name] = aggregate_rows(scope, scopes, matches, args.module)
 
-    markdown = render_markdown(args.module, args.fmea_type, input_text, scopes, scope_rows)
-    payload = build_json_payload(args.module, args.fmea_type, input_text, scopes, scope_rows)
+    markdown = render_markdown(args.module, fmea_type, input_text, scopes, scope_rows)
+    payload = build_json_payload(args.module, fmea_type, input_text, scopes, scope_rows)
 
     if args.excel_out:
         excel_path = Path(args.excel_out)
-        render_excel_workbook(args.module, args.fmea_type, input_text, scopes, scope_rows, excel_path)
+        render_excel_workbook(args.module, fmea_type, input_text, scopes, scope_rows, excel_path)
 
     if args.markdown_out:
         markdown_path = Path(args.markdown_out)

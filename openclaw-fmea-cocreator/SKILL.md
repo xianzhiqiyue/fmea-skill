@@ -1,7 +1,7 @@
 ---
 name: openclaw-fmea-cocreator
 version: 0.3.0
-description: Co-create AFMEA, SFMEA, or DFMEA for OpenClaw from module inputs, existing tables, or historical quality materials, with traceable drafts and follow-up actions.
+description: Co-create AFMEA, SFMEA, DFMEA, or PFMEA for OpenClaw from module inputs, existing tables, or historical quality materials, with traceable drafts and follow-up actions.
 category: research
 tags:
   - analysis
@@ -24,20 +24,21 @@ For OpenClaw delivery, prefer a reviewable Excel workbook over a raw spreadsheet
 
 This skill helps Codex:
 
-1. classify the task as `AFMEA`, `SFMEA`, or `DFMEA`
+1. classify the task as `AFMEA`, `SFMEA`, `DFMEA`, or `PFMEA`
 2. collect missing inputs in a structured way
 3. retrieve similar historical failure cases
 4. coordinate a small multi-specialist agent cluster when the scope needs multiple expert viewpoints
 5. diagnose input quality before drafting so weak inputs do not produce false confidence
 6. draft a normalized FMEA table
 7. review lifecycle/interface/component coverage for likely gaps
-8. convert important uncertainty into plain-language validation questions for non-expert users
-9. separate AI suggestions from human-confirmed judgments
-10. output both the FMEA table and a follow-up action list
+8. run a quality gate for FMEA type boundaries, engineering self-consistency, Poka-Yoke actionability, and Excel formatting readiness
+9. convert important uncertainty into plain-language validation questions for non-expert users
+10. separate AI suggestions from human-confirmed judgments
+11. output both the FMEA table and a follow-up action list
 
 ## Core workflow
 
-新工作流由 6 个强制阶段构成,Claude 必须按顺序执行,不可跳步。
+新工作流由 7 个强制阶段构成,Claude 必须按顺序执行,不可跳步。
 
 ### 阶段 1: 结构化抽取 (P-Diagram + 模块层级树)
 
@@ -62,6 +63,13 @@ This skill helps Codex:
 - `S/O/D` 评分证据
 
 将输入质量标为 `strong`、`usable_with_assumptions` 或 `high_risk_missing_context`。缺口要转成具体、可回答的验证问题,不要只要求用户"补充更多信息"。
+
+FMEA 类型边界必须保留:
+
+- `AFMEA`: 应用生命周期、使用场景、运输、安装、操作、维护和现场控制点
+- `SFMEA`: 系统、子系统、接口、功能链、能量/物料/信息流和系统状态
+- `DFMEA`: 设计对象、零件、部件、材料、连接件、传感器/执行器、PCBA 和控制接口
+- `PFMEA`: 制造、装配、测试、检验、包装、放行等过程步骤和控制计划
 
 ### 阶段 2: 多专家失效模式生成 (6 个角色)
 
@@ -107,7 +115,18 @@ python3 openclaw-fmea-cocreator/scripts/retrieve_cases.py \
 
 审阅时把低证据、低置信度、覆盖缺口、输入质量缺口和 `O/D` 不确定项显式送入确认队列。确认项应包含普通用户能回答的问题、默认 AI 假设、答案错误时的影响,以及专家评审焦点。
 
-### 阶段 5: 工作簿渲染
+### 阶段 5: 硬核质量门禁
+
+按 [references/fmea_quality_gate.md](references/fmea_quality_gate.md) 审查草稿,至少覆盖:
+
+- 四类 FMEA 防串台: AFMEA 看操作流,SFMEA 看接口/边界,DFMEA 看设计物理极限,PFMEA 看工序/工装/检验/放行
+- 工程物理自洽: 对象、功能、失效模式、影响、原因、现行控制、建议措施必须能闭环
+- 现场痛点与防呆: 建议措施必须能落到 BOM、图纸、工装、SOP、控制计划、测试或 OpenClaw 评审动作,不得只写"加强培训/检查/优化设计"
+- Excel 输出格式: 表头、序号列、文本列、评分列和多级编号必须满足门禁
+
+质量门禁发现必须进入 JSON/Markdown companion 的 `quality_gate_findings`; 对影响 FMEA 类型归属、物理机理或措施可执行性的发现,同步转入确认队列。
+
+### 阶段 6: 工作簿渲染
 
 ```bash
 python3 openclaw-fmea-cocreator/scripts/build_workbook.py \
@@ -124,7 +143,7 @@ python3 openclaw-fmea-cocreator/scripts/build_workbook.py \
 - `覆盖盲区与待确认队列`
 - `结构与P-Diagram`
 
-### 阶段 6: 评审写回与案例库飞轮 (M3)
+### 阶段 7: 评审写回与案例库飞轮 (M3)
 
 完成 `fmea_normalized.json` 与工作簿后,把人工评审与回流闭环:
 
@@ -164,11 +183,12 @@ When this skill is used as an OpenClaw workflow building block, the default outp
 1. `Scope split`
 2. `Input quality diagnosis`
 3. `Coverage matrix review`
-4. `FMEA draft`
-5. `Rows needing confirmation`
-6. `Top risks`
-7. `Suggested actions`
-8. `Source trace`
+4. `Quality gate findings`
+5. `FMEA draft`
+6. `Rows needing confirmation`
+7. `Top risks`
+8. `Suggested actions`
+9. `Source trace`
 
 Minimum delivery rules:
 
@@ -183,6 +203,7 @@ Minimum delivery rules:
 - keep `O` and `D` in `draft` state unless the user or source gave enough enterprise evidence
 - call out boundary rows whose scope ownership is ambiguous
 - include input quality and coverage review in JSON/Markdown companions so weak inputs do not look complete
+- include quality gate findings for type-boundary, physics/self-consistency, actionability, and formatting issues before final signoff
 - write plain-language validation prompts for non-expert users whenever assumptions materially affect scope, `O/D`, controls, or action priority
 - preserve historical traceability in the `AI打分推导依据` cell whenever a historical row influenced the draft
 - keep Markdown or JSON only as preview or system interface companions when useful
@@ -203,6 +224,7 @@ For most requests, return these sections when useful:
 2. `Rows needing confirmation`
 3. `Top risks`
 4. `Suggested actions`
+5. `Quality gate findings`
 
 If the user only asks for one of these, keep the response scoped.
 
@@ -215,6 +237,12 @@ If the task starts from an existing FMEA workbook instead of raw text, also use 
 Current script support:
 
 ```bash
+python3 openclaw-fmea-cocreator/scripts/draft_fmea_from_cases.py \
+  --module "模块名" \
+  --fmea-type PFMEA \
+  --input-file /path/to/input.txt \
+  --excel-out /path/to/output.xlsx
+
 python3 openclaw-fmea-cocreator/scripts/merge_and_score.py \
   --structure structure.json \
   --candidates-dir <dir> \
@@ -230,6 +258,8 @@ python3 openclaw-fmea-cocreator/scripts/build_workbook.py \
 OpenClaw bridge support:
 
 ```bash
+python3 scripts/run_openclaw_submission.py --payload-file /path/to/payload.json
+python3 scripts/run_openclaw_submission.py --example-name auto_scope_pfmea_module_assembly --dry-run --print-input
 python3 scripts/build_openclaw_review_cards.py --input-json /path/to/draft.json --output-json /path/to/cards.json
 python3 scripts/apply_openclaw_review_actions.py --input-json /path/to/draft.json --actions-json /path/to/review_actions.json
 python3 scripts/import_existing_fmea_excel.py --input-excel /path/to/existing.xlsx --excel-out /path/to/normalized.xlsx --json-out /path/to/normalized.json
@@ -241,12 +271,17 @@ python3 scripts/import_existing_fmea_excel.py --input-excel /path/to/existing.xl
 - `references/specialist_role_prompts.md`: 阶段 2 多专家轮次的 prompt 卡
 - `references/deduplication_protocol.md`: 跨 scope 与 scope 内去重协议
 - `references/evidence_grading.md`: 证据等级与置信度公式
+- `references/fmea_quality_gate.md`: 每次交付前读取,用于防串台、工程物理自洽、防呆措施和 Excel 格式门禁
 - `references/workflow.md`: when you need the full co-creation workflow
 - `references/output_schema.md`: when generating or normalizing tables
 - `references/openclaw_review_cards_schema.json` (M3): when rendering `确认队列` and `Top风险` as OpenClaw cards
 - `references/openclaw_review_action_protocol.json` (M3): when frontend review actions need a writeback contract
 - `references/openclaw_review_action_examples.json` (M3): when testing or mocking review writeback payloads
-- `references/prompt_templates.md`: when constructing prompts or choosing AFMEA/SFMEA/DFMEA framing
+- `references/prompt_templates.md`: when constructing prompts or choosing AFMEA/SFMEA/DFMEA/PFMEA framing
+- `references/openclaw_form_definition.json`: when building the actual OpenClaw form config
+- `references/openclaw_interface_mapping.md`: when mapping OpenClaw fields to script inputs, workbook sheets, or structured payloads
+- `references/openclaw_submission_examples.json`: when preparing request payloads or testing submission shape
+- `references/openclaw_submission_assembly.md`: when wiring backend payload assembly or executing the bridge script
 - `references/scoring_guardrails.md`: whenever assigning or reviewing S/O/D
 
 ## Guardrails
@@ -258,6 +293,7 @@ python3 scripts/import_existing_fmea_excel.py --input-excel /path/to/existing.xl
 - Do not cite a historical case without naming the source workbook and sheet when practical.
 - Do not let cross-module analogies dominate a scope that is already well covered by current-module cases.
 - Do not merge boundary rows into one scope silently when ownership is debatable.
+- Do not mix PFMEA process-step causes into DFMEA design rows, or DFMEA design mechanisms into PFMEA rows; move cross-type risks into confirmation/follow-up instead.
 
 ## Preferred style
 

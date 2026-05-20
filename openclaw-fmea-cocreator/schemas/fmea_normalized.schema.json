@@ -5,7 +5,7 @@
   "required": ["module_root", "fmea_type", "rows", "coverage_gaps", "top_risks", "confirmation_queue"],
   "properties": {
     "module_root": {"type": "string"},
-    "fmea_type": {"enum": ["AFMEA", "SFMEA", "DFMEA"]},
+    "fmea_type": {"enum": ["AFMEA", "SFMEA", "DFMEA", "PFMEA"]},
     "rows": {
       "type": "array",
       "items": {
@@ -49,6 +49,22 @@
       }
     },
     "coverage_gaps": {"type": "array"},
+    "quality_gate_findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["gate", "status", "row_key", "finding", "required_fix_or_confirmation", "reason_tags", "blocking"],
+        "properties": {
+          "gate": {"enum": ["type_boundary", "physics_self_consistency", "actionability", "formatting"]},
+          "status": {"enum": ["fail", "review", "pass_with_note"]},
+          "row_key": {"type": "string"},
+          "finding": {"type": "string"},
+          "required_fix_or_confirmation": {"type": "string"},
+          "reason_tags": {"type": "array", "items": {"type": "string"}},
+          "blocking": {"type": "boolean"}
+        }
+      }
+    },
     "top_risks": {"type": "array"},
     "confirmation_queue": {"type": "array"}
   }

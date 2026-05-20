@@ -28,6 +28,19 @@ FMEA_HEADERS = [
 ]
 assert len(FMEA_HEADERS) == 31, "Header count must equal 31"
 
+HEADER_FILL = PatternFill("solid", fgColor="333333")
+HEADER_FONT = Font(color="FFFFFF", bold=True)
+SERIAL_FILL = PatternFill("solid", fgColor="D9E1F2")
+CENTER_ALIGN = Alignment(horizontal="center", vertical="center", wrap_text=True)
+TEXT_ALIGN = Alignment(horizontal="left", vertical="top", wrap_text=True)
+THIN_BORDER = Border(
+    left=Side(style="thin", color="D9D9D9"),
+    right=Side(style="thin", color="D9D9D9"),
+    top=Side(style="thin", color="D9D9D9"),
+    bottom=Side(style="thin", color="D9D9D9"),
+)
+NUMERIC_COLUMNS = {11, 13, 16, 17, 21, 22, 23, 24, 26}
+
 
 def build():
     wb = Workbook()
@@ -53,13 +66,25 @@ def build():
     for col_idx, header in enumerate(FMEA_HEADERS, start=2):
         cell = main.cell(row=2, column=col_idx)
         cell.value = header
-        cell.font = Font(bold=True)
-        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-        cell.fill = PatternFill("solid", fgColor="D9E1F2")
+        cell.font = HEADER_FONT
+        cell.alignment = CENTER_ALIGN
+        cell.fill = HEADER_FILL
+        cell.border = THIN_BORDER
     main.row_dimensions[2].height = 32
 
     main.cell(row=3, column=17).value = "=J3*L3*O3"
     main.cell(row=3, column=24).value = "=U3*V3*W3"
+    for col_idx in range(2, 33):
+        cell = main.cell(row=3, column=col_idx)
+        cell.border = THIN_BORDER
+        if col_idx == 2:
+            cell.fill = SERIAL_FILL
+            cell.font = Font(bold=True)
+            cell.alignment = CENTER_ALIGN
+        elif col_idx in NUMERIC_COLUMNS:
+            cell.alignment = CENTER_ALIGN
+        else:
+            cell.alignment = TEXT_ALIGN
 
     width_map = {
         2: 6, 3: 20, 4: 16, 5: 18, 6: 22, 7: 24, 8: 22, 9: 22, 10: 30, 11: 5,

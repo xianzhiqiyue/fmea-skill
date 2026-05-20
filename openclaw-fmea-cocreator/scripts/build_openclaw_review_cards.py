@@ -25,6 +25,58 @@ def as_int(value: Any, default: int = 0) -> int:
         return default
 
 
+def legacy_row_key(row: dict[str, Any]) -> str:
+    head = str(row.get("analysis_object") or row.get("function") or row.get("scope") or "未命名对象").strip()
+    tail = str(row.get("failure_mode") or "待补失效模式").strip()
+    return f"{head} / {tail}"
+
+
+def legacy_row_to_card_row(row: dict[str, Any], overlay: dict[str, Any] | None = None) -> dict[str, Any]:
+    overlay = overlay or {}
+    scope = overlay.get("scope") or row.get("scope") or ""
+    key = overlay.get("row_key") or legacy_row_key(row)
+    severity = as_int(row.get("severity"), 1)
+    occurrence = as_int(row.get("occurrence"), 1)
+    detection = as_int(row.get("detection"), 1)
+    rpn = as_int(overlay.get("current_rpn", row.get("rpn")), max(severity * occurrence * detection, 1))
+    reason_tags = list(overlay.get("reason_tags", row.get("reason_tags", [])) or [])
+    if overlay.get("why_confirmation_is_needed"):
+        reason_tags.append("confirmation_queue")
+    return {
+        "row_id": row.get("row_id") or f"{scope}/{key}",
+        "leaf_id": row.get("leaf_id", ""),
+        "leaf_name": row.get("analysis_object") or scope,
+        "scope_path": row.get("scope_path") or scope,
+        "failure_mode": overlay.get("failure_mode") or row.get("failure_mode") or key,
+        "failure_mode_canonical": row.get("failure_mode_canonical", ""),
+        "p_diagram_anchor": row.get("p_diagram_anchor", ""),
+        "cause": row.get("cause", ""),
+        "effect_customer": row.get("effect") or overlay.get("why_it_matters", ""),
+        "effect_downstream": "",
+        "effect_system": "",
+        "current_controls_prevention": row.get("current_controls", ""),
+        "current_controls_detection": row.get("current_controls", ""),
+        "recommended_actions": [item for item in [row.get("recommended_actions") or overlay.get("first_action_candidate", "")] if item],
+        "severity": severity,
+        "occurrence": occurrence,
+        "detection": detection,
+        "rpn": max(rpn, 1),
+        "evidence_grade": row.get("evidence_grade", "ai-inferred"),
+        "confidence": as_number(row.get("confidence"), 0.0),
+        "needs_human_confirmation": row.get("confirmation_status") == "needs expert confirmation" or bool(overlay),
+        "source_traces": [{"type": "legacy_source", "ref": ref} for ref in row.get("source_cases", [])],
+        "reference_type": row.get("reference_type", ""),
+        "reason_tags": reason_tags,
+        "plain_language_question": overlay.get("plain_language_question", ""),
+        "why_it_matters": overlay.get("why_it_matters", ""),
+        "suggested_options": overlay.get("suggested_options", []),
+        "default_assumption": overlay.get("default_assumption", ""),
+        "impact_if_wrong": overlay.get("impact_if_wrong", ""),
+        "priority": overlay.get("priority", ""),
+        "blocking": bool(overlay.get("blocking")),
+    }
+
+
 def unique_tags(tags: list[Any]) -> list[str]:
     out: list[str] = []
     for tag in tags:
@@ -150,6 +202,11 @@ def row_to_card(row: dict[str, Any], queue: str) -> dict[str, Any]:
 
 def resolve_queue_rows(normalized: dict[str, Any], queue_key: str) -> list[dict[str, Any]]:
     rows_by_id = {row["row_id"]: row for row in normalized.get("rows", []) if "row_id" in row}
+    legacy_rows_by_key = {
+        (row.get("scope", ""), legacy_row_key(row)): row
+        for row in normalized.get("rows", [])
+        if "row_id" not in row
+    }
     resolved: list[dict[str, Any]] = []
     for item in normalized.get(queue_key, []):
         if isinstance(item, str):
@@ -158,10 +215,18 @@ def resolve_queue_rows(normalized: dict[str, Any], queue_key: str) -> list[dict[
                 resolved.append(row)
         elif isinstance(item, dict):
             row_id = item.get("row_id")
-            base = rows_by_id.get(row_id, {}) if row_id else {}
-            row = {**base, **item}
-            if "row_id" in row:
-                resolved.append(row)
+            if row_id:
+                base = rows_by_id.get(row_id, {})
+                row = {**base, **item}
+                if "row_id" in row:
+                    resolved.append(row)
+                continue
+            legacy_key = (item.get("scope", ""), item.get("row_key", ""))
+            base = legacy_rows_by_key.get(legacy_key, {})
+            if base:
+                resolved.append(legacy_row_to_card_row(base, item))
+            elif item.get("row_key"):
+                resolved.append(legacy_row_to_card_row({}, item))
     return resolved
 
 

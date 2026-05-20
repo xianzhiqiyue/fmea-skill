@@ -12,11 +12,14 @@ The companion payload should still be made of:
 1. `Scope split`
 2. `Input quality diagnosis`
 3. `Coverage matrix review`
-4. `FMEA draft`
-5. `Rows needing confirmation`
-6. `Top risks`
-7. `Suggested actions`
-8. `Source trace`
+4. `Quality gate findings`
+5. `FMEA draft`
+6. `Rows needing confirmation`
+7. `Top risks`
+8. `Suggested actions`
+9. `Source trace`
+
+Supported FMEA types are `AFMEA`, `SFMEA`, `DFMEA`, and `PFMEA`. Keep the workbook shape stable across types, but choose the analysis object according to type: lifecycle/control point for AFMEA, system/interface for SFMEA, design item/part for DFMEA, and process step/control point for PFMEA.
 
 ## Workbook layout
 
@@ -29,6 +32,8 @@ The default deliverable should be one `.xlsx` workbook with the exact standard-t
 All generated FMEA rows go into `FMEA主表`; use `生命周期维度` for scope/lifecycle grouping instead of creating one worksheet per scope.
 `FMEA主表` must keep the standard table position: headers in `B2:W2`, data rows beginning at row `3`, and formulas in `RPN` / `改进后RPN`.
 `评分准则参考` must be copied from the standard template without content rewrites so the workbook keeps the template reference structure exactly.
+
+For legacy/direct drafting flows, `draft_fmea_from_cases.py` may choose type-specific templates (`afmea_template.xlsx`, `sfmea_template.xlsx`, `pfmea_template.xlsx`) before falling back to `template.xlsx`. The semantic column contract remains the same even when the workbook styling/template differs by type.
 
 Default rich drafts may use lifecycle-style grouping when the input scope calls for it, but lifecycle names, row counts, module names, product metrics, and risk examples are generated content, not template content.
 Rows expanded from lifecycle context should stay traceable and remain `needs expert confirmation`.
@@ -45,6 +50,10 @@ The JSON payload may include quality metadata that is not written as separate wo
 | `input_quality_diagnosis.missing_critical_inputs` | recommended | highest-value inputs needed before expert signoff |
 | `coverage_matrix` | recommended | list of coverage dimensions with `covered`, `weak`, or `missing` status |
 | `coverage_matrix[].review_prompt` | recommended | what reviewers should confirm or supplement |
+| `quality_gate_findings` | recommended | list of type-boundary, physics/self-consistency, actionability, or formatting findings |
+| `quality_gate_findings[].gate` | recommended | `type_boundary`, `physics_self_consistency`, `actionability`, or `formatting` |
+| `quality_gate_findings[].status` | recommended | `fail`, `review`, or `pass_with_note` |
+| `quality_gate_findings[].required_fix_or_confirmation` | recommended | concrete rewrite or expert confirmation needed before signoff |
 
 These fields are review scaffolding. They should not be presented as proof that the FMEA is complete.
 
@@ -128,6 +137,7 @@ After the main table, add these only when useful:
 - `Rows needing confirmation`
 - `Recommended actions`
 - `Assumptions`
+- `Quality gate findings`
 - `Source trace`
 
 For Excel delivery, prefer separate worksheets instead of appending these sections under the main table.
@@ -151,6 +161,8 @@ The confirmation queue should usually include:
 | Reason tags | machine-readable tags such as `input_quality`, `coverage_gap`, `score_uncertainty`, `broader_analogy` |
 | Priority | `critical`, `high`, `medium`, or `low` |
 | Blocking | whether expert closure should block final signoff |
+
+Quality gate findings may also be mirrored into the confirmation queue when the row has a blocking type-boundary, physical-consistency, or actionability issue. Use reason tags such as `fmea_type_boundary`, `weak_physics`, `vague_action`, `poka_yoke_missing`, or `formatting_gate`.
 
 ## Top-risk digest fields
 

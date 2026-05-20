@@ -4,7 +4,7 @@ This skill should behave like a collaborative FMEA facilitator, not just a table
 
 ## Default flow
 
-1. Identify whether the task is `AFMEA`, `SFMEA`, or `DFMEA`.
+1. Identify whether the task is `AFMEA`, `SFMEA`, `DFMEA`, or `PFMEA`.
 2. Decide whether the material should be treated as one scope or split into multiple scopes.
 3. Extract or request the minimum inputs needed to build a first draft.
 4. Diagnose input quality and record missing context before drafting.
@@ -13,22 +13,25 @@ This skill should behave like a collaborative FMEA facilitator, not just a table
 7. Draft and consolidate a normalized FMEA table.
 8. Mark uncertain ratings and assumptions.
 9. Review lifecycle/interface/component coverage for likely gaps.
-10. Convert important uncertainty into non-expert validation questions.
-11. Produce a review-oriented follow-up section.
-12. If the user confirms rows, suggest which ones should be added to the case library.
+10. Run the FMEA quality gate for type-boundary, physics, actionability, and workbook-format readiness.
+11. Convert important uncertainty into non-expert validation questions.
+12. Produce a review-oriented follow-up section.
+13. If the user confirms rows, suggest which ones should be added to the case library.
 
 For OpenClaw delivery, use the reference workbook shape as the standard output format.
 Use the bundled `template.xlsx` as the standard output template; it must remain content-clean, with sample-specific document content removed.
+For direct draft generation, type-specific templates `afmea_template.xlsx`, `sfmea_template.xlsx`, and `pfmea_template.xlsx` may be selected automatically by `draft_fmea_from_cases.py`; normalized pipeline rendering still uses the current 5-sheet `template.xlsx` unless an explicit renderer option is added.
 Package the result as:
 
 1. scope split summary
 2. input quality diagnosis
 3. coverage matrix review
-4. per-scope FMEA draft worksheets
-5. confirmation queue
-6. top-risk digest
-7. action list
-8. source trace
+4. quality gate findings
+5. per-scope FMEA draft worksheets
+6. confirmation queue
+7. top-risk digest
+8. action list
+9. source trace
 
 The preferred artifact is one Excel workbook with the standard sheets `封面`, `FMEA主表`, and `评分准则参考`.
 `FMEA主表` keeps headers in `B2:W2` and generated data from row `3`.
@@ -121,6 +124,7 @@ Expected dimensions by type:
 | `AFMEA` | storage, transport, installation, operation, abnormal use, maintenance, movement, disposal |
 | `SFMEA` | system decomposition, subsystem functions, structural/signal/energy/material interfaces, boundary ownership |
 | `DFMEA` | component/function/cause/control coverage, design constraints, materials/tolerances, supplier/manufacturing, validation and detection controls |
+| `PFMEA` | incoming material, process steps, equipment/tooling, process parameters, inspection/testing, packaging/release, downstream escape controls |
 
 Coverage behavior:
 
@@ -129,6 +133,34 @@ Coverage behavior:
 - mark it `missing` when no meaningful row or source supports it
 - turn `weak` and `missing` dimensions into plain-language confirmation cards when they could affect risk priority
 - keep high-severity safety and compliance gaps visible even if RPN is unknown
+
+## FMEA quality gate
+
+Run this gate after coverage review and before final workbook delivery. Use [fmea_quality_gate.md](fmea_quality_gate.md) as the rule source.
+
+Required checks:
+
+- Type boundary and anti-crosstalk:
+  - `AFMEA` rows must be application/lifecycle/customer-operation risks.
+  - `SFMEA` rows must be system boundary, interface, function-chain, flow, or state-logic risks.
+  - `DFMEA` rows must be design item, BOM, material, tolerance, derating, thermal, EMC, or control-interface risks.
+  - `PFMEA` rows must be process step, tooling, equipment, parameter, inspection, release, or downstream escape risks.
+- Engineering self-consistency:
+  - object/function/failure/effect/cause/control/action must form a plausible chain.
+  - generic cause text is not enough; name the physical, control, process, or interface mechanism.
+  - detection score must match actual detection capability.
+- Site actionability and Poka-Yoke:
+  - recommended actions should be concrete enough to enter a drawing, BOM, tooling change, SOP/control plan, test plan, review card, or OpenClaw action.
+  - vague actions such as `加强培训`, `加强检查`, `优化设计`, `图纸审核`, and `采购认证` must be rewritten or routed to confirmation unless paired with a measurable control.
+- Excel formatting readiness:
+  - header dark fill with white bold text, serial column light blue and centered, text columns wrapped and left/top aligned, score columns centered.
+  - long text should use `1.`, `2.`, `3.` style line breaks when the field carries multiple ideas.
+
+Output behavior:
+
+- Emit `quality_gate_findings` in JSON/Markdown companions.
+- Add blocking findings to the confirmation queue when the issue can change type ownership, mechanism validity, `O/D`, or action priority.
+- Do not claim a row is complete just because it has a high RPN; a vague cause or vague action remains a quality issue.
 
 ## Non-expert validation mode
 
@@ -146,7 +178,7 @@ Split the analysis before drafting when the input mixes:
 - different physical architectures
 - different major operating modes with distinct failure logic
 - different subsystem boundaries that should own different controls
-- different lifecycle stages that really belong to AFMEA vs DFMEA
+- different lifecycle stages that really belong to AFMEA vs DFMEA/PFMEA
 
 Examples:
 
@@ -203,6 +235,7 @@ Focus on:
 - weak cause/effect separation
 - unrealistic ratings
 - vague controls or actions
+- FMEA type crosstalk and physically implausible cause/effect/action chains
 - opportunities to merge duplicate rows or split overloaded rows
 
 Behavior:
@@ -234,6 +267,24 @@ Focus on converting it into:
 - effect
 - root cause
 - current control
+
+### OpenClaw form submission
+
+Use when the user or product backend sends an OpenClaw form payload instead of a local CLI command.
+
+Useful helper:
+
+```bash
+python3 scripts/run_openclaw_submission.py --payload-file /path/to/payload.json
+```
+
+Behavior:
+
+- validate the payload shape and FMEA type, including `PFMEA`
+- merge form fields into one input text file
+- choose draft or existing-workbook import mode
+- produce Excel, optional Markdown, optional JSON, and optional review-card JSON artifacts
+- use `references/openclaw_submission_examples.json` for smoke tests and backend fixtures
 
 ## Source mapping
 

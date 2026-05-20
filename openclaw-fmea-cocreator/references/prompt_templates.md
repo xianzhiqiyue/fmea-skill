@@ -67,6 +67,28 @@ Template:
 现行控制、建议措施、S/O/D 初步评分和 RPN，并标出待确认项。
 ```
 
+## PFMEA framing
+
+Use for:
+
+- process step, station, or control-plan analysis
+- incoming material, assembly, test, inspection, packaging, release, and downstream escape risks
+- process parameter, equipment, fixture, operator method, measurement system, and traceability controls
+
+Template:
+
+```text
+请针对 {process_or_line_name} 做 PFMEA 共创。
+过程流程/工序：{process_steps}
+关键过程参数和设备工装：{process_parameters_and_fixtures}
+检验测试与放行控制：{inspection_and_release_controls}
+后工序或客户影响：{downstream_or_customer_impact}
+
+请按过程步骤展开 PFMEA 草稿，包括过程功能、潜在失效模式、后果、
+过程原因、现行预防/探测控制、S/O/D 初步评分、RPN 和建议措施，
+并标出待确认项和需要补充的控制计划证据。
+```
+
 ## Failure-mode-class prompts
 
 When the user wants to expand a function from different failure categories, use these categories:
