@@ -36,6 +36,15 @@ This skill helps Codex:
 10. separate AI suggestions from human-confirmed judgments
 11. output both the FMEA table and a follow-up action list
 
+## Completeness floor
+
+默认输出必须是**覆盖型草稿**,不是少量示例行。除非用户明确要求"只看 Top 风险"或"快速示例",否则:
+
+- OpenClaw-ready 或 Excel 草稿不得少于 20 条 FMEA 行;DFMEA/PFMEA 宽范围草稿应优先达到脚本默认行数
+- 每个 scope/lifecycle/process group 至少保留 4 条可审阅行;历史案例不足时,用覆盖补缺行补齐,并标为 `needs expert confirmation`
+- 同一叶节点或同一工序不要只给 1 个泛化失效模式;应按 guidewords 展开不同机理: 功能丧失、功能退化、间歇性、非预期功能、错误输出/误判、接口失配、环境应力、老化/磨损、误操作、检验逃逸
+- 允许低证据 AI 草稿存在,但必须显式标记证据等级、假设、待确认问题和专家复核焦点;不能因为证据少就少输出
+
 ## Core workflow
 
 新工作流由 7 个强制阶段构成,Claude 必须按顺序执行,不可跳步。
@@ -84,7 +93,7 @@ FMEA 类型边界必须保留:
 
 每个角色独立,只看 `structure.json`,不看其他角色已产出。每个角色对 hierarchy 每个叶节点扫遍"必扫描轴对",输出 `candidates_{role}.json`。
 
-**强制约束**: 不能静默跳过任何 (叶节点 × 必扫描轴对) 组合。不适用即给 `not_applicable_reason`。
+**强制约束**: 不能静默跳过任何 (叶节点 × 必扫描轴对) 组合。不适用即给 `not_applicable_reason`。适用组合不能只产出一个笼统风险;应至少尝试从 2 个不同失效类别展开候选行,直到该叶节点已覆盖主要功能、接口、控制、环境、寿命和误用风险。
 
 ### 阶段 3: 历史证据池
 
@@ -198,6 +207,7 @@ Minimum delivery rules:
 - write all FMEA rows into `FMEA主表`; use `生命周期维度` to preserve scope/lifecycle grouping
 - preserve the template `评分准则参考` worksheet exactly as the standard template provides it; use [references/scoring_guardrails.md](references/scoring_guardrails.md) for draft scoring rationale, not for rewriting that sheet
 - when using lifecycle coverage, derive grouping and row count from the user's module/input; do not hardcode sample workbook dimensions or row distribution as template requirements
+- keep draft volume reviewable but complete: default workbook drafts should normally exceed 20 rows, and broad DFMEA/PFMEA drafts should not collapse to only a few rows just because historical cases are sparse
 - for broad or OpenClaw-ready FMEA drafts, use a multi-specialist agent cluster when available; if subagents are unavailable, simulate the same role passes sequentially and label which professional viewpoint produced each cluster of risks
 - label each row as `current module`, `direct family reference`, or `broader analogy`
 - keep `O` and `D` in `draft` state unless the user or source gave enough enterprise evidence

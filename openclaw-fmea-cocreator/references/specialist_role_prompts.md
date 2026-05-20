@@ -8,6 +8,8 @@
 2. **强制扫描**: 必扫描组合的每个 (叶节点 × 轴对) 都必须有产出,否则给 `not_applicable_reason`
 3. **不许静默跳过**: 任何漏写都会在阶段 4 `merge_and_score.py` 的覆盖率检查中暴露
 4. **使用规范化短码**: `failure_mode_canonical` 用 snake_case 英文 (如 `stuck_relay_contact`),保证后续机械去重稳定
+5. **覆盖密度**: 适用的 (叶节点 × 轴对) 不能只给 1 条泛化风险。优先从下列 guidewords 中选择 2-3 个互不重复的失效类别展开: `no_function`、`degraded_function`、`intermittent_function`、`unintended_function`、`wrong_output_or_misjudgement`、`interface_mismatch`、`environmental_stress`、`wear_or_aging`、`misuse_or_maintenance_error`、`detection_escape`。
+6. **少证据不等于少输出**: 没有历史证据时仍要输出覆盖补缺候选,但 `self_confidence <= 0.5`,并在 `assumptions` 中写明需要专家确认的事实。
 
 ## 输出 schema(每个候选行)
 
@@ -64,7 +66,7 @@
 >
 > 对 hierarchy 中**每一个叶节点**,扫遍 P-Diagram 中 `system_interactions × intended_outputs` 的所有组合。
 >
-> 每个组合按本文件"输出 schema"产出 1 行;不适用即给 `not_applicable_reason`,不许静默跳过。
+> 每个适用组合按本文件"输出 schema"产出 2-3 行不同机理的候选;不适用即给 `not_applicable_reason`,不许静默跳过。
 >
 > 输出整体为 JSON 数组,可直接被 `merge_and_score.py` 消费。
 

@@ -37,6 +37,14 @@ The preferred artifact is one Excel workbook with the standard sheets `封面`, 
 `FMEA主表` keeps headers in `B2:W2` and generated data from row `3`.
 Markdown can still be used as a review preview, and JSON can still be used as a structured interface payload.
 
+Completeness rules:
+
+- Default deliverables are coverage drafts, not short examples. Do not stop at a handful of rows unless the user explicitly asked for a quick sample or top-risk digest.
+- For Excel/OpenClaw-ready drafts, produce at least 20 FMEA rows. Use the type-specific script defaults when possible: AFMEA 28, SFMEA 25, DFMEA 36, PFMEA 30.
+- Each scope should have at least 4 rows. If historical matches are sparse, add clearly labeled coverage-gap rows instead of leaving the scope nearly empty.
+- Coverage-gap rows must be useful placeholders: name the suspected function, failure category, effect, cause mechanism, current-control gap, suggested action, and confirmation need. Avoid repeated generic text like "risk not identified".
+- For every key function/process/leaf, expand across multiple guidewords: loss, degradation, intermittent behavior, unintended behavior, wrong output or misjudgement, interface mismatch, environmental stress, wear/aging, misuse/maintenance error, and detection escape.
+
 Input quality diagnosis rules:
 
 - classify every raw-input draft as `strong`, `usable_with_assumptions`, or `high_risk_missing_context`
