@@ -71,3 +71,30 @@ def test_json_payload_includes_quality_gate_findings():
 
     assert payload["quality_gate_findings"]
     assert any("quality_gate" in item["reason_tags"] for item in payload["confirmation_queue"])
+
+
+def test_fallback_coverage_rows_are_distinct_and_reviewable():
+    scope = draft.ScopeDefinition(name="装配工序", query_terms=["装配", "工装"])
+    profile = draft.lifecycle_profile_by_name(scope.name, draft.PFMEA_COVERAGE_PROFILES)
+    rows = [draft.fallback_lifecycle_row(scope, profile, "线束装配", index) for index in range(1, 5)]
+
+    assert len({row.failure_mode for row in rows}) == 4
+    assert all(row.confirmation_status == "needs expert confirmation" for row in rows)
+    assert all("guideword=" in row.rating_basis for row in rows)
+    assert all(row.recommended_actions for row in rows)
+
+
+def test_manual_scope_rows_are_padded_to_minimum():
+    scope = draft.ScopeDefinition(name="装配工序", query_terms=["装配", "工装"])
+    scope_rows = draft.pad_scope_rows_to_minimum(
+        "线束装配",
+        [scope],
+        {"装配工序": []},
+        min_rows=6,
+        profiles=draft.PFMEA_COVERAGE_PROFILES,
+    )
+
+    rows = scope_rows["装配工序"]
+    assert len(rows) == 6
+    assert len({row.failure_mode for row in rows}) == 6
+    assert all(row.reference_type == "broader analogy" for row in rows)

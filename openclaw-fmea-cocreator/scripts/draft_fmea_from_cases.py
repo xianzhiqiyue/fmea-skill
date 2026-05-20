@@ -60,6 +60,119 @@ FMEA_TYPE_METADATA = {
     },
 }
 ALLOWED_THEMES = {"dfmea_sample_data", "knowledge_base_template"}
+DEFAULT_SCOPE_MIN_ROWS = 4
+COVERAGE_GAP_GUIDEWORDS: list[dict[str, str]] = [
+    {
+        "category": "功能丧失",
+        "failure_mode": "核心功能完全丧失",
+        "effect": "相关功能不可用,导致任务中断、验收失败或后工序停滞",
+        "cause": "关键输入、执行单元、供电/气路/通信或控制链路中断",
+        "controls": "待确认是否已有上电自检、功能测试、报警联锁或出厂验证",
+        "action": "补充关键功能自检、失效注入验证、异常停机策略和责任人",
+        "severity": "8",
+        "occurrence": "4",
+        "detection": "5",
+    },
+    {
+        "category": "功能退化",
+        "failure_mode": "功能性能退化或输出不足",
+        "effect": "性能指标偏离要求,造成实验结果失真、效率下降或客户重复调试",
+        "cause": "裕量不足、参数漂移、磨损、校准偏移或过程窗口变窄",
+        "controls": "待确认是否已有性能边界测试、趋势监测、校准记录或 SPC 控制",
+        "action": "补充性能边界验证、趋势预警、校准周期和关键参数上下限",
+        "severity": "7",
+        "occurrence": "5",
+        "detection": "5",
+    },
+    {
+        "category": "间歇性功能",
+        "failure_mode": "间歇性失效或偶发不稳定",
+        "effect": "现场难以复现,导致误判、重复返修、任务中断或服务成本上升",
+        "cause": "接触不良、热漂移、振动松动、边界状态时序竞争或日志不足",
+        "controls": "待确认是否已有长稳测试、振动/温升覆盖、日志记录和异常复盘",
+        "action": "增加长时间运行、边界循环、日志抓取、连接防松和复现判据",
+        "severity": "7",
+        "occurrence": "5",
+        "detection": "6",
+    },
+    {
+        "category": "非预期功能",
+        "failure_mode": "非预期动作或错误状态切换",
+        "effect": "设备在错误时机动作,造成样品/工件损伤、安全风险或流程混乱",
+        "cause": "状态机覆盖不足、互锁缺失、误触发、配置错用或异常恢复逻辑不完整",
+        "controls": "待确认是否已有独立互锁、权限限制、状态覆盖测试和异常恢复测试",
+        "action": "补充状态覆盖矩阵、独立联锁、权限控制、异常恢复和失效注入测试",
+        "severity": "8",
+        "occurrence": "4",
+        "detection": "6",
+    },
+    {
+        "category": "错误输出/误判",
+        "failure_mode": "输出错误、判断错误或数据张冠李戴",
+        "effect": "后工序基于错误结果继续流转,造成误放行、实验结论错误或追溯失效",
+        "cause": "传感/测量误差、阈值设置不当、数据绑定错误、缓存未刷新或算法误判",
+        "controls": "待确认是否已有双通道校验、扫码绑定、边界样本验证和异常数据拦截",
+        "action": "增加数据绑定校验、阈值锁定、异常值拦截、复核逻辑和追溯记录",
+        "severity": "8",
+        "occurrence": "4",
+        "detection": "7",
+    },
+    {
+        "category": "接口失配",
+        "failure_mode": "接口匹配不良或边界责任不清",
+        "effect": "集成、安装或联调阶段出现连接失败、通信异常、泄漏、松脱或责任争议",
+        "cause": "接口控制文件缺失、公差链/协议/接地/密封/流量边界定义不足",
+        "controls": "待确认是否已有接口矩阵、边界样机验证、联调清单和变更闭环",
+        "action": "补齐接口矩阵、边界条件、关键接口测试、变更评审和交接验收",
+        "severity": "7",
+        "occurrence": "5",
+        "detection": "5",
+    },
+    {
+        "category": "环境应力",
+        "failure_mode": "环境应力下失效",
+        "effect": "温湿度、EMC、电源、振动或污染导致性能漂移、误报警或停机",
+        "cause": "环境裕量不足、客户现场边界未定义、降额不足或环境监测缺失",
+        "controls": "待确认是否已有环境适应性验证、降额清单、环境监测和现场预检",
+        "action": "增加环境边界验证、降额复核、环境超限联锁和客户现场条件确认",
+        "severity": "7",
+        "occurrence": "4",
+        "detection": "6",
+    },
+    {
+        "category": "老化/磨损",
+        "failure_mode": "寿命件老化、磨损或疲劳失效",
+        "effect": "全寿命后期可靠性下降,导致重复停机、维护成本上升或关键功能失效",
+        "cause": "寿命模型不足、材料老化、疲劳、插拔/运动次数超限或维护周期不清",
+        "controls": "待确认是否已有寿命试验、寿命计数、维护提醒和备件策略",
+        "action": "建立寿命件清单、寿命计数、维护提醒、加速寿命验证和备件策略",
+        "severity": "7",
+        "occurrence": "5",
+        "detection": "6",
+    },
+    {
+        "category": "误操作/维护错误",
+        "failure_mode": "误操作、误维护或参数误设",
+        "effect": "客户现场或维修后出现功能异常、安全保护误动作、数据失真或返修",
+        "cause": "SOP 不清、权限/提示不足、防错缺失、维护复位步骤遗漏或培训不可验证",
+        "controls": "待确认是否已有权限控制、操作确认、维护清单、培训记录和日志追踪",
+        "action": "增加防错设计、权限分级、关键步骤二次确认、维护闭环和日志追溯",
+        "severity": "7",
+        "occurrence": "5",
+        "detection": "5",
+    },
+    {
+        "category": "检验逃逸",
+        "failure_mode": "检验/测试覆盖不足导致缺陷逃逸",
+        "effect": "缺陷在后工序或客户现场暴露,造成误放行、返工、投诉或安全风险",
+        "cause": "测试覆盖不足、抽样方案不足、治具/量具状态异常、阈值未锁定或 MSA 不足",
+        "controls": "待确认是否已有测试覆盖矩阵、治具点检、MSA、全检/抽检规则和放行审批",
+        "action": "补充测试覆盖矩阵、治具自检、MSA 复核、判定阈值锁定和逃逸复盘",
+        "severity": "8",
+        "occurrence": "4",
+        "detection": "8",
+    },
+]
 
 FIELD_ALIASES = {
     "analysis_object": ["模块/零件", "零件名称", "子系统/功能模块", "子系统/组件", "子系统/部件", "模块", "关联项目/产品"],
@@ -2090,13 +2203,40 @@ def lifecycle_profile_by_name(scope_name: str, profiles: list[dict[str, Any]] | 
     return {
         "name": scope_name,
         "keywords": [],
-        "target_rows": 4,
+        "target_rows": DEFAULT_SCOPE_MIN_ROWS,
         "function_context": "{function}",
         "effect_context": "{effect}",
         "cause_context": "{cause}",
         "control_context": "{controls}",
         "action_context": "{actions}",
     }
+
+
+def scope_target_rows(
+    scopes: list[ScopeDefinition],
+    min_rows: int,
+    profiles: list[dict[str, Any]] | None = None,
+) -> dict[str, int]:
+    if not scopes:
+        return {}
+
+    active_profiles = profiles or LIFECYCLE_COVERAGE_PROFILES
+    rows_remaining = max(
+        min_rows,
+        sum(int(lifecycle_profile_by_name(scope.name, active_profiles).get("target_rows", DEFAULT_SCOPE_MIN_ROWS)) for scope in scopes),
+    )
+    scopes_remaining = len(scopes)
+    targets: dict[str, int] = {}
+
+    for scope in scopes:
+        profile = lifecycle_profile_by_name(scope.name, active_profiles)
+        default_target = int(profile.get("target_rows", DEFAULT_SCOPE_MIN_ROWS))
+        target_rows = max(default_target, rows_remaining // max(scopes_remaining, 1))
+        targets[scope.name] = target_rows
+        rows_remaining -= target_rows
+        scopes_remaining -= 1
+
+    return targets
 
 
 def contextualize_profile_text(profile: dict[str, Any], field_name: str, **values: str) -> str:
@@ -2196,30 +2336,65 @@ def draft_row_from_seed(scope: ScopeDefinition, profile: dict[str, Any], match: 
 
 
 def fallback_lifecycle_row(scope: ScopeDefinition, profile: dict[str, Any], module: str, index: int) -> DraftRow:
-    failure_mode = f"{module}{scope.name}场景风险未充分识别"
-    confirmation_reasons = [f"{scope.name} 维度缺少足够历史案例，需要补充模块实测、现场和维护数据"]
+    pattern = COVERAGE_GAP_GUIDEWORDS[(index - 1) % len(COVERAGE_GAP_GUIDEWORDS)]
+    failure_mode = f"{module}{scope.name}{pattern['failure_mode']}"
+    severity = pattern["severity"]
+    occurrence = pattern["occurrence"]
+    detection = pattern["detection"]
+    rpn = compute_rpn(severity, occurrence, detection, "")
+    confirmation_reasons = [
+        f"{scope.name} 维度缺少足够历史案例，需要补充模块实测、现场和维护数据",
+        f"覆盖补缺类别为 {pattern['category']}，需专家确认是否适用于当前对象",
+    ]
     return DraftRow(
         scope=scope.name,
         analysis_object=module,
         function=contextualize_profile_text(profile, "function_context", function=f"{module}在{scope.name}阶段保持功能和安全边界"),
         failure_mode=failure_mode,
-        effect=contextualize_profile_text(profile, "effect_context", effect="可能造成性能下降、交付延期、实验中断或服务成本上升"),
-        severity="7",
-        cause=contextualize_profile_text(profile, "cause_context", cause="缺少本维度历史案例和边界条件定义"),
-        occurrence="5",
-        current_controls=contextualize_profile_text(profile, "control_context", controls="待补充"),
-        detection="5",
-        rpn="175",
-        recommended_actions=contextualize_profile_text(profile, "action_context", actions="补充场景清单、控制计划、验证记录和责任人"),
+        effect=contextualize_profile_text(profile, "effect_context", effect=pattern["effect"]),
+        severity=severity,
+        cause=contextualize_profile_text(profile, "cause_context", cause=pattern["cause"]),
+        occurrence=occurrence,
+        current_controls=contextualize_profile_text(profile, "control_context", controls=pattern["controls"]),
+        detection=detection,
+        rpn=rpn,
+        recommended_actions=contextualize_profile_text(profile, "action_context", actions=pattern["action"]),
         owner="责任工程师待定",
         target_date="待定",
         confirmation_status="needs expert confirmation",
-        rating_basis=f"第 {index} 条覆盖补缺行；无足够源案例，已填入保守 AI 草稿 S/O/D=7/5/5，需人工确认",
+        rating_basis=f"第 {index} 条覆盖补缺行；guideword={pattern['category']}；无足够源案例，已填入保守 AI 草稿 S/O/D={severity}/{occurrence}/{detection}，需人工确认",
         reference_type="broader analogy",
         source_cases=[],
         confirmation_reasons=confirmation_reasons,
-        reviewer_focus="确认是否需要保留该生命周期风险，并补齐机理、现行控制、S/O/D 与责任人",
+        reviewer_focus=f"确认是否需要保留该 {pattern['category']} 风险，并补齐机理、现行控制、S/O/D 与责任人",
     )
+
+
+def pad_scope_rows_to_minimum(
+    module: str,
+    scopes: list[ScopeDefinition],
+    scope_rows: dict[str, list[DraftRow]],
+    min_rows: int,
+    profiles: list[dict[str, Any]] | None = None,
+) -> dict[str, list[DraftRow]]:
+    targets = scope_target_rows(scopes, min_rows, profiles)
+    active_profiles = profiles or LIFECYCLE_COVERAGE_PROFILES
+
+    for scope in scopes:
+        rows = scope_rows.setdefault(scope.name, [])
+        profile = lifecycle_profile_by_name(scope.name, active_profiles)
+        while len(rows) < targets.get(scope.name, DEFAULT_SCOPE_MIN_ROWS):
+            rows.append(fallback_lifecycle_row(scope, profile, module, len(rows) + 1))
+        rows.sort(
+            key=lambda item: (
+                -(safe_int(item.rpn) or -1),
+                -item.max_match_score,
+                item.analysis_object,
+                item.failure_mode,
+            )
+        )
+
+    return scope_rows
 
 
 def build_lifecycle_coverage_rows(
@@ -2233,15 +2408,11 @@ def build_lifecycle_coverage_rows(
     scope_rows: dict[str, list[DraftRow]] = {}
     base_query_terms = [module, *extracted_terms[:12], *tokenize(input_text)[:24]]
     active_profiles = profiles or LIFECYCLE_COVERAGE_PROFILES
-    rows_remaining = max(min_rows, sum(lifecycle_profile_by_name(scope.name, active_profiles).get("target_rows", 0) for scope in scopes))
-    scopes_remaining = len(scopes)
+    targets = scope_target_rows(scopes, min_rows, active_profiles)
 
     for scope in scopes:
         profile = lifecycle_profile_by_name(scope.name, active_profiles)
-        default_target = int(profile.get("target_rows", 4))
-        target_rows = max(default_target, rows_remaining // max(scopes_remaining, 1))
-        rows_remaining -= target_rows
-        scopes_remaining -= 1
+        target_rows = targets.get(scope.name, DEFAULT_SCOPE_MIN_ROWS)
 
         query = " ".join([*base_query_terms, *scope.query_terms, *profile.get("keywords", [])])
         seed_rows = rank_seed_rows(collect_matches(query, module), module, scope)
@@ -2915,6 +3086,7 @@ def main() -> None:
             matches = collect_matches(query, args.module)
             matches = [match for match in matches if match.theme in ALLOWED_THEMES][: args.top_k]
             scope_rows[scope.name] = aggregate_rows(scope, scopes, matches, args.module)
+        scope_rows = pad_scope_rows_to_minimum(args.module, scopes, scope_rows, min_rows, coverage_profiles)
 
     markdown = render_markdown(args.module, fmea_type, input_text, scopes, scope_rows)
     payload = build_json_payload(args.module, fmea_type, input_text, scopes, scope_rows)
