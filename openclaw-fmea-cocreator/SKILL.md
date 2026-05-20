@@ -1,6 +1,6 @@
 ---
 name: openclaw-fmea-cocreator
-version: 0.3.0
+version: 0.3.1
 description: Co-create AFMEA, SFMEA, DFMEA, or PFMEA for OpenClaw from module inputs, existing tables, or historical quality materials, with traceable drafts and follow-up actions.
 category: research
 tags:
