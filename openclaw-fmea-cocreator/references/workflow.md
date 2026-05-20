@@ -7,27 +7,40 @@ This skill should behave like a collaborative FMEA facilitator, not just a table
 1. Identify whether the task is `AFMEA`, `SFMEA`, or `DFMEA`.
 2. Decide whether the material should be treated as one scope or split into multiple scopes.
 3. Extract or request the minimum inputs needed to build a first draft.
-4. Normalize module names and retrieve similar historical cases.
-5. For broad or OpenClaw-ready work, run a multi-specialist FMEA cluster.
-6. Draft and consolidate a normalized FMEA table.
-7. Mark uncertain ratings and assumptions.
-8. Produce a review-oriented follow-up section.
-9. If the user confirms rows, suggest which ones should be added to the case library.
+4. Diagnose input quality and record missing context before drafting.
+5. Normalize module names and retrieve similar historical cases.
+6. For broad or OpenClaw-ready work, run a multi-specialist FMEA cluster.
+7. Draft and consolidate a normalized FMEA table.
+8. Mark uncertain ratings and assumptions.
+9. Review lifecycle/interface/component coverage for likely gaps.
+10. Convert important uncertainty into non-expert validation questions.
+11. Produce a review-oriented follow-up section.
+12. If the user confirms rows, suggest which ones should be added to the case library.
 
 For OpenClaw delivery, use the reference workbook shape as the standard output format.
 Use the bundled `template.xlsx` as the standard output template; it must remain content-clean, with sample-specific document content removed.
 Package the result as:
 
 1. scope split summary
-2. per-scope FMEA draft worksheets
-3. confirmation queue
-4. top-risk digest
-5. action list
-6. source trace
+2. input quality diagnosis
+3. coverage matrix review
+4. per-scope FMEA draft worksheets
+5. confirmation queue
+6. top-risk digest
+7. action list
+8. source trace
 
 The preferred artifact is one Excel workbook with the standard sheets `封面`, `FMEA主表`, and `评分准则参考`.
 `FMEA主表` keeps headers in `B2:W2` and generated data from row `3`.
 Markdown can still be used as a review preview, and JSON can still be used as a structured interface payload.
+
+Input quality diagnosis rules:
+
+- classify every raw-input draft as `strong`, `usable_with_assumptions`, or `high_risk_missing_context`
+- treat the diagnosis as a confidence signal, not as a blocker; draft-first still applies when the user needs a starting point
+- check for module/object, function, scenario/lifecycle, environment, interfaces, BOM/key parts, current controls/tests, historical issues, customer/downstream impact, and scoring evidence
+- convert missing high-value inputs into specific validation questions rather than generic requests for more material
+- route missing context that could change scope, `O/D`, controls, or action priority into the confirmation queue
 
 Retrieval and grouping rules:
 
@@ -96,6 +109,35 @@ Consolidation rules:
 - route disputed scope, score, ownership, or evidence basis into `Rows needing confirmation`
 - keep safety/compliance high-S concerns visible even if RPN is lower than other rows
 - after consolidation, rank top risks and list which professional role should confirm each uncertain row
+
+## Coverage matrix review
+
+Run coverage review after the draft is consolidated and before final delivery. The matrix is a review aid, not a correctness guarantee.
+
+Expected dimensions by type:
+
+| FMEA type | Coverage dimensions |
+| --- | --- |
+| `AFMEA` | storage, transport, installation, operation, abnormal use, maintenance, movement, disposal |
+| `SFMEA` | system decomposition, subsystem functions, structural/signal/energy/material interfaces, boundary ownership |
+| `DFMEA` | component/function/cause/control coverage, design constraints, materials/tolerances, supplier/manufacturing, validation and detection controls |
+
+Coverage behavior:
+
+- mark a dimension `covered` when rows and source trace provide direct support
+- mark it `weak` when rows exist but rely on broad analogy, missing controls, or low evidence
+- mark it `missing` when no meaningful row or source supports it
+- turn `weak` and `missing` dimensions into plain-language confirmation cards when they could affect risk priority
+- keep high-severity safety and compliance gaps visible even if RPN is unknown
+
+## Non-expert validation mode
+
+When the reviewer may not have senior FMEA experience, express confirmation items as answerable business or engineering facts:
+
+- ask what the user can observe: past occurrence, existing test, alarm/interlock, interface owner, customer impact, maintenance reality
+- include suggested options such as `multiple past issues`, `rare but possible`, `no known history`, `unknown`
+- state the AI default assumption and impact if the answer is wrong
+- keep the expert reviewer focus in the same item so the card still works for senior reviewers
 
 ## Scope split rule
 

@@ -28,9 +28,12 @@ This skill helps Codex:
 2. collect missing inputs in a structured way
 3. retrieve similar historical failure cases
 4. coordinate a small multi-specialist agent cluster when the scope needs multiple expert viewpoints
-5. draft a normalized FMEA table
-6. separate AI suggestions from human-confirmed judgments
-7. output both the FMEA table and a follow-up action list
+5. diagnose input quality before drafting so weak inputs do not produce false confidence
+6. draft a normalized FMEA table
+7. review lifecycle/interface/component coverage for likely gaps
+8. convert important uncertainty into plain-language validation questions for non-expert users
+9. separate AI suggestions from human-confirmed judgments
+10. output both the FMEA table and a follow-up action list
 
 ## Core workflow
 
@@ -44,6 +47,21 @@ This skill helps Codex:
 - `p_diagrams[]` 每个子系统一份 P-Diagram
 
 输出必须通过 schema 自检(详见 reference)。如果用户输入不足,列出缺失字段并要求补充,不要伪造。
+
+同时记录输入质量诊断,至少检查:
+
+- 模块或分析对象
+- 关键功能或要求
+- 使用场景或生命周期阶段
+- 环境和应用应力
+- 结构、信号、能量、流体、运动、数据或控制接口
+- BOM、关键件、材料或设计约束
+- 现行预防控制、探测控制、测试、报警或联锁
+- 历史故障、维修、投诉或相似 FMEA 行
+- 客户影响或后工序影响
+- `S/O/D` 评分证据
+
+将输入质量标为 `strong`、`usable_with_assumptions` 或 `high_risk_missing_context`。缺口要转成具体、可回答的验证问题,不要只要求用户"补充更多信息"。
 
 ### 阶段 2: 多专家失效模式生成 (6 个角色)
 
@@ -87,6 +105,8 @@ python3 openclaw-fmea-cocreator/scripts/retrieve_cases.py \
 
 由 `merge_and_score.py` 脚本承担,Claude 只做最后审阅。
 
+审阅时把低证据、低置信度、覆盖缺口、输入质量缺口和 `O/D` 不确定项显式送入确认队列。确认项应包含普通用户能回答的问题、默认 AI 假设、答案错误时的影响,以及专家评审焦点。
+
 ### 阶段 5: 工作簿渲染
 
 ```bash
@@ -97,6 +117,7 @@ python3 openclaw-fmea-cocreator/scripts/build_workbook.py \
 ```
 
 输出工作簿包含 5 个 sheet:
+
 - `封面` (含证据等级分布、置信度分布、覆盖摘要)
 - `FMEA主表` (31 列,含 P-Diagram 锚点、证据等级、置信度等新列)
 - `评分准则参考`
@@ -131,20 +152,23 @@ python3 openclaw-fmea-cocreator/scripts/build_workbook.py \
 5. 下一次跑 `retrieve_cases.py` 时加 `--case-library-root case_library/`,本企业历史案例命中权重自动 × 1.5,优先级高于通用历史案例。
 
 **回流条件 (避免 echo chamber)**:
-- `review_status == "promoted"` (`promote_to_case` 动作) — 无条件回流
-- `review_status == "confirmed"` 且 `evidence_grade ∈ {evidence-backed, historical-supported}` — 回流
-- 其他情况 (`confirmed + ai-inferred` / `rejected` / `deferred`) — 不回流
+
+- `review_status == "promoted"` (`promote_to_case` 动作) - 无条件回流
+- `review_status == "confirmed"` 且 `evidence_grade ∈ {evidence-backed, historical-supported}` - 回流
+- 其他情况 (`confirmed + ai-inferred` / `rejected` / `deferred`) - 不回流
 
 ## OpenClaw delivery contract
 
 When this skill is used as an OpenClaw workflow building block, the default output should be a compact package with these parts:
 
 1. `Scope split`
-2. `FMEA draft`
-3. `Rows needing confirmation`
-4. `Top risks`
-5. `Suggested actions`
-6. `Source trace`
+2. `Input quality diagnosis`
+3. `Coverage matrix review`
+4. `FMEA draft`
+5. `Rows needing confirmation`
+6. `Top risks`
+7. `Suggested actions`
+8. `Source trace`
 
 Minimum delivery rules:
 
@@ -158,6 +182,8 @@ Minimum delivery rules:
 - label each row as `current module`, `direct family reference`, or `broader analogy`
 - keep `O` and `D` in `draft` state unless the user or source gave enough enterprise evidence
 - call out boundary rows whose scope ownership is ambiguous
+- include input quality and coverage review in JSON/Markdown companions so weak inputs do not look complete
+- write plain-language validation prompts for non-expert users whenever assumptions materially affect scope, `O/D`, controls, or action priority
 - preserve historical traceability in the `AI打分推导依据` cell whenever a historical row influenced the draft
 - keep Markdown or JSON only as preview or system interface companions when useful
 

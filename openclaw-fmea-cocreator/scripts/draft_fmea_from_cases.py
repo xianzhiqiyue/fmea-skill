@@ -10,8 +10,6 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-from openpyxl import load_workbook
-
 from retrieve_cases import (
     ALIASES,
     DATA_ROOT,
@@ -388,6 +386,32 @@ class DraftRow:
 
 
 @dataclass
+class InputQualitySignal:
+    signal: str
+    status: str
+    evidence: str
+    missing_detail: str = ""
+
+
+@dataclass
+class InputQualityDiagnosis:
+    level: str
+    summary: str
+    signals: list[InputQualitySignal]
+    missing_critical_inputs: list[str]
+    assumptions: list[str]
+
+
+@dataclass
+class CoverageMatrixItem:
+    dimension: str
+    status: str
+    evidence: str
+    review_prompt: str
+    reason_tags: list[str] = field(default_factory=list)
+
+
+@dataclass
 class ConfirmationItem:
     scope: str
     row_key: str
@@ -396,6 +420,14 @@ class ConfirmationItem:
     reference_type: str
     source_cases: list[str]
     review_comment: str = ""
+    plain_language_question: str = ""
+    why_it_matters: str = ""
+    suggested_options: list[str] = field(default_factory=list)
+    default_assumption: str = ""
+    impact_if_wrong: str = ""
+    reason_tags: list[str] = field(default_factory=list)
+    priority: str = "medium"
+    blocking: bool = False
 
 
 def load_input_text(args: argparse.Namespace) -> str:
@@ -807,6 +839,364 @@ def build_reviewer_focus(reference_type: str, boundary_scopes: list[str], occurr
     return "；".join(focus_points)
 
 
+INPUT_QUALITY_RULES: list[dict[str, Any]] = [
+    {
+        "signal": "module_or_object",
+        "label": "模块或分析对象",
+        "keywords": [],
+        "missing": "确认具体模块、子系统或零件边界",
+        "assumption": "以命令行模块名作为分析对象",
+    },
+    {
+        "signal": "function_or_requirement",
+        "label": "关键功能或要求",
+        "keywords": ["功能", "用于", "实现", "要求", "指标", "性能", "放大", "检测", "控制", "保护", "传输", "支撑", "冷却", "供电"],
+        "missing": "补充该对象必须实现的核心功能、性能指标或设计要求",
+        "assumption": "按模块名称和历史案例推断功能",
+    },
+    {
+        "signal": "scenario_or_lifecycle",
+        "label": "使用场景或生命周期",
+        "keywords": ["贮存", "储存", "运输", "安装", "调试", "使用", "运行", "操作", "维护", "保养", "客户", "现场", "任务", "移机"],
+        "missing": "补充贮存、运输、安装、运行、维护等实际场景",
+        "assumption": "按通用生命周期补齐场景",
+    },
+    {
+        "signal": "environment",
+        "label": "环境和应用应力",
+        "keywords": ["温度", "湿度", "振动", "冲击", "EMC", "电磁", "ESD", "粉尘", "冷凝", "散热", "海拔", "电源", "噪声"],
+        "missing": "补充温湿度、振动、EMC、电源、散热或污染等边界条件",
+        "assumption": "按同类设备常见环境应力推断",
+    },
+    {
+        "signal": "interfaces",
+        "label": "接口关系",
+        "keywords": ["接口", "连接", "线缆", "接插件", "信号", "能量", "气路", "液路", "运动", "通信", "CAN", "RS", "以太网", "控制"],
+        "missing": "补充结构、信号、能量、流体、运动或控制接口",
+        "assumption": "从相似模块案例推断接口风险",
+    },
+    {
+        "signal": "bom_or_key_parts",
+        "label": "BOM/关键件/材料",
+        "keywords": ["BOM", "物料", "零件", "器件", "材料", "电阻", "电容", "传感器", "继电器", "风扇", "线圈", "接头", "板卡"],
+        "missing": "补充关键零部件、材料、连接方式或特殊工艺",
+        "assumption": "按模块历史案例中的典型关键件推断",
+    },
+    {
+        "signal": "current_controls",
+        "label": "现行控制/测试/报警",
+        "keywords": ["测试", "验证", "检验", "检查", "报警", "联锁", "保护", "监测", "自检", "筛选", "评审", "SOP"],
+        "missing": "补充现有预防控制、探测控制、测试、报警或联锁",
+        "assumption": "以通用测试和保护措施作为草稿控制",
+    },
+    {
+        "signal": "historical_issues",
+        "label": "历史问题或相似案例",
+        "keywords": ["历史", "故障", "失效", "投诉", "维修", "返修", "案例", "问题", "异常", "经验", "教训"],
+        "missing": "补充历史故障、维修、投诉或相似 FMEA 行",
+        "assumption": "仅引用资料库相似案例，不代表当前模块已发生",
+    },
+    {
+        "signal": "impact_context",
+        "label": "客户/后工序影响",
+        "keywords": ["客户", "后工序", "安全", "停机", "损坏", "性能", "精度", "投诉", "验收", "返工", "法规", "合规"],
+        "missing": "补充对客户任务、后工序、安全、成本或合规的影响",
+        "assumption": "按核心功能受影响估计严重度",
+    },
+    {
+        "signal": "scoring_evidence",
+        "label": "S/O/D 评分证据",
+        "keywords": ["S", "O", "D", "RPN", "频度", "严重度", "探测度", "发生", "检出", "过程能力", "良率", "ppm", "覆盖率"],
+        "missing": "补充企业评分标尺、发生频度、测试覆盖或检出能力证据",
+        "assumption": "O/D 只作为 AI 草稿，必须校准",
+    },
+]
+
+COVERAGE_DIMENSIONS: dict[str, list[dict[str, Any]]] = {
+    "AFMEA": [
+        {"dimension": "贮存", "keywords": ["贮存", "储存", "仓储", "温湿度", "防潮"]},
+        {"dimension": "物流运输", "keywords": ["运输", "包装", "振动", "冲击", "跌落", "搬运"]},
+        {"dimension": "安装调试", "keywords": ["安装", "调试", "接线", "校准", "验收"]},
+        {"dimension": "正常操作", "keywords": ["操作", "使用", "运行", "任务", "客户"]},
+        {"dimension": "异常/误操作", "keywords": ["误操作", "异常", "报警", "权限", "互锁"]},
+        {"dimension": "维护保养", "keywords": ["维护", "保养", "校准", "寿命", "备件"]},
+        {"dimension": "移机/场地变化", "keywords": ["移机", "场地", "搬迁", "重新安装"]},
+        {"dimension": "报废/退役", "keywords": ["报废", "退役", "处置", "回收"]},
+    ],
+    "SFMEA": [
+        {"dimension": "系统分解", "keywords": ["系统", "子系统", "模块", "架构", "分解"]},
+        {"dimension": "子系统功能", "keywords": ["功能", "要求", "指标", "任务"]},
+        {"dimension": "结构接口", "keywords": ["结构", "连接", "安装", "固定", "装配"]},
+        {"dimension": "信号/数据接口", "keywords": ["信号", "通信", "数据", "CAN", "RS", "接口"]},
+        {"dimension": "能量/物料接口", "keywords": ["供电", "能量", "气路", "液路", "冷媒", "射频"]},
+        {"dimension": "边界 ownership", "keywords": ["边界", "责任", "归属", "接口", "联调"]},
+    ],
+    "DFMEA": [
+        {"dimension": "功能/要求覆盖", "keywords": ["功能", "要求", "指标", "性能"]},
+        {"dimension": "关键件/部件覆盖", "keywords": ["零件", "部件", "器件", "BOM", "物料", "材料"]},
+        {"dimension": "失效原因机理", "keywords": ["原因", "机理", "老化", "疲劳", "漂移", "短路", "开路", "磨损"]},
+        {"dimension": "设计约束/裕量", "keywords": ["裕量", "容差", "约束", "阈值", "散热", "强度", "EMC"]},
+        {"dimension": "供应商/制造影响", "keywords": ["供应商", "制造", "装配", "焊接", "来料", "过程", "一致性"]},
+        {"dimension": "现行预防/探测控制", "keywords": ["测试", "验证", "检验", "报警", "联锁", "保护", "监测"]},
+    ],
+}
+
+
+def keyword_hit(text: str, keywords: list[str]) -> str:
+    lowered = text.lower()
+    for keyword in keywords:
+        if keyword and keyword.lower() in lowered:
+            return keyword
+    return ""
+
+
+def diagnose_input_quality(module: str, fmea_type: str, input_text: str, scopes: list[ScopeDefinition]) -> InputQualityDiagnosis:
+    combined = " ".join([module, fmea_type, input_text])
+    signals: list[InputQualitySignal] = []
+    missing: list[str] = []
+    assumptions: list[str] = []
+
+    for rule in INPUT_QUALITY_RULES:
+        if rule["signal"] == "module_or_object":
+            has_signal = bool(module or keyword_hit(combined, ["模块", "系统", "零件", "部件", "产品"]))
+            evidence = module or "输入文本包含分析对象线索"
+        else:
+            hit = keyword_hit(combined, rule["keywords"])
+            has_signal = bool(hit)
+            evidence = f"命中关键词：{hit}" if hit else ""
+
+        if has_signal:
+            status = "present"
+            missing_detail = ""
+        else:
+            status = "missing"
+            evidence = "未在用户输入中识别到"
+            missing_detail = rule["missing"]
+            missing.append(rule["missing"])
+            assumptions.append(rule["assumption"])
+
+        signals.append(
+            InputQualitySignal(
+                signal=rule["signal"],
+                status=status,
+                evidence=evidence,
+                missing_detail=missing_detail,
+            )
+        )
+
+    missing_count = len(missing)
+    if missing_count <= 2:
+        level = "strong"
+        summary = "输入已覆盖主要 FMEA 起草要素，仍需按企业标尺校准 O/D。"
+    elif missing_count <= 5:
+        level = "usable_with_assumptions"
+        summary = "输入可支持首版草稿，但若干关键信息需要在评审中确认。"
+    else:
+        level = "high_risk_missing_context"
+        summary = "输入偏薄，草稿只能作为发现风险和引导补充信息的起点。"
+
+    return InputQualityDiagnosis(
+        level=level,
+        summary=summary,
+        signals=signals,
+        missing_critical_inputs=missing[:6],
+        assumptions=assumptions[:6],
+    )
+
+
+def row_search_text(row: DraftRow) -> str:
+    return " ".join(
+        [
+            row.scope,
+            row.analysis_object,
+            row.function,
+            row.failure_mode,
+            row.effect,
+            row.cause,
+            row.current_controls,
+            row.recommended_actions,
+            row.rating_basis,
+        ]
+    )
+
+
+def build_coverage_matrix(
+    fmea_type: str,
+    scopes: list[ScopeDefinition],
+    scope_rows: dict[str, list[DraftRow]],
+    input_quality: InputQualityDiagnosis,
+) -> list[CoverageMatrixItem]:
+    dimensions = COVERAGE_DIMENSIONS.get(fmea_type.upper(), COVERAGE_DIMENSIONS["DFMEA"])
+    rows = [row for group in scope_rows.values() for row in group]
+    scope_text = " ".join(scope.name + " " + " ".join(scope.query_terms) for scope in scopes)
+    missing_signals = {signal.signal for signal in input_quality.signals if signal.status == "missing"}
+    matrix: list[CoverageMatrixItem] = []
+
+    for item in dimensions:
+        dimension = item["dimension"]
+        keywords = item["keywords"]
+        matched_rows = [row for row in rows if keyword_hit(row_search_text(row), keywords)]
+        scope_hit = keyword_hit(scope_text, keywords)
+        if matched_rows:
+            weak_reasons: list[str] = []
+            if all(row.reference_type != "current module" for row in matched_rows):
+                weak_reasons.append("主要依赖类比来源")
+            if any(row.confirmation_status == "needs expert confirmation" for row in matched_rows):
+                weak_reasons.append("存在待确认评分或适用性")
+            if any(not normalize_space(row.current_controls) for row in matched_rows):
+                weak_reasons.append("现行控制不充分")
+            status = "weak" if weak_reasons else "covered"
+            evidence = f"关联行数：{len(matched_rows)}" + (f"；{'；'.join(weak_reasons)}" if weak_reasons else "")
+        elif scope_hit:
+            status = "weak"
+            evidence = f"scope 或输入命中关键词：{scope_hit}，但草稿行支撑不足"
+        else:
+            status = "missing"
+            evidence = "未识别到对应草稿行或 scope 线索"
+
+        tags = ["coverage_gap"] if status in {"weak", "missing"} else []
+        if status == "missing":
+            tags.append("missing_dimension")
+        if "current_controls" in missing_signals and dimension in {"现行预防/探测控制", "正常操作", "子系统功能"}:
+            tags.append("missing_controls")
+        prompt = f"确认 `{dimension}` 是否适用于当前分析范围；如适用，请补充场景、控制措施或历史问题。"
+        matrix.append(CoverageMatrixItem(dimension=dimension, status=status, evidence=evidence, review_prompt=prompt, reason_tags=tags))
+
+    return matrix
+
+
+def build_non_expert_question(reason_tags: list[str], label: str) -> tuple[str, list[str], str, str]:
+    options = ["多次出现或已知高风险", "偶发或理论可能", "没有已知历史", "不清楚，需要专家确认"]
+    if "input_quality" in reason_tags:
+        return (
+            f"关于{label}，当前输入是否能代表真实产品和使用场景？",
+            options,
+            "按通用同类模块经验补齐缺口",
+            "可能漏掉关键场景、接口或控制措施，导致风险优先级偏低。",
+        )
+    if "coverage_gap" in reason_tags:
+        return (
+            f"`{label}` 这个维度是否适用于当前模块，是否存在必须纳入 FMEA 的风险？",
+            ["适用且有历史/测试问题", "适用但暂无问题", "不适用", "不清楚，需要专家确认"],
+            "暂按需要评审的潜在覆盖缺口处理",
+            "可能漏掉某个生命周期、接口或部件维度的失效模式。",
+        )
+    if "score_uncertainty" in reason_tags:
+        return (
+            "现有测试、报警、检验或联锁是否足以在客户受影响前发现该问题？",
+            ["能稳定发现", "只能部分发现", "基本发现不了", "不清楚，需要测试/质量确认"],
+            "O/D 维持 AI 草稿评分",
+            "RPN 可能被低估或高估，措施优先级会受到影响。",
+        )
+    if "broader_analogy" in reason_tags:
+        return (
+            "这个相似模块案例的机理、接口和使用条件是否真的适用于当前模块？",
+            ["高度相似，可以借用", "部分相似，需要改写", "不适用", "不清楚，需要设计专家确认"],
+            "作为类比参考保留",
+            "可能把其他模块的问题误当成当前模块风险，或使用了错误控制措施。",
+        )
+    return (
+        "这条风险的范围、评分和控制措施是否符合当前产品事实？",
+        options,
+        "保留为 AI 草稿",
+        "可能影响该行是否应进入正式 FMEA 或 Top 风险。",
+    )
+
+
+def build_gap_confirmation_items(
+    input_quality: InputQualityDiagnosis,
+    coverage_matrix: list[CoverageMatrixItem],
+) -> list[ConfirmationItem]:
+    items: list[ConfirmationItem] = []
+    for missing in input_quality.missing_critical_inputs[:4]:
+        tags = ["input_quality", "non_expert_validation"]
+        question, options, default, impact = build_non_expert_question(tags, missing)
+        items.append(
+            ConfirmationItem(
+                scope="输入质量诊断",
+                row_key=missing,
+                why_confirmation_is_needed="输入缺少会影响 FMEA 完整性或评分置信度的关键信息",
+                suggested_reviewer_focus="补充事实输入或确认 AI 默认假设是否可接受",
+                reference_type="AI assumption",
+                source_cases=[],
+                plain_language_question=question,
+                why_it_matters="输入缺口会影响风险识别、O/D 校准和措施优先级。",
+                suggested_options=options,
+                default_assumption=default,
+                impact_if_wrong=impact,
+                reason_tags=tags,
+                priority="high" if input_quality.level == "high_risk_missing_context" else "medium",
+                blocking=input_quality.level == "high_risk_missing_context",
+            )
+        )
+
+    for item in coverage_matrix:
+        if item.status == "covered":
+            continue
+        tags = [*item.reason_tags, "non_expert_validation"]
+        question, options, default, impact = build_non_expert_question(tags, item.dimension)
+        items.append(
+            ConfirmationItem(
+                scope="覆盖矩阵审查",
+                row_key=item.dimension,
+                why_confirmation_is_needed=f"覆盖维度为 {item.status}：{item.evidence}",
+                suggested_reviewer_focus=item.review_prompt,
+                reference_type="AI coverage review",
+                source_cases=[],
+                plain_language_question=question,
+                why_it_matters="覆盖缺口可能代表遗漏的生命周期、接口或部件风险。",
+                suggested_options=options,
+                default_assumption=default,
+                impact_if_wrong=impact,
+                reason_tags=tags,
+                priority="high" if item.status == "missing" else "medium",
+                blocking=item.status == "missing",
+            )
+        )
+    return items
+
+
+def row_reason_tags(row: DraftRow) -> list[str]:
+    tags: list[str] = []
+    reason_text = "；".join(row.confirmation_reasons)
+    if "O/D" in reason_text or "评分" in reason_text:
+        tags.append("score_uncertainty")
+    if row.reference_type != "current module":
+        tags.append("broader_analogy" if row.reference_type == "broader analogy" else "family_analogy")
+    if row.boundary_scopes:
+        tags.append("scope_boundary")
+    if "模板或知识库" in reason_text:
+        tags.append("template_source")
+    if not normalize_space(row.current_controls):
+        tags.append("missing_controls")
+    if tags:
+        tags.append("non_expert_validation")
+    return tags
+
+
+def enriched_confirmation_item_for_row(row: DraftRow) -> ConfirmationItem:
+    tags = row_reason_tags(row)
+    question, options, default, impact = build_non_expert_question(tags, row_key(row))
+    priority = "high" if safe_int(row.rpn) is not None and (safe_int(row.rpn) or 0) >= 150 else "medium"
+    return ConfirmationItem(
+        scope=row.scope,
+        row_key=row_key(row),
+        why_confirmation_is_needed="；".join(row.confirmation_reasons),
+        suggested_reviewer_focus=row.reviewer_focus,
+        reference_type=row.reference_type,
+        source_cases=row.source_cases,
+        review_comment=row.review_comment,
+        plain_language_question=question if tags else "",
+        why_it_matters="该判断会影响本行是否适用于当前模块，以及 O/D 与措施优先级是否合理。" if tags else "",
+        suggested_options=options if tags else [],
+        default_assumption=default if tags else "",
+        impact_if_wrong=impact if tags else "",
+        reason_tags=tags,
+        priority=priority,
+        blocking="score_uncertainty" in tags or "scope_boundary" in tags,
+    )
+
+
 def row_key(row: DraftRow) -> str:
     head = normalize_space(row.analysis_object or row.function or row.scope or "未命名对象")
     tail = normalize_space(row.failure_mode or "待补失效模式")
@@ -828,23 +1218,19 @@ def first_action_candidate(actions: str) -> str:
     return ""
 
 
-def build_confirmation_queue(scope_rows: dict[str, list[DraftRow]]) -> list[ConfirmationItem]:
+def build_confirmation_queue(
+    scope_rows: dict[str, list[DraftRow]],
+    input_quality: InputQualityDiagnosis | None = None,
+    coverage_matrix: list[CoverageMatrixItem] | None = None,
+) -> list[ConfirmationItem]:
     items: list[ConfirmationItem] = []
+    if input_quality and coverage_matrix is not None:
+        items.extend(build_gap_confirmation_items(input_quality, coverage_matrix))
     for rows in scope_rows.values():
         for row in rows:
             if row.confirmation_status != "needs expert confirmation":
                 continue
-            items.append(
-                ConfirmationItem(
-                    scope=row.scope,
-                    row_key=row_key(row),
-                    why_confirmation_is_needed="；".join(row.confirmation_reasons),
-                    suggested_reviewer_focus=row.reviewer_focus,
-                    reference_type=row.reference_type,
-                    source_cases=row.source_cases,
-                    review_comment=row.review_comment,
-                )
-            )
+            items.append(enriched_confirmation_item_for_row(row))
     return items
 
 
@@ -1559,6 +1945,11 @@ def render_excel_workbook(
     if not DEFAULT_TEMPLATE_PATH.exists():
         raise FileNotFoundError(f"未找到 Excel 输出模板：{DEFAULT_TEMPLATE_PATH}")
 
+    try:
+        from openpyxl import load_workbook
+    except ModuleNotFoundError as exc:
+        raise ModuleNotFoundError("Excel output requires the optional dependency `openpyxl`.") from exc
+
     workbook = load_workbook(DEFAULT_TEMPLATE_PATH)
     render_template_cover(workbook, module, fmea_type, input_text, scopes, scope_rows)
     render_template_fmea_sheet(workbook, module, scopes, scope_rows)
@@ -1574,7 +1965,9 @@ def render_markdown(
     scopes: list[ScopeDefinition],
     scope_rows: dict[str, list[DraftRow]],
 ) -> str:
-    confirmation_queue = build_confirmation_queue(scope_rows)
+    input_quality = diagnose_input_quality(module, fmea_type, input_text, scopes)
+    coverage_matrix = build_coverage_matrix(fmea_type, scopes, scope_rows, input_quality)
+    confirmation_queue = build_confirmation_queue(scope_rows, input_quality, coverage_matrix)
     top_risks = build_top_risks(scope_rows)
     suggested_actions = build_suggested_actions(scope_rows)
     source_trace = build_source_trace(scope_rows)
@@ -1590,11 +1983,40 @@ def render_markdown(
         "",
         "> " + format_md_cell(input_text[:400] + ("..." if len(input_text) > 400 else "")),
         "",
-        "## Scope 规划",
+        "## Input Quality Diagnosis",
         "",
-        "| Scope | 检索关键词 | 来源 | 命中数 | 说明 |",
-        "| --- | --- | --- | ---: | --- |",
+        f"- Level: `{input_quality.level}`",
+        f"- Summary: {input_quality.summary}",
+        "",
+        "| Signal | Status | Evidence | Missing detail |",
+        "| --- | --- | --- | --- |",
     ]
+    for signal in input_quality.signals:
+        lines.append(
+            f"| {format_md_cell(signal.signal)} | {format_md_cell(signal.status)} | {format_md_cell(signal.evidence)} | {format_md_cell(signal.missing_detail)} |"
+        )
+    lines.extend(
+        [
+            "",
+            "## Coverage Matrix Review",
+            "",
+            "| Dimension | Status | Evidence | Review prompt |",
+            "| --- | --- | --- | --- |",
+        ]
+    )
+    for item in coverage_matrix:
+        lines.append(
+            f"| {format_md_cell(item.dimension)} | {format_md_cell(item.status)} | {format_md_cell(item.evidence)} | {format_md_cell(item.review_prompt)} |"
+        )
+    lines.extend(
+        [
+            "",
+            "## Scope 规划",
+            "",
+            "| Scope | 检索关键词 | 来源 | 命中数 | 说明 |",
+            "| --- | --- | --- | ---: | --- |",
+        ]
+    )
     for scope in scopes:
         terms = scope.query_terms or scope.extracted_terms
         source = "auto" if scope.auto_suggested else "manual"
@@ -1662,16 +2084,16 @@ def render_markdown(
             "",
             "## Rows Needing Confirmation",
             "",
-            "| Scope | Row key | Why confirmation is needed | Suggested reviewer focus | Review comment | Reference type | Source case |",
-            "| --- | --- | --- | --- | --- | --- | --- |",
+            "| Scope | Row key | Why confirmation is needed | Plain-language question | Suggested options | Impact if wrong | Priority | Blocking | Suggested reviewer focus | Review comment | Reference type | Source case |",
+            "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
         ]
     )
     if not confirmation_queue:
-        lines.append("|  |  | 当前没有额外确认队列，仍建议在评审中校准 O/D。 |  |  |  |  |")
+        lines.append("|  |  | 当前没有额外确认队列，仍建议在评审中校准 O/D。 |  |  |  |  |  |  |  |  |  |")
     else:
         for item in confirmation_queue[:12]:
             lines.append(
-                f"| {format_md_cell(item.scope)} | {format_md_cell(item.row_key)} | {format_md_cell(item.why_confirmation_is_needed)} | {format_md_cell(item.suggested_reviewer_focus)} | {format_md_cell(item.review_comment)} | {format_md_cell(item.reference_type)} | {format_md_cell('; '.join(item.source_cases))} |"
+                f"| {format_md_cell(item.scope)} | {format_md_cell(item.row_key)} | {format_md_cell(item.why_confirmation_is_needed)} | {format_md_cell(item.plain_language_question)} | {format_md_cell(' / '.join(item.suggested_options))} | {format_md_cell(item.impact_if_wrong)} | {format_md_cell(item.priority)} | {format_md_cell(str(item.blocking))} | {format_md_cell(item.suggested_reviewer_focus)} | {format_md_cell(item.review_comment)} | {format_md_cell(item.reference_type)} | {format_md_cell('; '.join(item.source_cases))} |"
             )
 
     lines.extend(
@@ -1712,7 +2134,9 @@ def build_json_payload(
     scopes: list[ScopeDefinition],
     scope_rows: dict[str, list[DraftRow]],
 ) -> dict[str, Any]:
-    confirmation_queue = build_confirmation_queue(scope_rows)
+    input_quality = diagnose_input_quality(module, fmea_type, input_text, scopes)
+    coverage_matrix = build_coverage_matrix(fmea_type, scopes, scope_rows, input_quality)
+    confirmation_queue = build_confirmation_queue(scope_rows, input_quality, coverage_matrix)
     top_risks = build_top_risks(scope_rows)
     suggested_actions = build_suggested_actions(scope_rows)
     source_trace = build_source_trace(scope_rows)
@@ -1720,6 +2144,8 @@ def build_json_payload(
         "module": module,
         "fmea_type": fmea_type,
         "input_text": input_text,
+        "input_quality_diagnosis": asdict(input_quality),
+        "coverage_matrix": [asdict(item) for item in coverage_matrix],
         "scopes": [asdict(scope) for scope in scopes],
         "rows": [asdict(row) for rows in scope_rows.values() for row in rows],
         "confirmation_queue": [asdict(item) for item in confirmation_queue],

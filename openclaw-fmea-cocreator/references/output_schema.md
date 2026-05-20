@@ -10,11 +10,13 @@ Companion Markdown/JSON artifacts can still carry review queues and machine-read
 The companion payload should still be made of:
 
 1. `Scope split`
-2. `FMEA draft`
-3. `Rows needing confirmation`
-4. `Top risks`
-5. `Suggested actions`
-6. `Source trace`
+2. `Input quality diagnosis`
+3. `Coverage matrix review`
+4. `FMEA draft`
+5. `Rows needing confirmation`
+6. `Top risks`
+7. `Suggested actions`
+8. `Source trace`
 
 ## Workbook layout
 
@@ -30,6 +32,21 @@ All generated FMEA rows go into `FMEA主表`; use `生命周期维度` for scope
 
 Default rich drafts may use lifecycle-style grouping when the input scope calls for it, but lifecycle names, row counts, module names, product metrics, and risk examples are generated content, not template content.
 Rows expanded from lifecycle context should stay traceable and remain `needs expert confirmation`.
+
+## Companion JSON quality fields
+
+The JSON payload may include quality metadata that is not written as separate workbook sheets:
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| `input_quality_diagnosis.level` | recommended | `strong`, `usable_with_assumptions`, or `high_risk_missing_context` |
+| `input_quality_diagnosis.summary` | recommended | short explanation of why the level was assigned |
+| `input_quality_diagnosis.signals` | recommended | per-signal status for function, scenario, environment, interfaces, controls, history, and scoring evidence |
+| `input_quality_diagnosis.missing_critical_inputs` | recommended | highest-value inputs needed before expert signoff |
+| `coverage_matrix` | recommended | list of coverage dimensions with `covered`, `weak`, or `missing` status |
+| `coverage_matrix[].review_prompt` | recommended | what reviewers should confirm or supplement |
+
+These fields are review scaffolding. They should not be presented as proof that the FMEA is complete.
 
 ## Recommended columns
 
@@ -126,6 +143,14 @@ The confirmation queue should usually include:
 | Why confirmation is needed | ambiguous scope, weak evidence, uncertain `O/D`, or borrowed analogy |
 | Suggested reviewer focus | what the expert should confirm or correct |
 | Review comment | human review notes already written back but not yet fully closed |
+| Plain-language question | question a non-expert user can answer from product facts |
+| Why it matters | how the answer can change scope, score, control, or action priority |
+| Suggested options | answer choices such as `multiple past issues`, `rare but possible`, `no known history`, `unknown` |
+| Default assumption | AI assumption used for the draft |
+| Impact if wrong | what may be wrong in the draft if the assumption is false |
+| Reason tags | machine-readable tags such as `input_quality`, `coverage_gap`, `score_uncertainty`, `broader_analogy` |
+| Priority | `critical`, `high`, `medium`, or `low` |
+| Blocking | whether expert closure should block final signoff |
 
 ## Top-risk digest fields
 

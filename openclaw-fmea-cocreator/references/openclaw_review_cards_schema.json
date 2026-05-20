@@ -6,6 +6,14 @@
   "properties": {
     "generated_at": {"type": "string", "format": "date-time"},
     "fmea_normalized_path": {"type": "string"},
+    "summary": {
+      "type": "object",
+      "properties": {
+        "card_count": {"type": "integer", "minimum": 0},
+        "input_quality_level": {"type": "string"},
+        "coverage_gap_count": {"type": "integer", "minimum": 0}
+      }
+    },
     "cards": {
       "type": "array",
       "items": {
@@ -16,6 +24,8 @@
           "row_id": {"type": "string"},
           "queue": {"enum": ["confirmation_queue", "top_risks"]},
           "title": {"type": "string"},
+          "priority": {"enum": ["critical", "high", "medium", "low"]},
+          "reason_tags": {"type": "array", "items": {"type": "string"}},
           "evidence_grade": {
             "enum": ["evidence-backed", "historical-supported", "multi-role-inferred", "ai-inferred", "contradicted"]
           },
@@ -34,7 +44,21 @@
               "recommended_actions": {"type": "array", "items": {"type": "string"}},
               "severity": {"type": "integer"},
               "occurrence": {"type": "integer"},
-              "detection": {"type": "integer"}
+              "detection": {"type": "integer"},
+              "p_diagram_anchor": {"type": "string"},
+              "reference_type": {"type": "string"}
+            }
+          },
+          "review_context": {
+            "type": "object",
+            "properties": {
+              "reason_tags": {"type": "array", "items": {"type": "string"}},
+              "plain_language_question": {"type": "string"},
+              "why_it_matters": {"type": "string"},
+              "suggested_options": {"type": "array", "items": {"type": "string"}},
+              "default_assumption": {"type": "string"},
+              "impact_if_wrong": {"type": "string"},
+              "blocking": {"type": "boolean"}
             }
           },
           "available_actions": {
